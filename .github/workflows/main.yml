@@ -16,21 +16,20 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.3'
+          flutter-version: '3.29.0'
           channel: 'stable'
+          cache: true
+
+      - name: Check Flutter & Dart Version
+        run: flutter doctor -v
 
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: '3.3.1'
-
-      - name: Clear Cache
-        run: |
-          flutter clean
-          rm -rf ~/.pub-cache
+          sdk: '3.7.0'
 
       - name: Install dependencies
-        run: flutter pub upgrade --major-versions
+        run: flutter pub get
 
       - name: Run Flutter analyze
         run: flutter analyze
@@ -39,4 +38,4 @@ jobs:
         run: flutter test
 
       - name: Build APK
-        run: flutter build apk
+        run: flutter build apk --release
