@@ -5,7 +5,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key}); // Fehler mit "key" behoben
+  const MyApp({super.key}); // Korrektur des Key-Parameters
 
   @override
   Widget build(BuildContext context) {
@@ -19,14 +19,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Klasse öffentlich machen, falls sie vorher privat war
 class BLEHomePage extends StatefulWidget {
-  const BLEHomePage({super.key}); // Fehler mit "key" behoben
+  const BLEHomePage({super.key});
 
   @override
-  _BLEHomePageState createState() => _BLEHomePageState();
+  BLEHomePageState createState() => BLEHomePageState();
 }
 
-class _BLEHomePageState extends State<BLEHomePage> {
+class BLEHomePageState extends State<BLEHomePage> {
   int counter = 0;
 
   void _incrementCounter() {
