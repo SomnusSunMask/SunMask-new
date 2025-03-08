@@ -1,84 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 void main() {
-  runApp(const BLEApp());
+  runApp(MyApp());
 }
 
-class BLEApp extends StatelessWidget {
-  const BLEApp({super.key});
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'BLE Scanner',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const BLEHomePage(),
+      title: 'Flutter BLE App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: BLEHomePage(),
     );
   }
 }
 
 class BLEHomePage extends StatefulWidget {
-  const BLEHomePage({super.key});
-
   @override
   _BLEHomePageState createState() => _BLEHomePageState();
 }
 
 class _BLEHomePageState extends State<BLEHomePage> {
-  List<ScanResult> scanResults = [];
-  bool isScanning = false;
+  int counter = 0;
 
-  void startScan() {
+  void _incrementCounter() {
     setState(() {
-      isScanning = true;
-      scanResults.clear();
-    });
-
-    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
-
-    FlutterBluePlus.scanResults.listen((results) {
-      setState(() {
-        scanResults = results;
-      });
-    });
-
-    Future.delayed(const Duration(seconds: 5), () {
-      FlutterBluePlus.stopScan();
-      setState(() {
-        isScanning = false;
-      });
+      counter++;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("BLE Scanner")),
-      body: Column(
-        children: [
-          ElevatedButton(
-            onPressed: isScanning ? null : startScan,
-            child: const Text("Scan nach Geräten"),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: scanResults.length,
-              itemBuilder: (context, index) {
-                final result = scanResults[index];
-                return ListTile(
-                  title: Text(result.device.platformName.isNotEmpty
-                      ? result.device.platformName
-                      : "Unbekanntes Gerät"),
-                  subtitle: Text(result.device.remoteId.toString()),
-                );
-              },
+      appBar: AppBar(
+        title: Text('BLE Test App'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Counter: $counter',
+              style: TextStyle(fontSize: 24),
             ),
-          ),
-        ],
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _incrementCounter,
+              child: Text('Increment'),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
