@@ -5,6 +5,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key}); // Fehler mit "key" behoben
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -18,6 +20,8 @@ class MyApp extends StatelessWidget {
 }
 
 class BLEHomePage extends StatefulWidget {
+  const BLEHomePage({super.key}); // Fehler mit "key" behoben
+
   @override
   _BLEHomePageState createState() => _BLEHomePageState();
 }
@@ -35,7 +39,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('BLE Test App'),
+        title: const Text('BLE Test App'),
       ),
       body: Center(
         child: Column(
@@ -43,12 +47,12 @@ class _BLEHomePageState extends State<BLEHomePage> {
           children: [
             Text(
               'Counter: $counter',
-              style: TextStyle(fontSize: 24),
+              style: const TextStyle(fontSize: 24),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _incrementCounter,
-              child: Text('Increment'),
+              child: const Text('Increment'),
             ),
           ],
         ),
