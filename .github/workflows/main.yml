@@ -18,10 +18,19 @@ jobs:
         with:
           flutter-version: '3.19.3'
           channel: 'stable'
-          cache: true
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: '3.3.1'
+
+      - name: Clear Cache
+        run: |
+          flutter clean
+          rm -rf ~/.pub-cache
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub upgrade --major-versions
 
       - name: Run Flutter analyze
         run: flutter analyze
