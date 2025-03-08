@@ -27,7 +27,6 @@ class BLEHomePage extends StatefulWidget {
 }
 
 class _BLEHomePageState extends State<BLEHomePage> {
-  final FlutterBluePlus flutterBlue = FlutterBluePlus();
   List<ScanResult> scanResults = [];
   bool isScanning = false;
 
@@ -37,15 +36,16 @@ class _BLEHomePageState extends State<BLEHomePage> {
       scanResults.clear();
     });
 
-    flutterBlue.startScan(timeout: const Duration(seconds: 5));
+    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
-    flutterBlue.scanResults.listen((results) {
+    FlutterBluePlus.scanResults.listen((results) {
       setState(() {
         scanResults = results;
       });
     });
 
-    flutterBlue.stopScan().then((_) {
+    Future.delayed(const Duration(seconds: 5), () {
+      FlutterBluePlus.stopScan();
       setState(() {
         isScanning = false;
       });
@@ -68,10 +68,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
               itemBuilder: (context, index) {
                 final result = scanResults[index];
                 return ListTile(
-                  title: Text(result.device.name.isNotEmpty
-                      ? result.device.name
+                  title: Text(result.device.platformName.isNotEmpty
+                      ? result.device.platformName
                       : "Unbekanntes Gerät"),
-                  subtitle: Text(result.device.id.toString()),
+                  subtitle: Text(result.device.remoteId.toString()),
                 );
               },
             ),
