@@ -37,6 +37,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void scanForDevices() async {
+    // Berechtigungen anfordern (ab Android 12 erforderlich)
+    await FlutterBluePlus.requestPermissions();
+
+    // Starte den Scan
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
@@ -54,31 +58,36 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.stopScan();
   }
 
+  void connectToDevice(BluetoothDevice device) async {
+    try {
+      await device.connect();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Verbunden mit: ${device.platformName}")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Fehler: ${e.toString()}")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('BLE Geräte'),
       ),
-      body: devices.isEmpty
-          ? const Center(child: Text('Keine BLE-Geräte gefunden'))
-          : ListView.builder(
-              itemCount: devices.length,
-              itemBuilder: (context, index) {
-                final device = devices[index];
-                return ListTile(
-                  title: Text(device.platformName),
-                  subtitle: Text(device.remoteId.toString()),
-                  onTap: () {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Gerät ausgewählt: ${device.platformName}")),
-                      );
-                    });
-                  },
-                );
-              },
-            ),
+      body: ListView.builder(
+        itemCount: devices.length,
+        itemBuilder: (context, index) {
+          final device = devices[index];
+          return ListTile(
+            title: Text(device.platformName),
+            subtitle: Text(device.remoteId.toString()),
+            onTap: () => connectToDevice(device), // Verbindung herstellen
+          );
+        },
+      ),
     );
   }
 }
