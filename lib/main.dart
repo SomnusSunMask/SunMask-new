@@ -2,68 +2,68 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter BLE App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: BLEHomePage(),
+      debugShowCheckedModeBanner: false,
+      title: 'BLE App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const BLEHomePage(),
     );
   }
 }
 
 class BLEHomePage extends StatefulWidget {
+  const BLEHomePage({Key? key}) : super(key: key);
+
   @override
   _BLEHomePageState createState() => _BLEHomePageState();
 }
 
 class _BLEHomePageState extends State<BLEHomePage> {
-  final FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
+  FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
   List<ScanResult> scanResults = [];
-  bool isScanning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    startScan();
+  }
 
   void startScan() async {
     scanResults.clear();
-    setState(() {
-      isScanning = true;
-    });
-
-    flutterBlue.startScan(timeout: Duration(seconds: 5));
+    flutterBlue.startScan(timeout: const Duration(seconds: 5));
 
     flutterBlue.scanResults.listen((results) {
       setState(() {
         scanResults = results;
       });
     });
-
-    await Future.delayed(Duration(seconds: 5));
-    stopScan();
   }
 
   void stopScan() {
     flutterBlue.stopScan();
-    setState(() {
-      isScanning = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('BLE Scanner'),
-      ),
+      appBar: AppBar(title: const Text('BLE Geräte')),
       body: Column(
         children: [
           ElevatedButton(
-            onPressed: isScanning ? null : startScan,
-            child: Text(isScanning ? 'Scanning...' : 'Start Scan'),
+            onPressed: startScan,
+            child: const Text("Start Scan"),
+          ),
+          ElevatedButton(
+            onPressed: stopScan,
+            child: const Text("Stop Scan"),
           ),
           Expanded(
             child: ListView.builder(
@@ -71,10 +71,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
               itemBuilder: (context, index) {
                 final device = scanResults[index].device;
                 return ListTile(
-                  title: Text(device.name.isNotEmpty ? device.name : 'Unknown Device'),
-                  subtitle: Text(device.id.toString()),
+                  title: Text(device.platformName ?? "Unbekanntes Gerät"),
+                  subtitle: Text(device.remoteId.toString()),
                   onTap: () {
-                    // Hier kann eine Verbindung zum Gerät hergestellt werden
+                    // Hier kannst du eine Verbindung mit dem Gerät herstellen
                   },
                 );
               },
