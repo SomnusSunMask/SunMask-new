@@ -54,25 +54,50 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.stopScan();
   }
 
+  Future<void> connectToDevice(BluetoothDevice device) async {
+    try {
+      debugPrint("Verbinde mit: ${device.platformName}");
+      await device.connect();
+      debugPrint("${device.platformName} erfolgreich verbunden!");
+
+      // UI aktualisieren und eine Rückmeldung geben
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("${device.platformName} verbunden!")),
+      );
+    } catch (e) {
+      debugPrint("Fehler beim Verbinden: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Fehler: ${device.platformName} konnte nicht verbunden werden.")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('BLE Geräte'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: scanForDevices,
+          ),
+        ],
       ),
-      body: ListView.builder(
-        itemCount: devices.length,
-        itemBuilder: (context, index) {
-          final device = devices[index];
-          return ListTile(
-            title: Text(device.platformName),
-            subtitle: Text(device.remoteId.toString()),
-            onTap: () {
-              debugPrint("Gerät ausgewählt: ${device.platformName}");
-            },
-          );
-        },
-      ),
+      body: devices.isEmpty
+          ? const Center(child: Text("Keine BLE-Geräte gefunden"))
+          : ListView.builder(
+              itemCount: devices.length,
+              itemBuilder: (context, index) {
+                final device = devices[index];
+                return ListTile(
+                  title: Text(device.platformName),
+                  subtitle: Text(device.remoteId.toString()),
+                  onTap: () => connectToDevice(device),
+                );
+              },
+            ),
     );
   }
 }
