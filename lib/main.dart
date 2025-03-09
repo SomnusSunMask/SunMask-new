@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -30,47 +30,28 @@ class BLEHomePage extends StatefulWidget {
 
 class _BLEHomePageState extends State<BLEHomePage> {
   final List<BluetoothDevice> devices = [];
+  BluetoothDevice? selectedDevice;
+  BluetoothCharacteristic? timerCharacteristic;
+  bool isConnected = false;
 
   @override
   void initState() {
     super.initState();
-    requestPermissions();
-  }
-
-  void requestPermissions() async {
-    final granted = await _checkPermissions();
-    if (mounted) {
-      if (granted) {
-        scanForDevices();
-      } else {
-        _showSnackBar("Berechtigungen fehlen!");
-      }
-    }
-  }
-
-  Future<bool> _checkPermissions() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.locationWhenInUse,
-    ].request();
-    return statuses.values.every((status) => status.isGranted);
+    scanForDevices();
   }
 
   void scanForDevices() async {
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
-      if (mounted) {
-        setState(() {
-          devices.clear();
-          for (var result in results) {
-            if (!devices.contains(result.device)) {
-              devices.add(result.device);
-            }
+      setState(() {
+        devices.clear();
+        for (var result in results) {
+          if (!devices.contains(result.device)) {
+            devices.add(result.device);
           }
-        });
-      }
+        }
+      });
     });
 
     await Future.delayed(const Duration(seconds: 5));
@@ -78,22 +59,31 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void connectToDevice(BluetoothDevice device) async {
-    try {
-      await device.connect();
-      if (mounted) {
-        _showSnackBar("Verbunden mit: ${device.platformName}");
-      }
-    } catch (e) {
-      if (mounted) {
-        _showSnackBar("Fehler: ${e.toString()}");
+    await device.connect();
+    setState(() {
+      selectedDevice = device;
+      isConnected = true;
+    });
+
+    List<BluetoothService> services = await device.discoverServices();
+    for (var service in services) {
+      for (var characteristic in service.characteristics) {
+        if (characteristic.uuid.toString() == "abcdef01-1234-5678-1234-56789abcdef0") {
+          timerCharacteristic = characteristic;
+          debugPrint("Timer-Charakteristik gefunden!");
+        }
       }
     }
   }
 
-  void _showSnackBar(String message) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-    });
+  void sendTimerToESP() async {
+    if (timerCharacteristic != null && isConnected) {
+      List<int> timerValue = utf8.encode("30"); // Sendet "30" als Text
+      await timerCharacteristic!.write(timerValue);
+      debugPrint("30 Sekunden Timer gesendet!");
+    } else {
+      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
+    }
   }
 
   @override
@@ -102,16 +92,30 @@ class _BLEHomePageState extends State<BLEHomePage> {
       appBar: AppBar(
         title: const Text('BLE Geräte'),
       ),
-      body: ListView.builder(
-        itemCount: devices.length,
-        itemBuilder: (context, index) {
-          final device = devices[index];
-          return ListTile(
-            title: Text(device.platformName),
-            subtitle: Text(device.remoteId.toString()),
-            onTap: () => connectToDevice(device),
-          );
-        },
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: devices.length,
+              itemBuilder: (context, index) {
+                final device = devices[index];
+                return ListTile(
+                  title: Text(device.platformName),
+                  subtitle: Text(device.remoteId.toString()),
+                  onTap: () {
+                    connectToDevice(device);
+                    debugPrint("Gerät ausgewählt: ${device.platformName}");
+                  },
+                );
+              },
+            ),
+          ),
+          if (isConnected) // Button nur anzeigen, wenn verbunden
+            ElevatedButton(
+              onPressed: sendTimerToESP,
+              child: const Text("30 Sekunden Timer senden"),
+            ),
+        ],
       ),
     );
   }
