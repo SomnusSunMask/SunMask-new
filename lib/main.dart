@@ -59,7 +59,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   void connectToDevice(BluetoothDevice device) async {
     await device.connect();
-    
+
     if (mounted) {
       Navigator.push(
         context,
@@ -105,6 +105,8 @@ class DeviceControlPage extends StatefulWidget {
 class _DeviceControlPageState extends State<DeviceControlPage> {
   BluetoothCharacteristic? timerCharacteristic;
   bool isConnected = false;
+  int selectedHour = 0;
+  int selectedMinute = 0;
 
   @override
   void initState() {
@@ -131,9 +133,10 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   void sendTimerToESP() async {
     if (timerCharacteristic != null && isConnected) {
-      List<int> timerValue = utf8.encode("30"); // Sendet "30" als Text
+      int totalSeconds = (selectedHour * 3600) + (selectedMinute * 60);
+      List<int> timerValue = utf8.encode(totalSeconds.toString());
       await timerCharacteristic!.write(timerValue);
-      debugPrint("30 Sekunden Timer gesendet!");
+      debugPrint("Timer gesendet: $totalSeconds Sekunden");
     } else {
       debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
     }
@@ -141,7 +144,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   void disconnectFromDevice() async {
     await widget.device.disconnect();
-    
+
     if (mounted) {
       Navigator.pop(context); // Zurück zur Geräteliste
     }
@@ -156,19 +159,55 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Center(
-            child: ElevatedButton(
-              onPressed: sendTimerToESP,
-              child: const Text("30 Sekunden Timer senden"),
-            ),
+          const Text(
+            "Timer einstellen:",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              DropdownButton<int>(
+                value: selectedHour,
+                items: List.generate(24, (index) => index)
+                    .map((hour) => DropdownMenuItem(
+                          value: hour,
+                          child: Text("$hour h"),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedHour = value!;
+                  });
+                },
+              ),
+              const SizedBox(width: 20),
+              DropdownButton<int>(
+                value: selectedMinute,
+                items: List.generate(60, (index) => index)
+                    .map((minute) => DropdownMenuItem(
+                          value: minute,
+                          child: Text("$minute min"),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedMinute = value!;
+                  });
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 20),
-          Center(
-            child: ElevatedButton(
-              onPressed: disconnectFromDevice,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text("Verbindung trennen"),
-            ),
+          ElevatedButton(
+            onPressed: sendTimerToESP,
+            child: const Text("Timer senden"),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: disconnectFromDevice,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Verbindung trennen"),
           ),
         ],
       ),
