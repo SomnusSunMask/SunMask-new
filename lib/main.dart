@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,14 +34,28 @@ class _BLEHomePageState extends State<BLEHomePage> {
   @override
   void initState() {
     super.initState();
-    scanForDevices();
+    requestPermissions().then((granted) {
+      if (granted) {
+        scanForDevices();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Berechtigungen fehlen!")),
+        );
+      }
+    });
+  }
+
+  Future<bool> requestPermissions() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.locationWhenInUse,
+    ].request();
+
+    return statuses.values.every((status) => status.isGranted);
   }
 
   void scanForDevices() async {
-    // Berechtigungen anfordern (ab Android 12 erforderlich)
-    await FlutterBluePlus.requestPermissions();
-
-    // Starte den Scan
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
@@ -84,7 +99,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
           return ListTile(
             title: Text(device.platformName),
             subtitle: Text(device.remoteId.toString()),
-            onTap: () => connectToDevice(device), // Verbindung herstellen
+            onTap: () => connectToDevice(device),
           );
         },
       ),
