@@ -6,7 +6,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key); // Key hinzugefügt
+  const MyApp({super.key}); // Korrektur: super.key statt Key? key
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
 }
 
 class BLEHomePage extends StatefulWidget {
-  const BLEHomePage({Key? key}) : super(key: key); // Key hinzugefügt
+  const BLEHomePage({super.key}); // Korrektur: super.key statt Key? key
 
   @override
   State<BLEHomePage> createState() => _BLEHomePageState();
@@ -37,16 +37,16 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void scanForDevices() async {
-    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5)); // Statische Methode
+    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
-    FlutterBluePlus.scanResults.listen((results) { // Statische Eigenschaft
+    FlutterBluePlus.scanResults.listen((results) {
       setState(() {
         devices = results.map((r) => r.device).toList();
       });
     });
 
     await Future.delayed(const Duration(seconds: 5));
-    FlutterBluePlus.stopScan(); // Statische Methode
+    FlutterBluePlus.stopScan();
   }
 
   @override
@@ -60,10 +60,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
         itemBuilder: (context, index) {
           final device = devices[index];
           return ListTile(
-            title: Text(device.platformName), // `name` durch `platformName` ersetzt
-            subtitle: Text(device.remoteId.toString()), // `id` durch `remoteId` ersetzt
+            title: Text(device.platformName),
+            subtitle: Text(device.remoteId.toString()),
             onTap: () {
-              debugPrint("Gerät ausgewählt: ${device.platformName}"); // `print` ersetzt
+              debugPrint("Gerät ausgewählt: ${device.platformName}");
             },
           );
         },
