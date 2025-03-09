@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const BLEApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class BLEApp extends StatelessWidget {
+  const BLEApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter BLE App',
+      title: 'BLE Scanner',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -24,61 +24,58 @@ class BLEHomePage extends StatefulWidget {
   const BLEHomePage({super.key});
 
   @override
-  BLEHomePageState createState() => BLEHomePageState();
+  State<BLEHomePage> createState() => _BLEHomePageState();
 }
 
-class BLEHomePageState extends State<BLEHomePage> {
-  FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
-  List<BluetoothDevice> devicesList = [];
+class _BLEHomePageState extends State<BLEHomePage> {
+  final FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
+  List<ScanResult> scanResults = [];
+  bool isScanning = false;
 
-  @override
-  void initState() {
-    super.initState();
-    scanForDevices();
-  }
+  void startScan() async {
+    scanResults.clear();
+    setState(() {
+      isScanning = true;
+    });
 
-  void scanForDevices() {
     flutterBlue.startScan(timeout: const Duration(seconds: 4));
 
     flutterBlue.scanResults.listen((results) {
-      for (ScanResult r in results) {
-        if (!devicesList.contains(r.device)) {
-          setState(() {
-            devicesList.add(r.device);
-          });
-        }
-      }
+      setState(() {
+        scanResults = results;
+      });
     });
-  }
 
-  void connectToDevice(BluetoothDevice device) async {
-    await device.connect();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Verbunden mit ${device.name}')),
-    );
+    await Future.delayed(const Duration(seconds: 4));
+    flutterBlue.stopScan();
+
+    setState(() {
+      isScanning = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('BLE Geräte')),
+      appBar: AppBar(title: const Text('BLE Scanner')),
       body: Column(
         children: [
           ElevatedButton(
-            onPressed: scanForDevices,
-            child: const Text('Nach Geräten suchen'),
+            onPressed: isScanning ? null : startScan,
+            child: Text(isScanning ? 'Scanning...' : 'Start Scan'),
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: devicesList.length,
+              itemCount: scanResults.length,
               itemBuilder: (context, index) {
+                final device = scanResults[index].device;
                 return ListTile(
-                  title: Text(devicesList[index].name.isNotEmpty
-                      ? devicesList[index].name
-                      : 'Unbekanntes Gerät'),
-                  subtitle: Text(devicesList[index].id.toString()),
+                  title: Text(device.platformName ?? 'Unknown Device'),
+                  subtitle: Text(device.remoteId.str),
                   trailing: ElevatedButton(
-                    onPressed: () => connectToDevice(devicesList[index]),
+                    onPressed: () async {
+                      await device.connect();
+                    },
                     child: const Text('Verbinden'),
                   ),
                 );
