@@ -1,30 +1,34 @@
-// Stelle sicher, dass keine privaten Typen in der öffentlichen API genutzt werden.
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key); // Key hinzugefügt
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter BLE',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: BLEHomePage(),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const BLEHomePage(),
     );
   }
 }
 
 class BLEHomePage extends StatefulWidget {
+  const BLEHomePage({Key? key}) : super(key: key); // Key hinzugefügt
+
   @override
-  _BLEHomePageState createState() => _BLEHomePageState();
+  State<BLEHomePage> createState() => _BLEHomePageState();
 }
 
 class _BLEHomePageState extends State<BLEHomePage> {
-  FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
-  List<BluetoothDevice> devicesList = [];
+  List<BluetoothDevice> devices = [];
 
   @override
   void initState() {
@@ -32,40 +36,37 @@ class _BLEHomePageState extends State<BLEHomePage> {
     scanForDevices();
   }
 
-  void scanForDevices() {
-    flutterBlue.startScan(timeout: Duration(seconds: 4));
-    flutterBlue.scanResults.listen((results) {
-      for (ScanResult r in results) {
-        if (!devicesList.contains(r.device)) {
-          setState(() {
-            devicesList.add(r.device);
-          });
-        }
-      }
+  void scanForDevices() async {
+    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5)); // Statische Methode
+
+    FlutterBluePlus.scanResults.listen((results) { // Statische Eigenschaft
+      setState(() {
+        devices = results.map((r) => r.device).toList();
+      });
     });
+
+    await Future.delayed(const Duration(seconds: 5));
+    FlutterBluePlus.stopScan(); // Statische Methode
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("BLE Scanner")),
+      appBar: AppBar(
+        title: const Text('BLE Geräte'),
+      ),
       body: ListView.builder(
-        itemCount: devicesList.length,
+        itemCount: devices.length,
         itemBuilder: (context, index) {
+          final device = devices[index];
           return ListTile(
-            title: Text(devicesList[index].name.isNotEmpty
-                ? devicesList[index].name
-                : "Unbekanntes Gerät"),
-            subtitle: Text(devicesList[index].id.toString()),
+            title: Text(device.platformName), // `name` durch `platformName` ersetzt
+            subtitle: Text(device.remoteId.toString()), // `id` durch `remoteId` ersetzt
             onTap: () {
-              print("Gerät ausgewählt: ${devicesList[index].name}");
+              debugPrint("Gerät ausgewählt: ${device.platformName}"); // `print` ersetzt
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: scanForDevices,
-        child: Icon(Icons.search),
       ),
     );
   }
