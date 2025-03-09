@@ -2,29 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 void main() {
-  runApp(const BLEApp());
+  runApp(MyApp());
 }
 
-class BLEApp extends StatelessWidget {
-  const BLEApp({super.key});
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BLE Scanner',
+      title: 'Flutter BLE App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const BLEHomePage(),
+      home: BLEHomePage(),
     );
   }
 }
 
 class BLEHomePage extends StatefulWidget {
-  const BLEHomePage({super.key});
-
   @override
-  State<BLEHomePage> createState() => _BLEHomePageState();
+  _BLEHomePageState createState() => _BLEHomePageState();
 }
 
 class _BLEHomePageState extends State<BLEHomePage> {
@@ -38,7 +34,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       isScanning = true;
     });
 
-    flutterBlue.startScan(timeout: const Duration(seconds: 4));
+    flutterBlue.startScan(timeout: Duration(seconds: 5));
 
     flutterBlue.scanResults.listen((results) {
       setState(() {
@@ -46,9 +42,12 @@ class _BLEHomePageState extends State<BLEHomePage> {
       });
     });
 
-    await Future.delayed(const Duration(seconds: 4));
-    flutterBlue.stopScan();
+    await Future.delayed(Duration(seconds: 5));
+    stopScan();
+  }
 
+  void stopScan() {
+    flutterBlue.stopScan();
     setState(() {
       isScanning = false;
     });
@@ -57,7 +56,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('BLE Scanner')),
+      appBar: AppBar(
+        title: Text('BLE Scanner'),
+      ),
       body: Column(
         children: [
           ElevatedButton(
@@ -70,14 +71,11 @@ class _BLEHomePageState extends State<BLEHomePage> {
               itemBuilder: (context, index) {
                 final device = scanResults[index].device;
                 return ListTile(
-                  title: Text(device.platformName ?? 'Unknown Device'),
-                  subtitle: Text(device.remoteId.str),
-                  trailing: ElevatedButton(
-                    onPressed: () async {
-                      await device.connect();
-                    },
-                    child: const Text('Verbinden'),
-                  ),
+                  title: Text(device.name.isNotEmpty ? device.name : 'Unknown Device'),
+                  subtitle: Text(device.id.toString()),
+                  onTap: () {
+                    // Hier kann eine Verbindung zum Gerät hergestellt werden
+                  },
                 );
               },
             ),
