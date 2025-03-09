@@ -6,7 +6,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key}); // 🔹 `super.key` korrekt übergeben
 
   @override
   Widget build(BuildContext context) {
@@ -20,27 +20,19 @@ class MyApp extends StatelessWidget {
 }
 
 class BLEHomePage extends StatefulWidget {
-  const BLEHomePage({Key? key}) : super(key: key);
+  const BLEHomePage({super.key});
 
   @override
   _BLEHomePageState createState() => _BLEHomePageState();
 }
 
 class _BLEHomePageState extends State<BLEHomePage> {
-  final FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
   final List<ScanResult> scanResults = [];
 
   @override
   void initState() {
     super.initState();
-    startScan();
-  }
-
-  void startScan() async {
-    scanResults.clear();
-    await flutterBlue.startScan(timeout: const Duration(seconds: 5));
-
-    flutterBlue.scanResults.listen((results) {
+    FlutterBluePlus.scanResults.listen((results) {
       setState(() {
         scanResults.clear();
         scanResults.addAll(results);
@@ -48,8 +40,12 @@ class _BLEHomePageState extends State<BLEHomePage> {
     });
   }
 
+  void startScan() {
+    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+  }
+
   void stopScan() {
-    flutterBlue.stopScan();
+    FlutterBluePlus.stopScan();
   }
 
   @override
@@ -72,11 +68,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
               itemBuilder: (context, index) {
                 final device = scanResults[index].device;
                 return ListTile(
-                  title: Text(device.platformName ?? "Unbekanntes Gerät"),
+                  title: Text(device.platformName),
                   subtitle: Text(device.remoteId.toString()),
-                  onTap: () {
-                    // Hier kannst du eine Verbindung mit dem Gerät herstellen
-                  },
                 );
               },
             ),
