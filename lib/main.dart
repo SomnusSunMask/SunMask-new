@@ -6,7 +6,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key}); // Korrektur: super.key statt Key? key
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,14 +21,14 @@ class MyApp extends StatelessWidget {
 }
 
 class BLEHomePage extends StatefulWidget {
-  const BLEHomePage({super.key}); // Korrektur: super.key statt Key? key
+  const BLEHomePage({super.key});
 
   @override
   State<BLEHomePage> createState() => _BLEHomePageState();
 }
 
 class _BLEHomePageState extends State<BLEHomePage> {
-  List<BluetoothDevice> devices = [];
+  final List<BluetoothDevice> devices = [];
 
   @override
   void initState() {
@@ -37,16 +37,21 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void scanForDevices() async {
-    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+    await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
       setState(() {
-        devices = results.map((r) => r.device).toList();
+        devices.clear();
+        for (var result in results) {
+          if (!devices.contains(result.device)) {
+            devices.add(result.device);
+          }
+        }
       });
     });
 
     await Future.delayed(const Duration(seconds: 5));
-    FlutterBluePlus.stopScan();
+    await FlutterBluePlus.stopScan();
   }
 
   @override
