@@ -27,8 +27,8 @@ class BLEHomePage extends StatefulWidget {
 }
 
 class _BLEHomePageState extends State<BLEHomePage> {
-  FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
-  List<ScanResult> scanResults = [];
+  final FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
+  final List<ScanResult> scanResults = [];
 
   @override
   void initState() {
@@ -38,11 +38,12 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   void startScan() async {
     scanResults.clear();
-    flutterBlue.startScan(timeout: const Duration(seconds: 5));
+    await flutterBlue.startScan(timeout: const Duration(seconds: 5));
 
     flutterBlue.scanResults.listen((results) {
       setState(() {
-        scanResults = results;
+        scanResults.clear();
+        scanResults.addAll(results);
       });
     });
   }
