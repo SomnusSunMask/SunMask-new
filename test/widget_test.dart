@@ -1,21 +1,19 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_ble2/main.dart'; // Sicherstellen, dass der Pfad stimmt
+import 'package:flutter_ble2/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('BLE HomePage Test', (WidgetTester tester) async {
+    await tester.pumpWidget(MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('Counter: 0'), findsOneWidget);
-    expect(find.text('Counter: 1'), findsNothing);
-
-    // Tap the 'Increment' button and trigger a frame.
-    await tester.tap(find.text('Increment'));
+    // Prüfen, ob der Button existiert
+    expect(find.text('Start Scan'), findsOneWidget);
+    
+    // Button klicken und Scan starten
+    await tester.tap(find.text('Start Scan'));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('Counter: 0'), findsNothing);
-    expect(find.text('Counter: 1'), findsOneWidget);
+    // Nach dem Scan sollte "Scanning..." angezeigt werden
+    expect(find.text('Scanning...'), findsOneWidget);
   });
 }
