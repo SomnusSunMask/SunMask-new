@@ -5,9 +5,9 @@ import 'package:flutter_ble2/main.dart';
 void main() {
   testWidgets('App startet ohne Fehler', (WidgetTester tester) async {
     // Versuche, die App zu starten
-    await tester.pumpWidget(const BLEHomePage());
+    await tester.pumpWidget(const MyApp());
 
-    // Prüfe, ob ein zentrales Widget der App vorhanden ist
+    // Prüfe, ob die App erfolgreich gestartet ist
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }
