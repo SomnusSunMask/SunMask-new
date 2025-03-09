@@ -34,24 +34,26 @@ class _BLEHomePageState extends State<BLEHomePage> {
   @override
   void initState() {
     super.initState();
-    requestPermissions().then((granted) {
+    requestPermissions();
+  }
+
+  void requestPermissions() async {
+    final granted = await _checkPermissions();
+    if (mounted) {
       if (granted) {
         scanForDevices();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Berechtigungen fehlen!")),
-        );
+        _showSnackBar("Berechtigungen fehlen!");
       }
-    });
+    }
   }
 
-  Future<bool> requestPermissions() async {
+  Future<bool> _checkPermissions() async {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
       Permission.locationWhenInUse,
     ].request();
-
     return statuses.values.every((status) => status.isGranted);
   }
 
@@ -59,14 +61,16 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
-      setState(() {
-        devices.clear();
-        for (var result in results) {
-          if (!devices.contains(result.device)) {
-            devices.add(result.device);
+      if (mounted) {
+        setState(() {
+          devices.clear();
+          for (var result in results) {
+            if (!devices.contains(result.device)) {
+              devices.add(result.device);
+            }
           }
-        }
-      });
+        });
+      }
     });
 
     await Future.delayed(const Duration(seconds: 5));
@@ -76,14 +80,20 @@ class _BLEHomePageState extends State<BLEHomePage> {
   void connectToDevice(BluetoothDevice device) async {
     try {
       await device.connect();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Verbunden mit: ${device.platformName}")),
-      );
+      if (mounted) {
+        _showSnackBar("Verbunden mit: ${device.platformName}");
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Fehler: ${e.toString()}")),
-      );
+      if (mounted) {
+        _showSnackBar("Fehler: ${e.toString()}");
+      }
     }
+  }
+
+  void _showSnackBar(String message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    });
   }
 
   @override
