@@ -41,14 +41,16 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
-      setState(() {
-        devices.clear();
-        for (var result in results) {
-          if (!devices.contains(result.device)) {
-            devices.add(result.device);
+      if (mounted) {
+        setState(() {
+          devices.clear();
+          for (var result in results) {
+            if (!devices.contains(result.device)) {
+              devices.add(result.device);
+            }
           }
-        }
-      });
+        });
+      }
     });
 
     await Future.delayed(const Duration(seconds: 5));
@@ -57,12 +59,15 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   void connectToDevice(BluetoothDevice device) async {
     await device.connect();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DeviceControlPage(device: device),
-      ),
-    );
+    
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DeviceControlPage(device: device),
+        ),
+      );
+    }
   }
 
   @override
@@ -113,9 +118,11 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       for (var characteristic in service.characteristics) {
         if (characteristic.uuid.toString() == "abcdef01-1234-5678-1234-56789abcdef0") {
           timerCharacteristic = characteristic;
-          setState(() {
-            isConnected = true;
-          });
+          if (mounted) {
+            setState(() {
+              isConnected = true;
+            });
+          }
           debugPrint("Timer-Charakteristik gefunden!");
         }
       }
@@ -134,7 +141,10 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   void disconnectFromDevice() async {
     await widget.device.disconnect();
-    Navigator.pop(context); // Zurück zur Geräteliste
+    
+    if (mounted) {
+      Navigator.pop(context); // Zurück zur Geräteliste
+    }
   }
 
   @override
