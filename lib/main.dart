@@ -63,7 +63,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
       selectedDevice = device;
     });
 
-    // Navigiere zur neuen Seite, um Weckzeit/Timer einzustellen
     if (context.mounted) {
       Navigator.push(
         context,
@@ -111,7 +110,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   BluetoothCharacteristic? timerCharacteristic;
   bool isConnected = true;
   TimeOfDay selectedWakeTime = TimeOfDay.now();
-  int selectedTimerMinutes = 30; // Standardwert
+  int selectedTimerMinutes = 30;
+  bool servicesDiscovered = false; // Sicherstellen, dass Dienste gefunden wurden
 
   @override
   void initState() {
@@ -119,7 +119,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     discoverServices();
   }
 
-  void discoverServices() async {
+  Future<void> discoverServices() async {
     List<BluetoothService> services = await widget.device.discoverServices();
     for (var service in services) {
       for (var characteristic in service.characteristics) {
@@ -131,9 +131,17 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         }
       }
     }
+    setState(() {
+      servicesDiscovered = true; // Markiere Dienste als geladen
+    });
   }
 
   void sendWakeTimeToESP() async {
+    if (!servicesDiscovered) {
+      debugPrint("Dienste wurden noch nicht geladen. Bitte warten!");
+      return;
+    }
+
     if (alarmCharacteristic != null && isConnected) {
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
       String wakeTime = "${selectedWakeTime.hour}:${selectedWakeTime.minute}";
@@ -141,19 +149,24 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       String combinedData = "$currentTime|$wakeTime";
 
       await alarmCharacteristic!.write(utf8.encode(combinedData));
-      debugPrint("Weckzeit und aktuelle Uhrzeit gesendet: $combinedData");
+      debugPrint("✅ Weckzeit gesendet: $combinedData");
     } else {
-      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
+      debugPrint("⚠️ Keine Verbindung oder Weckzeit-Charakteristik nicht gefunden.");
     }
   }
 
   void sendTimerToESP() async {
+    if (!servicesDiscovered) {
+      debugPrint("Dienste wurden noch nicht geladen. Bitte warten!");
+      return;
+    }
+
     if (timerCharacteristic != null && isConnected) {
       String timerValue = selectedTimerMinutes.toString();
       await timerCharacteristic!.write(utf8.encode(timerValue));
-      debugPrint("Timer gesendet: $timerValue Minuten");
+      debugPrint("✅ Timer gesendet: $timerValue Minuten");
     } else {
-      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
+      debugPrint("⚠️ Keine Verbindung oder Timer-Charakteristik nicht gefunden.");
     }
   }
 
@@ -164,7 +177,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
 
     if (mounted) {
-      Navigator.pop(context); // Zurück zur Geräteliste
+      Navigator.pop(context);
     }
   }
 
