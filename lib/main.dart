@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BLE Weckzeit & Timer',
+      title: 'BLE Weckzeit',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -31,6 +31,8 @@ class BLEHomePage extends StatefulWidget {
 
 class _BLEHomePageState extends State<BLEHomePage> {
   final List<BluetoothDevice> devices = [];
+  BluetoothDevice? selectedDevice;
+  bool isConnected = false;
 
   @override
   void initState() {
@@ -58,23 +60,25 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   void connectToDevice(BluetoothDevice device) async {
     await device.connect();
-    debugPrint("Gerät verbunden: ${device.platformName}");
-    
-    // Neue Seite mit den Steuerungsmöglichkeiten öffnen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DeviceControlPage(device: device),
-      ),
-    );
+    if (mounted) {
+      setState(() {
+        selectedDevice = device;
+        isConnected = true;
+      });
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DeviceControlPage(device: device),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('BLE Geräte'),
-      ),
+      appBar: AppBar(title: const Text('BLE Geräte')),
       body: ListView.builder(
         itemCount: devices.length,
         itemBuilder: (context, index) {
@@ -82,7 +86,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
           return ListTile(
             title: Text(device.platformName),
             subtitle: Text(device.remoteId.toString()),
-            onTap: () => connectToDevice(device),
+            onTap: () {
+              connectToDevice(device);
+            },
           );
         },
       ),
@@ -92,17 +98,17 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
+
   const DeviceControlPage({super.key, required this.device});
 
   @override
-  State<DeviceControlPage> createState() => _DeviceControlPageState();
+  _DeviceControlPageState createState() => _DeviceControlPageState();
 }
 
 class _DeviceControlPageState extends State<DeviceControlPage> {
   BluetoothCharacteristic? alarmCharacteristic;
-  BluetoothCharacteristic? timerCharacteristic;
+  bool isConnected = true;
   TimeOfDay selectedWakeTime = TimeOfDay.now();
-  int selectedTimerMinutes = 30;
 
   @override
   void initState() {
@@ -118,37 +124,30 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           alarmCharacteristic = characteristic;
           debugPrint("Weckzeit-Charakteristik gefunden!");
         }
-        if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
-          timerCharacteristic = characteristic;
-          debugPrint("Timer-Charakteristik gefunden!");
-        }
       }
     }
   }
 
   void sendWakeTimeToESP() async {
-    if (alarmCharacteristic != null) {
+    if (alarmCharacteristic != null && isConnected) {
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
       String wakeTime = "${selectedWakeTime.hour}:${selectedWakeTime.minute}";
       String combinedData = "$currentTime|$wakeTime";
 
       await alarmCharacteristic!.write(utf8.encode(combinedData));
-      debugPrint("Weckzeit gesendet: $combinedData");
-    }
-  }
-
-  void sendTimerToESP() async {
-    if (timerCharacteristic != null) {
-      String timerValue = selectedTimerMinutes.toString();
-      await timerCharacteristic!.write(utf8.encode(timerValue));
-      debugPrint("Timer gesendet: $timerValue Minuten");
+      debugPrint("Weckzeit und aktuelle Uhrzeit gesendet: $combinedData");
+    } else {
+      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
     }
   }
 
   void disconnectFromDevice() async {
-    await widget.device.disconnect();
-    debugPrint("Verbindung getrennt.");
-    Navigator.pop(context); // Zurück zur Geräteliste gehen
+    if (widget.device != null) {
+      await widget.device.disconnect();
+      if (mounted) {
+        Navigator.pop(context); // Zurück zur Geräteliste
+      }
+    }
   }
 
   Future<void> selectWakeTime(BuildContext context) async {
@@ -156,46 +155,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       context: context,
       initialTime: selectedWakeTime,
     );
-    if (picked != null) {
+    if (picked != null && picked != selectedWakeTime) {
       setState(() {
         selectedWakeTime = picked;
-      });
-    }
-  }
-
-  Future<void> selectTimer(BuildContext context) async {
-    int? minutes = await showDialog<int>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Timer einstellen"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("Dauer in Minuten:"),
-              TextField(
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  selectedTimerMinutes = int.tryParse(value) ?? 30;
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop(selectedTimerMinutes);
-              },
-            ),
-          ],
-        );
-      },
-    );
-
-    if (minutes != null) {
-      setState(() {
-        selectedTimerMinutes = minutes;
       });
     }
   }
@@ -203,10 +165,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.device.platformName),
-      ),
+      appBar: AppBar(title: const Text('ESP32 Schlafmaske')),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           ElevatedButton(
             onPressed: () => selectWakeTime(context),
@@ -215,14 +176,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           ElevatedButton(
             onPressed: sendWakeTimeToESP,
             child: const Text("Weckzeit senden"),
-          ),
-          ElevatedButton(
-            onPressed: () => selectTimer(context),
-            child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
-          ),
-          ElevatedButton(
-            onPressed: sendTimerToESP,
-            child: const Text("Timer starten"),
           ),
           ElevatedButton(
             onPressed: disconnectFromDevice,
