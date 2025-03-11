@@ -60,37 +60,44 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   void connectToDevice(BluetoothDevice device) async {
     await device.connect();
-    if (mounted) {
-      setState(() {
-        selectedDevice = device;
-        isConnected = true;
-      });
+    setState(() {
+      selectedDevice = device;
+      isConnected = true;
+    });
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceControlPage(device: device),
-        ),
-      );
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DeviceControlPage(device: selectedDevice!),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('BLE Geräte')),
-      body: ListView.builder(
-        itemCount: devices.length,
-        itemBuilder: (context, index) {
-          final device = devices[index];
-          return ListTile(
-            title: Text(device.platformName),
-            subtitle: Text(device.remoteId.toString()),
-            onTap: () {
-              connectToDevice(device);
-            },
-          );
-        },
+      appBar: AppBar(
+        title: const Text('BLE Geräte'),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: devices.length,
+              itemBuilder: (context, index) {
+                final device = devices[index];
+                return ListTile(
+                  title: Text(device.platformName),
+                  subtitle: Text(device.remoteId.toString()),
+                  onTap: () {
+                    connectToDevice(device);
+                    debugPrint("Gerät ausgewählt: ${device.platformName}");
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -102,12 +109,11 @@ class DeviceControlPage extends StatefulWidget {
   const DeviceControlPage({super.key, required this.device});
 
   @override
-  _DeviceControlPageState createState() => _DeviceControlPageState();
+  State<DeviceControlPage> createState() => _DeviceControlPageState();
 }
 
 class _DeviceControlPageState extends State<DeviceControlPage> {
   BluetoothCharacteristic? alarmCharacteristic;
-  bool isConnected = true;
   TimeOfDay selectedWakeTime = TimeOfDay.now();
 
   @override
@@ -129,9 +135,13 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   void sendWakeTimeToESP() async {
-    if (alarmCharacteristic != null && isConnected) {
+    if (alarmCharacteristic != null) {
+      // Aktuelle Uhrzeit holen
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
+      // Weckzeit holen
       String wakeTime = "${selectedWakeTime.hour}:${selectedWakeTime.minute}";
+
+      // Format: "HH:MM|HH:MM" → "Aktuelle Zeit | Weckzeit"
       String combinedData = "$currentTime|$wakeTime";
 
       await alarmCharacteristic!.write(utf8.encode(combinedData));
@@ -142,12 +152,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   void disconnectFromDevice() async {
-    if (widget.device != null) {
-      await widget.device.disconnect();
-      if (mounted) {
-        Navigator.pop(context); // Zurück zur Geräteliste
-      }
-    }
+    await widget.device.disconnect();
+    Navigator.pop(context); // Zurück zur Geräteliste
   }
 
   Future<void> selectWakeTime(BuildContext context) async {
@@ -165,7 +171,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ESP32 Schlafmaske')),
+      appBar: AppBar(
+        title: Text(widget.device.platformName),
+      ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
