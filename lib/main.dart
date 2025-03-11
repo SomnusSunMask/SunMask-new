@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BLE Weckzeit',
+      title: 'BLE Weckzeit & Timer',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -33,8 +33,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
   final List<BluetoothDevice> devices = [];
   BluetoothDevice? selectedDevice;
   BluetoothCharacteristic? alarmCharacteristic;
+  BluetoothCharacteristic? timerCharacteristic;
   bool isConnected = false;
-  TimeOfDay selectedWakeTime = TimeOfDay.now(); // Standardwert
+  TimeOfDay selectedWakeTime = TimeOfDay.now();
+  int selectedTimerMinutes = 30; // Standardwert
 
   @override
   void initState() {
@@ -72,7 +74,11 @@ class _BLEHomePageState extends State<BLEHomePage> {
       for (var characteristic in service.characteristics) {
         if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
           alarmCharacteristic = characteristic;
-          debugPrint("✅ Weckzeit-Charakteristik gefunden!");
+          debugPrint("Weckzeit-Charakteristik gefunden!");
+        }
+        if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+          timerCharacteristic = characteristic;
+          debugPrint("Timer-Charakteristik gefunden!");
         }
       }
     }
@@ -88,16 +94,20 @@ class _BLEHomePageState extends State<BLEHomePage> {
       // Format: "HH:MM|HH:MM" → "Aktuelle Zeit | Weckzeit"
       String combinedData = "$currentTime|$wakeTime";
 
-      debugPrint("📤 Sende an ESP32: $combinedData");
-
-      try {
-        await alarmCharacteristic!.write(utf8.encode(combinedData));
-        debugPrint("✅ Weckzeit erfolgreich gesendet!");
-      } catch (e) {
-        debugPrint("❌ Fehler beim Senden der Weckzeit: $e");
-      }
+      await alarmCharacteristic!.write(utf8.encode(combinedData));
+      debugPrint("Weckzeit und aktuelle Uhrzeit gesendet: $combinedData");
     } else {
-      debugPrint("⚠️ Keine Verbindung oder Charakteristik nicht gefunden.");
+      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
+    }
+  }
+
+  void sendTimerToESP() async {
+    if (timerCharacteristic != null && isConnected) {
+      String timerValue = selectedTimerMinutes.toString();
+      await timerCharacteristic!.write(utf8.encode(timerValue));
+      debugPrint("Direkter Timer gesendet: $timerValue Minuten");
+    } else {
+      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
     }
   }
 
@@ -108,7 +118,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
         selectedDevice = null;
         isConnected = false;
       });
-      debugPrint("❌ Verbindung getrennt.");
+      debugPrint("Verbindung getrennt.");
     }
   }
 
@@ -120,6 +130,43 @@ class _BLEHomePageState extends State<BLEHomePage> {
     if (picked != null && picked != selectedWakeTime) {
       setState(() {
         selectedWakeTime = picked;
+      });
+    }
+  }
+
+  Future<void> selectTimer(BuildContext context) async {
+    int? minutes = await showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Timer einstellen"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Dauer in Minuten:"),
+              TextField(
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  selectedTimerMinutes = int.tryParse(value) ?? 30;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop(selectedTimerMinutes);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (minutes != null) {
+      setState(() {
+        selectedTimerMinutes = minutes;
       });
     }
   }
@@ -142,13 +189,13 @@ class _BLEHomePageState extends State<BLEHomePage> {
                   subtitle: Text(device.remoteId.toString()),
                   onTap: () {
                     connectToDevice(device);
-                    debugPrint("🔗 Gerät ausgewählt: ${device.platformName}");
+                    debugPrint("Gerät ausgewählt: ${device.platformName}");
                   },
                 );
               },
             ),
           ),
-          if (isConnected)
+          if (isConnected) // Buttons nur anzeigen, wenn verbunden
             Column(
               children: [
                 ElevatedButton(
@@ -158,6 +205,14 @@ class _BLEHomePageState extends State<BLEHomePage> {
                 ElevatedButton(
                   onPressed: sendWakeTimeToESP,
                   child: const Text("Weckzeit senden"),
+                ),
+                ElevatedButton(
+                  onPressed: () => selectTimer(context),
+                  child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
+                ),
+                ElevatedButton(
+                  onPressed: sendTimerToESP,
+                  child: const Text("Timer starten"),
                 ),
                 ElevatedButton(
                   onPressed: disconnectFromDevice,
