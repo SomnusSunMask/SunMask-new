@@ -44,6 +44,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
+      if (!mounted) return;
       setState(() {
         devices.clear();
         for (var result in results) {
@@ -60,6 +61,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   void connectToDevice(BluetoothDevice device) async {
     await device.connect();
+    if (!mounted) return;
+
     setState(() {
       selectedDevice = device;
       isConnected = true;
@@ -124,6 +127,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   void discoverServices() async {
     List<BluetoothService> services = await widget.device.discoverServices();
+    if (!mounted) return;
+
     for (var service in services) {
       for (var characteristic in service.characteristics) {
         if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
@@ -153,6 +158,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   void disconnectFromDevice() async {
     await widget.device.disconnect();
+    if (!mounted) return;
     Navigator.pop(context); // Zurück zur Geräteliste
   }
 
@@ -161,7 +167,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       context: context,
       initialTime: selectedWakeTime,
     );
-    if (picked != null && picked != selectedWakeTime) {
+    if (picked != null && picked != selectedWakeTime && mounted) {
       setState(() {
         selectedWakeTime = picked;
       });
