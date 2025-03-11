@@ -132,6 +132,55 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   int selectedTimerMinutes = 30;
   bool isConnected = true;
 
+  Future<void> selectWakeTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedWakeTime,
+    );
+    if (picked != null && picked != selectedWakeTime) {
+      setState(() {
+        selectedWakeTime = picked;
+      });
+    }
+  }
+
+  Future<void> selectTimer(BuildContext context) async {
+    int? minutes = await showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Timer einstellen"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Dauer in Minuten:"),
+              TextField(
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  selectedTimerMinutes = int.tryParse(value) ?? 30;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop(selectedTimerMinutes);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (minutes != null) {
+      setState(() {
+        selectedTimerMinutes = minutes;
+      });
+    }
+  }
+
   void sendWakeTimeToESP() async {
     if (widget.alarmCharacteristic != null) {
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
@@ -176,8 +225,16 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       body: Column(
         children: [
           ElevatedButton(
+            onPressed: () => selectWakeTime(context),
+            child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
+          ),
+          ElevatedButton(
             onPressed: sendWakeTimeToESP,
             child: const Text("Weckzeit senden"),
+          ),
+          ElevatedButton(
+            onPressed: () => selectTimer(context),
+            child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
           ),
           ElevatedButton(
             onPressed: sendTimerToESP,
