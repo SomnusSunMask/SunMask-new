@@ -34,7 +34,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
   BluetoothDevice? selectedDevice;
   BluetoothCharacteristic? alarmCharacteristic;
   bool isConnected = false;
-  TimeOfDay selectedWakeTime = TimeOfDay.now();
+  TimeOfDay selectedWakeTime = TimeOfDay.now(); // Standardwert
 
   @override
   void initState() {
@@ -70,7 +70,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     List<BluetoothService> services = await device.discoverServices();
     for (var service in services) {
       for (var characteristic in service.characteristics) {
-        if (characteristic.uuid.toString() == "abcdef02-1234-5678-1234-56789abcdef0") {
+        if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
           alarmCharacteristic = characteristic;
           debugPrint("Weckzeit-Charakteristik gefunden!");
         }
@@ -106,6 +106,18 @@ class _BLEHomePageState extends State<BLEHomePage> {
     }
   }
 
+  Future<void> selectWakeTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedWakeTime,
+    );
+    if (picked != null && picked != selectedWakeTime) {
+      setState(() {
+        selectedWakeTime = picked;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,9 +142,13 @@ class _BLEHomePageState extends State<BLEHomePage> {
               },
             ),
           ),
-          if (isConnected)
+          if (isConnected) // Buttons nur anzeigen, wenn verbunden
             Column(
               children: [
+                ElevatedButton(
+                  onPressed: () => selectWakeTime(context),
+                  child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
+                ),
                 ElevatedButton(
                   onPressed: sendWakeTimeToESP,
                   child: const Text("Weckzeit senden"),
