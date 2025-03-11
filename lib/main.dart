@@ -13,8 +13,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BLE Schlafmaske',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      title: 'BLE Weckzeit',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
       home: const BLEHomePage(),
     );
   }
@@ -30,7 +32,6 @@ class BLEHomePage extends StatefulWidget {
 class _BLEHomePageState extends State<BLEHomePage> {
   final List<BluetoothDevice> devices = [];
   BluetoothDevice? selectedDevice;
-  bool isConnected = false;
 
   @override
   void initState() {
@@ -56,47 +57,29 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.stopScan();
   }
 
-  void connectToDevice(BluetoothDevice device) async {
+  void connectToDevice(BluetoothDevice device, BuildContext context) async {
     await device.connect();
     setState(() {
       selectedDevice = device;
-      isConnected = true;
     });
 
-    List<BluetoothService> services = await device.discoverServices();
-    BluetoothCharacteristic? alarmCharacteristic;
-    BluetoothCharacteristic? timerCharacteristic;
-
-    for (var service in services) {
-      for (var characteristic in service.characteristics) {
-        if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
-          alarmCharacteristic = characteristic;
-          debugPrint("✅ Weckzeit-Charakteristik gefunden!");
-        }
-        if (characteristic.uuid.toString() == "abcdef02-1234-5678-1234-56789abcdef0") {
-          timerCharacteristic = characteristic;
-          debugPrint("✅ Timer-Charakteristik gefunden!");
-        }
-      }
-    }
-
-    // Navigiere zur Steuerungsseite mit BLE-Charakteristiken
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DeviceControlPage(
-          device: selectedDevice!,
-          alarmCharacteristic: alarmCharacteristic,
-          timerCharacteristic: timerCharacteristic,
+    // Navigiere zur neuen Seite, um Weckzeit/Timer einzustellen
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DeviceControlPage(device: device),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('BLE Geräte')),
+      appBar: AppBar(
+        title: const Text('BLE Geräte'),
+      ),
       body: ListView.builder(
         itemCount: devices.length,
         itemBuilder: (context, index) {
@@ -105,8 +88,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
             title: Text(device.platformName),
             subtitle: Text(device.remoteId.toString()),
             onTap: () {
-              connectToDevice(device);
-              debugPrint("📡 Gerät ausgewählt: ${device.platformName}");
+              connectToDevice(device, context);
             },
           );
         },
@@ -115,57 +97,75 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 }
 
-// ----------------------------------------
-// 🟢 Geräte-Steuerungsseite (Neue Seite nach Verbindung)
-// ----------------------------------------
-
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
-  final BluetoothCharacteristic? alarmCharacteristic;
-  final BluetoothCharacteristic? timerCharacteristic;
 
-  const DeviceControlPage({
-    required this.device,
-    this.alarmCharacteristic,
-    this.timerCharacteristic,
-    Key? key,
-  }) : super(key: key);
+  const DeviceControlPage({super.key, required this.device});
 
   @override
   State<DeviceControlPage> createState() => _DeviceControlPageState();
 }
 
 class _DeviceControlPageState extends State<DeviceControlPage> {
+  BluetoothCharacteristic? alarmCharacteristic;
+  BluetoothCharacteristic? timerCharacteristic;
+  bool isConnected = true;
   TimeOfDay selectedWakeTime = TimeOfDay.now();
-  int selectedTimerMinutes = 30;
+  int selectedTimerMinutes = 30; // Standardwert
+
+  @override
+  void initState() {
+    super.initState();
+    discoverServices();
+  }
+
+  void discoverServices() async {
+    List<BluetoothService> services = await widget.device.discoverServices();
+    for (var service in services) {
+      for (var characteristic in service.characteristics) {
+        if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+          alarmCharacteristic = characteristic;
+        }
+        if (characteristic.uuid.toString() == "abcdef02-1234-5678-1234-56789abcdef0") {
+          timerCharacteristic = characteristic;
+        }
+      }
+    }
+  }
 
   void sendWakeTimeToESP() async {
-    if (widget.alarmCharacteristic != null) {
+    if (alarmCharacteristic != null && isConnected) {
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
       String wakeTime = "${selectedWakeTime.hour}:${selectedWakeTime.minute}";
+
       String combinedData = "$currentTime|$wakeTime";
 
-      await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
-      debugPrint("✅ Weckzeit & aktuelle Uhrzeit gesendet: $combinedData");
+      await alarmCharacteristic!.write(utf8.encode(combinedData));
+      debugPrint("Weckzeit und aktuelle Uhrzeit gesendet: $combinedData");
     } else {
-      debugPrint("❌ Fehler: Keine gültige Weckzeit-Charakteristik!");
+      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
     }
   }
 
   void sendTimerToESP() async {
-    if (widget.timerCharacteristic != null) {
+    if (timerCharacteristic != null && isConnected) {
       String timerValue = selectedTimerMinutes.toString();
-      await widget.timerCharacteristic!.write(utf8.encode(timerValue));
-      debugPrint("✅ Timer gesendet: $timerValue Minuten");
+      await timerCharacteristic!.write(utf8.encode(timerValue));
+      debugPrint("Timer gesendet: $timerValue Minuten");
     } else {
-      debugPrint("❌ Fehler: Keine gültige Timer-Charakteristik vorhanden!");
+      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
     }
   }
 
   void disconnectFromDevice() async {
     await widget.device.disconnect();
-    Navigator.pop(context);
-    debugPrint("🔌 Verbindung getrennt.");
+    setState(() {
+      isConnected = false;
+    });
+
+    if (mounted) {
+      Navigator.pop(context); // Zurück zur Geräteliste
+    }
   }
 
   Future<void> selectWakeTime(BuildContext context) async {
@@ -173,7 +173,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       context: context,
       initialTime: selectedWakeTime,
     );
-    if (picked != null) {
+    if (picked != null && picked != selectedWakeTime) {
       setState(() {
         selectedWakeTime = picked;
       });
@@ -186,11 +186,17 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Timer einstellen"),
-          content: TextField(
-            keyboardType: TextInputType.number,
-            onChanged: (value) {
-              selectedTimerMinutes = int.tryParse(value) ?? 30;
-            },
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Dauer in Minuten:"),
+              TextField(
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  selectedTimerMinutes = int.tryParse(value) ?? 30;
+                },
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -214,7 +220,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.device.platformName)),
+      appBar: AppBar(
+        title: const Text('Gerät verbunden'),
+      ),
       body: Column(
         children: [
           ElevatedButton(
