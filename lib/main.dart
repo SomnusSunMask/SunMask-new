@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BLE Weckzeit',
+      title: 'BLE Weckzeit & Timer',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -117,7 +117,9 @@ class DeviceControlPage extends StatefulWidget {
 
 class _DeviceControlPageState extends State<DeviceControlPage> {
   BluetoothCharacteristic? alarmCharacteristic;
+  BluetoothCharacteristic? timerCharacteristic;
   TimeOfDay selectedWakeTime = TimeOfDay.now();
+  int selectedTimerMinutes = 30; // Standardwert
 
   @override
   void initState() {
@@ -135,18 +137,19 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           alarmCharacteristic = characteristic;
           debugPrint("Weckzeit-Charakteristik gefunden!");
         }
+        if (characteristic.uuid.toString() == "abcdef02-1234-5678-1234-56789abcdef0") {
+          timerCharacteristic = characteristic;
+          debugPrint("Timer-Charakteristik gefunden!");
+        }
       }
     }
   }
 
   void sendWakeTimeToESP() async {
     if (alarmCharacteristic != null) {
-      // Aktuelle Uhrzeit holen
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
-      // Weckzeit holen
       String wakeTime = "${selectedWakeTime.hour}:${selectedWakeTime.minute}";
 
-      // Format: "HH:MM|HH:MM" → "Aktuelle Zeit | Weckzeit"
       String combinedData = "$currentTime|$wakeTime";
 
       await alarmCharacteristic!.write(utf8.encode(combinedData));
@@ -156,10 +159,20 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
+  void sendTimerToESP() async {
+    if (timerCharacteristic != null) {
+      String timerValue = selectedTimerMinutes.toString();
+      await timerCharacteristic!.write(utf8.encode(timerValue));
+      debugPrint("Timer gesendet: $timerValue Minuten");
+    } else {
+      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
+    }
+  }
+
   void disconnectFromDevice() async {
     await widget.device.disconnect();
     if (!mounted) return;
-    Navigator.pop(context); // Zurück zur Geräteliste
+    Navigator.pop(context);
   }
 
   Future<void> selectWakeTime(BuildContext context) async {
@@ -170,6 +183,43 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     if (picked != null && picked != selectedWakeTime && mounted) {
       setState(() {
         selectedWakeTime = picked;
+      });
+    }
+  }
+
+  Future<void> selectTimer(BuildContext context) async {
+    int? minutes = await showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Timer einstellen"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Dauer in Minuten:"),
+              TextField(
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  selectedTimerMinutes = int.tryParse(value) ?? 30;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop(selectedTimerMinutes);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (minutes != null) {
+      setState(() {
+        selectedTimerMinutes = minutes;
       });
     }
   }
@@ -190,6 +240,14 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           ElevatedButton(
             onPressed: sendWakeTimeToESP,
             child: const Text("Weckzeit senden"),
+          ),
+          ElevatedButton(
+            onPressed: () => selectTimer(context),
+            child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
+          ),
+          ElevatedButton(
+            onPressed: sendTimerToESP,
+            child: const Text("Timer starten"),
           ),
           ElevatedButton(
             onPressed: disconnectFromDevice,
