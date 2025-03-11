@@ -72,7 +72,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       for (var characteristic in service.characteristics) {
         if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
           alarmCharacteristic = characteristic;
-          debugPrint("Weckzeit-Charakteristik gefunden!");
+          debugPrint("✅ Weckzeit-Charakteristik gefunden!");
         }
       }
     }
@@ -88,10 +88,16 @@ class _BLEHomePageState extends State<BLEHomePage> {
       // Format: "HH:MM|HH:MM" → "Aktuelle Zeit | Weckzeit"
       String combinedData = "$currentTime|$wakeTime";
 
-      await alarmCharacteristic!.write(utf8.encode(combinedData));
-      debugPrint("Weckzeit und aktuelle Uhrzeit gesendet: $combinedData");
+      debugPrint("📤 Sende an ESP32: $combinedData");
+
+      try {
+        await alarmCharacteristic!.write(utf8.encode(combinedData));
+        debugPrint("✅ Weckzeit erfolgreich gesendet!");
+      } catch (e) {
+        debugPrint("❌ Fehler beim Senden der Weckzeit: $e");
+      }
     } else {
-      debugPrint("Keine Verbindung oder Charakteristik nicht gefunden.");
+      debugPrint("⚠️ Keine Verbindung oder Charakteristik nicht gefunden.");
     }
   }
 
@@ -102,7 +108,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
         selectedDevice = null;
         isConnected = false;
       });
-      debugPrint("Verbindung getrennt.");
+      debugPrint("❌ Verbindung getrennt.");
     }
   }
 
@@ -136,13 +142,13 @@ class _BLEHomePageState extends State<BLEHomePage> {
                   subtitle: Text(device.remoteId.toString()),
                   onTap: () {
                     connectToDevice(device);
-                    debugPrint("Gerät ausgewählt: ${device.platformName}");
+                    debugPrint("🔗 Gerät ausgewählt: ${device.platformName}");
                   },
                 );
               },
             ),
           ),
-          if (isConnected) // Buttons nur anzeigen, wenn verbunden
+          if (isConnected)
             Column(
               children: [
                 ElevatedButton(
