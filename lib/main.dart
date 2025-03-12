@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BLE Weckzeit & Timer',
+      title: 'SunMask', // Neuer App-Name
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -46,7 +46,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
       setState(() {
         devices.clear();
         for (var result in results) {
-          if (!devices.contains(result.device)) {
+          // **Nur Geräte mit Name "ESP32_Schlafmaske" oder "SunMask" anzeigen**
+          if ((result.device.platformName == "ESP32_Schlafmaske" || result.device.platformName == "SunMask") &&
+              !devices.contains(result.device)) {
             devices.add(result.device);
           }
         }
@@ -92,7 +94,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BLE Geräte'),
+        title: const Text('SunMask Geräte'), // Geänderter Titel
       ),
       body: ListView.builder(
         itemCount: devices.length,
@@ -131,7 +133,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay selectedWakeTime = TimeOfDay.now();
   int selectedTimerMinutes = 30;
   bool isConnected = true;
-  double buttonWidth = double.infinity; // Einheitliche Button-Größe
 
   Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -154,7 +155,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Dauer in Minuten:", style: TextStyle(fontSize: 18)),
+              const Text("Dauer in Minuten:"),
               TextField(
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
@@ -165,7 +166,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           ),
           actions: [
             TextButton(
-              child: const Text("OK", style: TextStyle(fontSize: 18)),
+              child: const Text("OK"),
               onPressed: () {
                 Navigator.of(context).pop(selectedTimerMinutes);
               },
@@ -224,62 +225,38 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         title: const Text('Gerät verbunden'),
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Column(
-            children: [
-              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectWakeTime(context),
-                  child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendWakeTimeToESP,
-                  child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
+          const Text(
+            "Weckzeit",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}"),
+          ElevatedButton(
+            onPressed: () => selectWakeTime(context),
+            child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
+          ),
+          ElevatedButton(
+            onPressed: sendWakeTimeToESP,
+            child: const Text("Weckzeit senden"),
           ),
           const SizedBox(height: 20),
-          Column(
-            children: [
-              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Letzter Timer: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectTimer(context),
-                  child: Text("Timer einstellen: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendTimerToESP,
-                  child: const Text("Timer starten", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
+          const Text(
+            "Timer",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          Text("Letzter Timer: $selectedTimerMinutes Minuten"),
+          ElevatedButton(
+            onPressed: () => selectTimer(context),
+            child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
+          ),
+          ElevatedButton(
+            onPressed: sendTimerToESP,
+            child: const Text("Timer starten"),
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            width: buttonWidth,
-            child: ElevatedButton(
-              onPressed: disconnectFromDevice,
-              child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
-            ),
+          ElevatedButton(
+            onPressed: disconnectFromDevice,
+            child: const Text("Verbindung trennen"),
           ),
         ],
       ),
