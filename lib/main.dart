@@ -132,7 +132,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay selectedWakeTime = TimeOfDay.now();
   int selectedTimerMinutes = 30;
   bool isConnected = true;
-  double buttonWidth = double.infinity; // Einheitliche Button-Größe
+  double buttonWidth = 250; // Einheitliche Button-Größe
 
   Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -224,46 +224,67 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       appBar: AppBar(
         title: const Text('Gerät verbunden'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Column(
-            children: [
-              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () => selectWakeTime(context),
-                child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Column(
+              children: [
+                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 20)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: buttonWidth,
+                  child: ElevatedButton(
+                    onPressed: () => selectWakeTime(context),
+                    child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: buttonWidth,
+                  child: ElevatedButton(
+                    onPressed: sendWakeTimeToESP,
+                    child: const Text("Weckzeit senden"),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Column(
+              children: [
+                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Letzter Timer: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 20)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: buttonWidth,
+                  child: ElevatedButton(
+                    onPressed: () => selectTimer(context),
+                    child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: buttonWidth,
+                  child: ElevatedButton(
+                    onPressed: sendTimerToESP,
+                    child: const Text("Timer starten"),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: disconnectFromDevice,
+                child: const Text("Verbindung trennen"),
               ),
-              ElevatedButton(
-                onPressed: sendWakeTimeToESP,
-                child: const Text("Weckzeit senden"),
-              ),
-            ],
-          ),
-          Column(
-            children: [
-              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Letzter Timer: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () => selectTimer(context),
-                child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
-              ),
-              ElevatedButton(
-                onPressed: sendTimerToESP,
-                child: const Text("Timer starten"),
-              ),
-            ],
-          ),
-          ElevatedButton(
-            onPressed: disconnectFromDevice,
-            child: const Text("Verbindung trennen"),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
