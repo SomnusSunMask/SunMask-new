@@ -16,7 +16,7 @@
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
 
     <application
-        android:label="flutter_ble2"
+        android:label="SunMask"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
