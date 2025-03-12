@@ -155,7 +155,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Dauer in Minuten:", style: TextStyle(fontSize: 18)),
+              const Text("Dauer in Minuten:", style: TextStyle(fontSize: 20)),
               TextField(
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
@@ -166,7 +166,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           ),
           actions: [
             TextButton(
-              child: const Text("OK", style: TextStyle(fontSize: 18)),
+              child: const Text("OK", style: TextStyle(fontSize: 20)),
               onPressed: () {
                 Navigator.of(context).pop(selectedTimerMinutes);
               },
@@ -230,15 +230,15 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           children: [
             Column(
               children: [
-                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const Text("Weckzeit", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 20)),
+                Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 22)),
                 const SizedBox(height: 8),
                 SizedBox(
                   width: buttonWidth,
                   child: ElevatedButton(
                     onPressed: () => selectWakeTime(context),
-                    child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
+                    child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 22)),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -246,23 +246,23 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                   width: buttonWidth,
                   child: ElevatedButton(
                     onPressed: sendWakeTimeToESP,
-                    child: const Text("Weckzeit senden"),
+                    child: const Text("Weckzeit senden", style: TextStyle(fontSize: 22)),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             Column(
               children: [
-                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const Text("Timer", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                Text("Letzter Timer: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 20)),
+                Text("Letzter Timer: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 22)),
                 const SizedBox(height: 8),
                 SizedBox(
                   width: buttonWidth,
                   child: ElevatedButton(
                     onPressed: () => selectTimer(context),
-                    child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
+                    child: Text("Timer einstellen: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 22)),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -270,17 +270,17 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                   width: buttonWidth,
                   child: ElevatedButton(
                     onPressed: sendTimerToESP,
-                    child: const Text("Timer starten"),
+                    child: const Text("Timer starten", style: TextStyle(fontSize: 22)),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 50), // Mehr Abstand nach unten
             SizedBox(
               width: buttonWidth,
               child: ElevatedButton(
                 onPressed: disconnectFromDevice,
-                child: const Text("Verbindung trennen"),
+                child: const Text("Verbindung trennen", style: TextStyle(fontSize: 22)),
               ),
             ),
           ],
