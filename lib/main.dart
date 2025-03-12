@@ -131,6 +131,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay selectedWakeTime = TimeOfDay.now();
   int selectedTimerMinutes = 30;
   bool isConnected = true;
+  double buttonWidth = double.infinity; // Einheitliche Button-Größe
 
   Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -223,42 +224,62 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         title: const Text('Gerät verbunden'),
       ),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Weckzeit-Block
-          const SizedBox(height: 10),
-          const Text("Weckzeit", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}", textAlign: TextAlign.center),
-          ElevatedButton(
-            onPressed: () => selectWakeTime(context),
-            child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
+          Column(
+            children: [
+              const Text("Weckzeit", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}"),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: () => selectWakeTime(context),
+                  child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
+                ),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: sendWakeTimeToESP,
+                  child: const Text("Weckzeit senden"),
+                ),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: sendWakeTimeToESP,
-            child: const Text("Weckzeit senden"),
+          const SizedBox(height: 16), // Lücke zwischen den Blöcken
+          Column(
+            children: [
+              const Text("Timer", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text("Letzter Timer: $selectedTimerMinutes Minuten"),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: () => selectTimer(context),
+                  child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
+                ),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: sendTimerToESP,
+                  child: const Text("Timer starten"),
+                ),
+              ),
+            ],
           ),
-
-          // Abstand zwischen den Blöcken
-          const SizedBox(height: 30),
-
-          // Timer-Block
-          const Text("Timer", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Text("Letzter Timer: $selectedTimerMinutes Minuten", textAlign: TextAlign.center),
-          ElevatedButton(
-            onPressed: () => selectTimer(context),
-            child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
-          ),
-          ElevatedButton(
-            onPressed: sendTimerToESP,
-            child: const Text("Timer starten"),
-          ),
-
-          // Verbindung trennen
-          const SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: disconnectFromDevice,
-            child: const Text("Verbindung trennen"),
+          const SizedBox(height: 16), // Lücke für untere Mitte
+          SizedBox(
+            width: buttonWidth,
+            child: ElevatedButton(
+              onPressed: disconnectFromDevice,
+              child: const Text("Verbindung trennen"),
+            ),
           ),
         ],
       ),
