@@ -133,6 +133,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   int selectedTimerMinutes = 30;
   bool isConnected = true;
   double buttonWidth = 280; // Einheitliche Button-Größe
+  double buttonFontSize = 18; // Verkleinerte Schrift für einzeilige Buttons
 
   Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -238,7 +239,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                   width: buttonWidth,
                   child: ElevatedButton(
                     onPressed: () => selectWakeTime(context),
-                    child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 20)),
+                    child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}", style: TextStyle(fontSize: buttonFontSize)),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -246,7 +247,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                   width: buttonWidth,
                   child: ElevatedButton(
                     onPressed: sendWakeTimeToESP,
-                    child: const Text("Weckzeit senden", style: TextStyle(fontSize: 20)),
+                    child: Text("Weckzeit senden", style: TextStyle(fontSize: buttonFontSize)),
                   ),
                 ),
               ],
@@ -262,7 +263,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                   width: buttonWidth,
                   child: ElevatedButton(
                     onPressed: () => selectTimer(context),
-                    child: Text("Timer einstellen: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 20)),
+                    child: Text("Timer einstellen: $selectedTimerMinutes Minuten", style: TextStyle(fontSize: buttonFontSize)),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -270,7 +271,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                   width: buttonWidth,
                   child: ElevatedButton(
                     onPressed: sendTimerToESP,
-                    child: const Text("Timer starten", style: TextStyle(fontSize: 20)),
+                    child: Text("Timer starten", style: TextStyle(fontSize: buttonFontSize)),
                   ),
                 ),
               ],
@@ -280,7 +281,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
               width: buttonWidth,
               child: ElevatedButton(
                 onPressed: disconnectFromDevice,
-                child: const Text("Verbindung trennen", style: TextStyle(fontSize: 20)),
+                child: Text("Verbindung trennen", style: TextStyle(fontSize: buttonFontSize)),
               ),
             ),
           ],
