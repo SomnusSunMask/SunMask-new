@@ -57,7 +57,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.stopScan();
   }
 
-  void connectToDevice(BluetoothDevice device) async {
+  void connectToDevice(BluetoothDevice device, BuildContext context) async {
     await device.connect();
     BluetoothCharacteristic? alarmCharacteristic;
     BluetoothCharacteristic? timerCharacteristic;
@@ -74,7 +74,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
     }
 
-    if (mounted) {
+    if (context.mounted) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -102,7 +102,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
             title: Text(device.platformName),
             subtitle: Text(device.remoteId.toString()),
             onTap: () {
-              connectToDevice(device);
+              connectToDevice(device, context);
             },
           );
         },
@@ -131,8 +131,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay selectedWakeTime = TimeOfDay.now();
   int selectedTimerMinutes = 30;
   bool isConnected = true;
-  String activeWakeTime = "Keine Weckzeit gesetzt";
-  String activeTimer = "Kein Timer gesetzt";
+  String lastTimerSent = "Kein Timer gesetzt";
+  String lastWakeTimeSent = "Keine Weckzeit gesetzt";
 
   Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -147,30 +147,28 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   Future<void> selectTimer(BuildContext context) async {
-    TextEditingController timerController = TextEditingController();
-
     int? minutes = await showDialog<int>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Timer einstellen"),
-          content: TextField(
-            controller: timerController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: "Dauer in Minuten"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Dauer in Minuten:"),
+              TextField(
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  selectedTimerMinutes = int.tryParse(value) ?? 30;
+                },
+              ),
+            ],
           ),
           actions: [
             TextButton(
-              child: const Text("Abbrechen"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
               child: const Text("OK"),
               onPressed: () {
-                int value = int.tryParse(timerController.text) ?? 30;
-                Navigator.of(context).pop(value);
+                Navigator.of(context).pop(selectedTimerMinutes);
               },
             ),
           ],
@@ -194,7 +192,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
       await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
       setState(() {
-        activeWakeTime = "Weckzeit: $wakeTime";
+        lastWakeTimeSent = "Letzte Weckzeit: $wakeTime";
       });
       debugPrint("✅ Weckzeit gesendet: $combinedData");
     } else {
@@ -207,7 +205,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       String timerValue = selectedTimerMinutes.toString();
       await widget.timerCharacteristic!.write(utf8.encode(timerValue));
       setState(() {
-        activeTimer = "Timer: $selectedTimerMinutes Minuten";
+        lastTimerSent = "Letzter Timer: $selectedTimerMinutes Minuten";
       });
       debugPrint("✅ Timer gesendet: $timerValue Minuten");
     } else {
@@ -219,8 +217,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     await widget.device.disconnect();
     setState(() {
       isConnected = false;
-      activeWakeTime = "Keine Weckzeit gesetzt";
-      activeTimer = "Kein Timer gesetzt";
     });
 
     if (mounted) {
@@ -236,33 +232,47 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       ),
       body: Column(
         children: [
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(lastTimerSent, style: const TextStyle(fontSize: 16)),
+                    ElevatedButton(
+                      onPressed: () => selectTimer(context),
+                      child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
+                    ),
+                    ElevatedButton(
+                      onPressed: sendTimerToESP,
+                      child: const Text("Timer starten"),
+                    ),
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(lastWakeTimeSent, style: const TextStyle(fontSize: 16)),
+                    ElevatedButton(
+                      onPressed: () => selectWakeTime(context),
+                      child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
+                    ),
+                    ElevatedButton(
+                      onPressed: sendWakeTimeToESP,
+                      child: const Text("Weckzeit senden"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(activeWakeTime, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-          ElevatedButton(
-            onPressed: () => selectWakeTime(context),
-            child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
-          ),
-          ElevatedButton(
-            onPressed: sendWakeTimeToESP,
-            child: const Text("Weckzeit senden"),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(activeTimer, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-          ElevatedButton(
-            onPressed: () => selectTimer(context),
-            child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
-          ),
-          ElevatedButton(
-            onPressed: sendTimerToESP,
-            child: const Text("Timer starten"),
-          ),
-          ElevatedButton(
-            onPressed: disconnectFromDevice,
-            child: const Text("Verbindung trennen"),
+            padding: const EdgeInsets.only(bottom: 20),
+            child: ElevatedButton(
+              onPressed: disconnectFromDevice,
+              child: const Text("Verbindung trennen"),
+            ),
           ),
         ],
       ),
