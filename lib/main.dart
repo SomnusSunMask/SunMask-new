@@ -224,49 +224,41 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text("Letzter Timer: $selectedTimerMinutes Minuten", textAlign: TextAlign.center),
-                      ElevatedButton(
-                        onPressed: () => selectTimer(context),
-                        child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
-                      ),
-                      ElevatedButton(
-                        onPressed: sendTimerToESP,
-                        child: const Text("Timer starten"),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}", textAlign: TextAlign.center),
-                      ElevatedButton(
-                        onPressed: () => selectWakeTime(context),
-                        child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
-                      ),
-                      ElevatedButton(
-                        onPressed: sendWakeTimeToESP,
-                        child: const Text("Weckzeit senden"),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          // Weckzeit-Block
+          const SizedBox(height: 10),
+          const Text("Weckzeit", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}", textAlign: TextAlign.center),
+          ElevatedButton(
+            onPressed: () => selectWakeTime(context),
+            child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}"),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: disconnectFromDevice,
-              child: const Text("Verbindung trennen"),
-            ),
+          ElevatedButton(
+            onPressed: sendWakeTimeToESP,
+            child: const Text("Weckzeit senden"),
+          ),
+
+          // Abstand zwischen den Blöcken
+          const SizedBox(height: 30),
+
+          // Timer-Block
+          const Text("Timer", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Text("Letzter Timer: $selectedTimerMinutes Minuten", textAlign: TextAlign.center),
+          ElevatedButton(
+            onPressed: () => selectTimer(context),
+            child: Text("Timer einstellen: $selectedTimerMinutes Minuten"),
+          ),
+          ElevatedButton(
+            onPressed: sendTimerToESP,
+            child: const Text("Timer starten"),
+          ),
+
+          // Verbindung trennen
+          const SizedBox(height: 30),
+          ElevatedButton(
+            onPressed: disconnectFromDevice,
+            child: const Text("Verbindung trennen"),
           ),
         ],
       ),
