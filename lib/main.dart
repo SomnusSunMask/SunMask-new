@@ -46,7 +46,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       setState(() {
         devices.clear();
         for (var result in results) {
-          if (!devices.contains(result.device)) {
+          if (!devices.contains(result.device) && result.device.platformName == "SunMask") {
             devices.add(result.device);
           }
         }
