@@ -130,15 +130,17 @@ class DeviceControlPage extends StatefulWidget {
 class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay? selectedWakeTime;
   int? selectedTimerMinutes;
+  TimeOfDay? sentWakeTime;
+  int? sentTimerMinutes;
   bool isConnected = true;
   double buttonWidth = double.infinity;
 
-  String get wakeTimeText => selectedWakeTime != null
-      ? "${selectedWakeTime!.hour}:${selectedWakeTime!.minute}"
+  String get wakeTimeText => sentWakeTime != null
+      ? "${sentWakeTime!.hour}:${sentWakeTime!.minute}"
       : "Nicht aktiv";
 
   String get timerText =>
-      selectedTimerMinutes != null ? "$selectedTimerMinutes Minuten" : "Nicht aktiv";
+      sentTimerMinutes != null ? "$sentTimerMinutes Minuten" : "Nicht aktiv";
 
     Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -148,7 +150,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     if (picked != null && picked != selectedWakeTime) {
       setState(() {
         selectedWakeTime = picked;
-        selectedTimerMinutes = null; // Timer zurücksetzen
       });
     }
   }
@@ -186,7 +187,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     if (minutes != null) {
       setState(() {
         selectedTimerMinutes = minutes;
-        selectedWakeTime = null; // Weckzeit zurücksetzen
       });
     }
   }
@@ -199,6 +199,12 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       String combinedData = "$currentTime|$wakeTime";
 
       await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
+
+      setState(() {
+        sentWakeTime = selectedWakeTime;
+        sentTimerMinutes = null; // Timer zurücksetzen
+      });
+
       debugPrint("✅ Weckzeit gesendet: $combinedData");
     } else {
       debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden oder keine Weckzeit gesetzt.");
@@ -209,6 +215,12 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
       String timerValue = selectedTimerMinutes.toString();
       await widget.timerCharacteristic!.write(utf8.encode(timerValue));
+
+      setState(() {
+        sentTimerMinutes = selectedTimerMinutes;
+        sentWakeTime = null; // Weckzeit zurücksetzen
+      });
+
       debugPrint("✅ Timer gesendet: $timerValue Minuten");
     } else {
       debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
@@ -237,9 +249,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         children: [
           Column(
             children: [
-              const Text("Aktuelle Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text(wakeTimeText, style: const TextStyle(fontSize: 20)),
+              Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 8),
               SizedBox(
                 width: buttonWidth,
@@ -261,9 +273,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           const SizedBox(height: 20),
           Column(
             children: [
-              const Text("Aktueller Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const Text("TIMER", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text(timerText, style: const TextStyle(fontSize: 20)),
+              Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 8),
               SizedBox(
                 width: buttonWidth,
