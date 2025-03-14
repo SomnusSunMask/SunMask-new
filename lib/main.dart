@@ -136,19 +136,19 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   double buttonWidth = double.infinity;
 
   String get wakeTimeText => sentWakeTime != null
-      ? "${sentWakeTime!.hour}:${sentWakeTime!.minute}"
+      ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
       : "Nicht aktiv";
 
   String get timerText =>
       sentTimerMinutes != null ? "$sentTimerMinutes Minuten" : "Nicht aktiv";
 
   String get wakeTimeButtonText => selectedWakeTime != null
-      ? "Weckzeit wählen – ${selectedWakeTime!.hour}:${selectedWakeTime!.minute}"
+      ? "Weckzeit wählen – ${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}"
       : "Weckzeit wählen";
 
   String get timerButtonText => selectedTimerMinutes != null
-      ? "Timer einstellen – $selectedTimerMinutes Minuten"
-      : "Timer einstellen";
+      ? "Timer wählen – $selectedTimerMinutes Minuten"
+      : "Timer wählen";
 
     Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -167,7 +167,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Timer einstellen"),
+          title: const Text("Timer wählen"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -202,7 +202,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   void sendWakeTimeToESP() async {
     if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
-      String wakeTime = "${selectedWakeTime!.hour}:${selectedWakeTime!.minute}";
+      String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
 
       String combinedData = "$currentTime|$wakeTime";
 
@@ -297,7 +297,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                 width: buttonWidth,
                 child: ElevatedButton(
                   onPressed: sendTimerToESP,
-                  child: const Text("Timer starten", style: TextStyle(fontSize: 18)),
+                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
                 ),
               ),
             ],
