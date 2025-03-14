@@ -281,7 +281,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           const SizedBox(height: 20),
           Column(
             children: [
-              const Text("TIMER", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 8),
