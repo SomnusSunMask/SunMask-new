@@ -128,19 +128,27 @@ class DeviceControlPage extends StatefulWidget {
 }
 
 class _DeviceControlPageState extends State<DeviceControlPage> {
-  TimeOfDay selectedWakeTime = TimeOfDay.now();
-  int selectedTimerMinutes = 30;
+  TimeOfDay? selectedWakeTime;
+  int? selectedTimerMinutes;
   bool isConnected = true;
-  double buttonWidth = double.infinity; // Einheitliche Button-Größe
+  double buttonWidth = double.infinity;
+
+  String get wakeTimeText => selectedWakeTime != null
+      ? "${selectedWakeTime!.hour}:${selectedWakeTime!.minute}"
+      : "Nicht aktiv";
+
+  String get timerText =>
+      selectedTimerMinutes != null ? "$selectedTimerMinutes Minuten" : "Nicht aktiv";
 
     Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: selectedWakeTime,
+      initialTime: selectedWakeTime ?? TimeOfDay.now(),
     );
     if (picked != null && picked != selectedWakeTime) {
       setState(() {
         selectedWakeTime = picked;
+        selectedTimerMinutes = null; // Timer zurücksetzen
       });
     }
   }
@@ -178,31 +186,32 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     if (minutes != null) {
       setState(() {
         selectedTimerMinutes = minutes;
+        selectedWakeTime = null; // Weckzeit zurücksetzen
       });
     }
   }
 
   void sendWakeTimeToESP() async {
-    if (widget.alarmCharacteristic != null) {
+    if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
-      String wakeTime = "${selectedWakeTime.hour}:${selectedWakeTime.minute}";
+      String wakeTime = "${selectedWakeTime!.hour}:${selectedWakeTime!.minute}";
 
       String combinedData = "$currentTime|$wakeTime";
 
       await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
       debugPrint("✅ Weckzeit gesendet: $combinedData");
     } else {
-      debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden.");
+      debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden oder keine Weckzeit gesetzt.");
     }
   }
 
   void sendTimerToESP() async {
-    if (widget.timerCharacteristic != null) {
+    if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
       String timerValue = selectedTimerMinutes.toString();
       await widget.timerCharacteristic!.write(utf8.encode(timerValue));
       debugPrint("✅ Timer gesendet: $timerValue Minuten");
     } else {
-      debugPrint("⚠️ Timer-Charakteristik nicht gefunden.");
+      debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
     }
   }
 
@@ -228,15 +237,15 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         children: [
           Column(
             children: [
-              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const Text("Aktuelle Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text("Letzte Weckzeit: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 20)),
+              Text(wakeTimeText, style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 8),
               SizedBox(
                 width: buttonWidth,
                 child: ElevatedButton(
                   onPressed: () => selectWakeTime(context),
-                  child: Text("Weckzeit wählen: ${selectedWakeTime.format(context)}", style: const TextStyle(fontSize: 18)),
+                  child: Text("Weckzeit wählen", style: const TextStyle(fontSize: 18)),
                 ),
               ),
               const SizedBox(height: 4),
@@ -252,15 +261,15 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           const SizedBox(height: 20),
           Column(
             children: [
-              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const Text("Aktueller Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text("Letzter Timer: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 20)),
+              Text(timerText, style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 8),
               SizedBox(
                 width: buttonWidth,
                 child: ElevatedButton(
                   onPressed: () => selectTimer(context),
-                  child: Text("Timer einstellen: $selectedTimerMinutes Minuten", style: const TextStyle(fontSize: 18)),
+                  child: Text("Timer einstellen", style: const TextStyle(fontSize: 18)),
                 ),
               ),
               const SizedBox(height: 4),
