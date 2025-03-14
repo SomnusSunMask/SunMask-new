@@ -92,7 +92,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BLE Geräte'),
+        title: const Text('Somnus-Geräte'),
       ),
       body: ListView.builder(
         itemCount: devices.length,
@@ -133,7 +133,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   bool isConnected = true;
   double buttonWidth = double.infinity; // Einheitliche Button-Größe
 
-  Future<void> selectWakeTime(BuildContext context) async {
+    Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: selectedWakeTime,
