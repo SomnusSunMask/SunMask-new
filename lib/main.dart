@@ -142,6 +142,14 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   String get timerText =>
       sentTimerMinutes != null ? "$sentTimerMinutes Minuten" : "Nicht aktiv";
 
+  String get wakeTimeButtonText => selectedWakeTime != null
+      ? "Weckzeit wählen – ${selectedWakeTime!.hour}:${selectedWakeTime!.minute}"
+      : "Weckzeit wählen";
+
+  String get timerButtonText => selectedTimerMinutes != null
+      ? "Timer einstellen – $selectedTimerMinutes Minuten"
+      : "Timer einstellen";
+
     Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -257,7 +265,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                 width: buttonWidth,
                 child: ElevatedButton(
                   onPressed: () => selectWakeTime(context),
-                  child: Text("Weckzeit wählen", style: const TextStyle(fontSize: 18)),
+                  child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
                 ),
               ),
               const SizedBox(height: 4),
@@ -281,7 +289,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                 width: buttonWidth,
                 child: ElevatedButton(
                   onPressed: () => selectTimer(context),
-                  child: Text("Timer einstellen", style: const TextStyle(fontSize: 18)),
+                  child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
                 ),
               ),
               const SizedBox(height: 4),
