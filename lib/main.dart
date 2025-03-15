@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import für die Bildschirmrotation-Kontrolle
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized(); // Stellt sicher, dass alles initialisiert ist
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp, // Nur Hochformat erlaubt
+  ]).then((_) {
+    runApp(const MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -92,7 +98,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     }
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
