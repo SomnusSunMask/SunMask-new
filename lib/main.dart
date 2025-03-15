@@ -40,6 +40,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void scanForDevices() async {
+    setState(() {
+      devices.clear(); // Liste vor erneutem Scan zurücksetzen
+    });
+
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
@@ -93,6 +97,12 @@ class _BLEHomePageState extends State<BLEHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Somnus-Geräte'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh), // 🔄 Standardmäßiges Reload-Icon
+            onPressed: scanForDevices, // Ruft die Scan-Funktion erneut auf
+          ),
+        ],
       ),
       body: ListView.builder(
         itemCount: devices.length,
@@ -109,6 +119,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
       ),
     );
   }
+}
+
 }
 
 class DeviceControlPage extends StatefulWidget {
@@ -150,7 +162,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       ? "Timer wählen – $selectedTimerMinutes Minuten"
       : "Timer wählen";
 
-    Future<void> selectWakeTime(BuildContext context) async {
+  Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: selectedWakeTime ?? TimeOfDay.now(),
