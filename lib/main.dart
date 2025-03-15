@@ -69,7 +69,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   void connectToDevice(BluetoothDevice device, BuildContext context) async {
   try {
-    await device.connect();
+    await device.connect().timeout(Duration(seconds: 2)); // Verkürzt Wartezeit auf 2 Sekunden
 
     BluetoothCharacteristic? alarmCharacteristic;
     BluetoothCharacteristic? timerCharacteristic;
