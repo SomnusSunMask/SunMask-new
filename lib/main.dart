@@ -68,7 +68,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void connectToDevice(BluetoothDevice device, BuildContext context) async {
+  try {
     await device.connect();
+
     BluetoothCharacteristic? alarmCharacteristic;
     BluetoothCharacteristic? timerCharacteristic;
 
@@ -96,7 +98,20 @@ class _BLEHomePageState extends State<BLEHomePage> {
         ),
       );
     }
+  } catch (e) {
+    debugPrint("⚠️ Verbindung fehlgeschlagen: $e");
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Verbindung fehlgeschlagen! Bitte erneut versuchen.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
+}
+
 
     @override
   Widget build(BuildContext context) {
