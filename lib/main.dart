@@ -376,66 +376,61 @@ Future<void> reconnectToDevice() async {
     );
 
     Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
+      if (mounted && Navigator.canPop(currentContext)) {
         Navigator.pop(currentContext); // Zurück zur Geräteliste
       }
     });
   }
 }
 
-
-
-  
-   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('SunMask Steuerung'),
-        actions: [
-          TextButton(
-            onPressed: reconnectToDevice,
-            child: const Text(
-              "Erneut verbinden",
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('SunMask Steuerung'),
+      actions: [
+        TextButton(
+          onPressed: reconnectToDevice,
+          child: const Text(
+            "Erneut verbinden",
+            style: TextStyle(color: Colors.white, fontSize: 16),
           ),
-        ],
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Column(
-            children: [
-              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-            ],
+        ),
+      ],
+    ),
+    body: Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Column(
+          children: [
+            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Column(
+          children: [
+            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: buttonWidth,
+          child: ElevatedButton(
+            onPressed: () async {
+              final currentContext = context; // 🔹 Kontext vor await speichern
+              await widget.device.disconnect();
+              if (mounted && Navigator.canPop(currentContext)) {
+                Navigator.pop(currentContext); // 🔹 Gespeicherten Kontext verwenden
+              }
+            },
+            child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
           ),
-          const SizedBox(height: 20),
-          Column(
-            children: [
-              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: buttonWidth,
-            child: ElevatedButton(
-              onPressed: () async {
-               final currentContext = context; // 🔹 Kontext vor await speichern
-                await widget.device.disconnect();
-                 if (mounted) {
-                  Navigator.pop(currentContext); // 🔹 Gespeicherten Kontext verwenden
-                }
-               },
-
-              child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }
