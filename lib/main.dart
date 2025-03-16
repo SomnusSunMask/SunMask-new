@@ -350,22 +350,23 @@ import 'package:flutter/material.dart';
 Future<void> reconnectToDevice() async {
   if (!mounted) return; // Verhindert den Zugriff, falls das Widget nicht mehr existiert
 
-  final messenger = ScaffoldMessenger.of(context); // Sicherstellen, dass `context` vorher gespeichert wird
+  final currentContext = context; // Speichert `context` vor dem ersten `await`
+  final messenger = ScaffoldMessenger.of(currentContext); // Speichert `ScaffoldMessenger` ebenfalls vorher
 
   try {
     await widget.device.connect().timeout(const Duration(seconds: 2));
 
-    if (mounted) {
-      setState(() {
-        isConnected = true;
-      });
-    }
+    if (!mounted) return; // Nach dem await prüfen, ob Widget noch existiert
+
+    setState(() {
+      isConnected = true;
+    });
 
     debugPrint("✅ Erneute Verbindung erfolgreich");
   } catch (e) {
     debugPrint("❌ Erneute Verbindung fehlgeschlagen: $e");
 
-    if (!mounted) return; // Doppelte Absicherung
+    if (!mounted) return; // Absicherung nach `await`
 
     messenger.showSnackBar(
       const SnackBar(
@@ -376,7 +377,7 @@ Future<void> reconnectToDevice() async {
 
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
-        Navigator.pop(context); // Zurück zur Geräteliste
+        Navigator.pop(currentContext); // Zurück zur Geräteliste
       }
     });
   }
