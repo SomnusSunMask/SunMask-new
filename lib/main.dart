@@ -277,7 +277,7 @@ void sendWakeTimeToESP() async {
     } catch (e) {
       debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
-      final messenger = ScaffoldMessenger.of(context); // Kontext vorher speichern
+      final messenger = ScaffoldMessenger.of(context); // 🔹 Kontext vorher speichern
 
       await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
 
@@ -313,7 +313,7 @@ void sendTimerToESP() async {
     } catch (e) {
       debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
-      final messenger = ScaffoldMessenger.of(context); // Kontext vorher speichern
+      final messenger = ScaffoldMessenger.of(context); // 🔹 Kontext vorher speichern
 
       await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
 
@@ -330,41 +330,6 @@ void sendTimerToESP() async {
     debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
   }
 }
-
-
- void sendTimerToESP() async {
-  if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
-    try {
-      String timerValue = selectedTimerMinutes.toString();
-      
-      await widget.timerCharacteristic!.write(utf8.encode(timerValue)); // 🔹 Daten senden
-
-      if (mounted) {
-        setState(() {
-          sentTimerMinutes = selectedTimerMinutes;
-          sentWakeTime = null; // Weckzeit zurücksetzen
-        });
-      }
-
-      debugPrint("✅ Timer gesendet: $timerValue Minuten");
-    } catch (e) {
-      debugPrint("⚠️ Senden fehlgeschlagen: $e");
-
-      if (mounted) {
-        await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  } else {
-    debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
-  }
-}
-
 
 
   void disconnectFromDevice() async {
