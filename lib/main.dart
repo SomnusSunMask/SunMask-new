@@ -68,47 +68,28 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.stopScan();
   }
 
-void connectToDevice(BluetoothDevice device, BuildContext context) async {
-  setState(() {
-    loadingDevices.add(device); // 🔄 Ladeanimation starten
-  });
+  void connectToDevice(BluetoothDevice device, BuildContext context) async {
+    setState(() {
+      loadingDevices.add(device); // 🔄 Ladeanimation starten
+    });
 
-  try {
-    await device.connect().timeout(Duration(seconds: 2));
+    try {
+      await device.connect().timeout(Duration(seconds: 2));
 
-    List<BluetoothService> services = await device.discoverServices();
-    for (var service in services) {
-      for (var characteristic in service.characteristics) {
-        if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
-          widget.alarmCharacteristic = characteristic; // 🔹 Hier `widget.` hinzufügen!
-        }
-        if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
-          widget.timerCharacteristic = characteristic; // 🔹 Hier `widget.` hinzufügen!
+      BluetoothCharacteristic? alarmCharacteristic;
+      BluetoothCharacteristic? timerCharacteristic;
+
+      List<BluetoothService> services = await device.discoverServices();
+      for (var service in services) {
+        for (var characteristic in service.characteristics) {
+          if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+            alarmCharacteristic = characteristic; 
+          }
+          if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+            timerCharacteristic = characteristic;
+          }
         }
       }
-    }
-
-    if (context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceControlPage(
-            device: device,
-            alarmCharacteristic: widget.alarmCharacteristic, // 🔹 Hier wird es weitergegeben
-            timerCharacteristic: widget.timerCharacteristic,
-          ),
-        ),
-      );
-    }
-  } catch (e) {
-    debugPrint("❌ Verbindung fehlgeschlagen: $e");
-  } finally {
-    setState(() {
-      loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
-    });
-  }
-}
-
 
       if (context.mounted) {
         Navigator.push(
@@ -132,8 +113,8 @@ void connectToDevice(BluetoothDevice device, BuildContext context) async {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Verbindung fehlgeschlagen! Bitte erneut versuchen.'),
-            duration: Duration(seconds: 3),
+            content: const Text('❌ Verbindung fehlgeschlagen! Bitte erneut versuchen.'),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -182,13 +163,12 @@ void connectToDevice(BluetoothDevice device, BuildContext context) async {
   }
 }
 
-
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
-  final BluetoothCharacteristic? alarmCharacteristic;
-  final BluetoothCharacteristic? timerCharacteristic;
+  BluetoothCharacteristic? alarmCharacteristic;
+  BluetoothCharacteristic? timerCharacteristic;
 
-  const DeviceControlPage({
+  DeviceControlPage({
     super.key,
     required this.device,
     this.alarmCharacteristic,
@@ -271,136 +251,133 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-void sendWakeTimeToESP() async {
-  if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
-    try {
-      String currentTime = DateFormat("HH:mm").format(DateTime.now());
-      String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
+  void sendWakeTimeToESP() async {
+    if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
+      try {
+        String currentTime = DateFormat("HH:mm").format(DateTime.now());
+        String wakeTime =
+            "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
 
-      String combinedData = "$currentTime|$wakeTime";
-      
-      await widget.alarmCharacteristic!.write(utf8.encode(combinedData)); // 🔹 Daten senden
+        String combinedData = "$currentTime|$wakeTime";
 
-      if (mounted) {
-        setState(() {
-          sentWakeTime = selectedWakeTime;
-          sentTimerMinutes = null; // Timer zurücksetzen
-        });
+        await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
+
+        if (mounted) {
+          setState(() {
+            sentWakeTime = selectedWakeTime;
+            sentTimerMinutes = null; // Timer zurücksetzen
+          });
+        }
+
+        debugPrint("✅ Weckzeit gesendet: $combinedData");
+      } catch (e) {
+        debugPrint("⚠️ Senden fehlgeschlagen: $e");
+
+        if (!mounted) return;
+        final messenger = ScaffoldMessenger.of(context);
+
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (mounted) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+
+        await refreshBLECharacteristics();
       }
-
-      debugPrint("✅ Weckzeit gesendet: $combinedData");
-    } catch (e) {
-      debugPrint("⚠️ Senden fehlgeschlagen: $e");
-
-      if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
-
-      await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
-
-      if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-
-      // 🔹 Charakteristiken neu abrufen, falls das Senden fehlschlägt
-      await refreshBLECharacteristics();
+    } else {
+      debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden oder keine Weckzeit gesetzt.");
     }
-  } else {
-    debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden oder keine Weckzeit gesetzt.");
   }
-}
 
-void sendTimerToESP() async {
-  if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
-    try {
-      String timerValue = selectedTimerMinutes.toString();
-      
-      await widget.timerCharacteristic!.write(utf8.encode(timerValue)); // 🔹 Daten senden
+  void sendTimerToESP() async {
+    if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
+      try {
+        String timerValue = selectedTimerMinutes.toString();
 
-      if (mounted) {
-        setState(() {
-          sentTimerMinutes = selectedTimerMinutes;
-          sentWakeTime = null; // Weckzeit zurücksetzen
-        });
+        await widget.timerCharacteristic!.write(utf8.encode(timerValue));
+
+        if (mounted) {
+          setState(() {
+            sentTimerMinutes = selectedTimerMinutes;
+            sentWakeTime = null;
+          });
+        }
+
+        debugPrint("✅ Timer gesendet: $timerValue Minuten");
+      } catch (e) {
+        debugPrint("⚠️ Senden fehlgeschlagen: $e");
+
+        if (!mounted) return;
+        final messenger = ScaffoldMessenger.of(context);
+
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (mounted) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+
+        await refreshBLECharacteristics();
       }
-
-      debugPrint("✅ Timer gesendet: $timerValue Minuten");
-    } catch (e) {
-      debugPrint("⚠️ Senden fehlgeschlagen: $e");
-
-      if (!mounted) return;
-      final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
-
-      await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
-
-      if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-
-      // 🔹 Charakteristiken neu abrufen, falls das Senden fehlschlägt
-      await refreshBLECharacteristics();
+    } else {
+      debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
     }
-  } else {
-    debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
   }
-}
-
-
 
   void disconnectFromDevice() async {
-  await widget.device.disconnect();
-  setState(() {
-    isConnected = false;
-  });
+    await widget.device.disconnect();
+    setState(() {
+      isConnected = false;
+    });
 
-  if (mounted) {
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
-}
 
-Future<void> refreshBLECharacteristics() async {
-  try {
-    if (widget.device.isConnected) {
-      List<BluetoothService> services = await widget.device.discoverServices();
-      BluetoothCharacteristic? newAlarmCharacteristic;
-      BluetoothCharacteristic? newTimerCharacteristic;
+  Future<void> refreshBLECharacteristics() async {
+    try {
+      if (widget.device.isConnected) {
+        List<BluetoothService> services = await widget.device.discoverServices();
+        BluetoothCharacteristic? newAlarmCharacteristic;
+        BluetoothCharacteristic? newTimerCharacteristic;
 
-      for (var service in services) {
-        for (var characteristic in service.characteristics) {
-          if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
-            newAlarmCharacteristic = characteristic;
-          }
-          if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
-            newTimerCharacteristic = characteristic;
+        for (var service in services) {
+          for (var characteristic in service.characteristics) {
+            if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+              newAlarmCharacteristic = characteristic;
+            }
+            if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+              newTimerCharacteristic = characteristic;
+            }
           }
         }
-      }
 
-      if (mounted) {
-        setState(() {
-          widget.alarmCharacteristic = newAlarmCharacteristic;
-          widget.timerCharacteristic = newTimerCharacteristic;
-        });
-      }
+        if (mounted) {
+          setState(() {
+            widget.alarmCharacteristic = newAlarmCharacteristic;
+            widget.timerCharacteristic = newTimerCharacteristic;
+          });
+        }
 
-      debugPrint("🔄 BLE-Charakteristiken aktualisiert.");
-    } else {
-      debugPrint("⚠️ Gerät ist nicht mehr verbunden.");
+        debugPrint("🔄 BLE-Charakteristiken aktualisiert.");
+      } else {
+        debugPrint("⚠️ Gerät ist nicht mehr verbunden.");
+      }
+    } catch (e) {
+      debugPrint("❌ Fehler beim Abrufen der BLE-Charakteristiken: $e");
     }
-  } catch (e) {
-    debugPrint("❌ Fehler beim Abrufen der BLE-Charakteristiken: $e");
   }
-}
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -416,54 +393,34 @@ Future<void> refreshBLECharacteristics() async {
               const SizedBox(height: 8),
               Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectWakeTime(context),
-                  child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
-                ),
+              ElevatedButton(
+                onPressed: () => selectWakeTime(context),
+                child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
               ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendWakeTimeToESP,
-                  child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
-                ),
+              ElevatedButton(
+                onPressed: sendWakeTimeToESP,
+                child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
               ),
             ],
           ),
-          const SizedBox(height: 20),
           Column(
             children: [
               const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectTimer(context),
-                  child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
-                ),
+              ElevatedButton(
+                onPressed: () => selectTimer(context),
+                child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
               ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendTimerToESP,
-                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
-                ),
+              ElevatedButton(
+                onPressed: sendTimerToESP,
+                child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: buttonWidth,
-            child: ElevatedButton(
-              onPressed: disconnectFromDevice,
-              child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
-            ),
+          ElevatedButton(
+            onPressed: disconnectFromDevice,
+            child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
           ),
         ],
       ),
