@@ -165,11 +165,11 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
 
 class DeviceControlPage extends StatefulWidget {
-  late BluetoothDevice device;
-  BluetoothCharacteristic? alarmCharacteristic;
-  BluetoothCharacteristic? timerCharacteristic;
+  final BluetoothDevice device;
+  final BluetoothCharacteristic? alarmCharacteristic;
+  final BluetoothCharacteristic? timerCharacteristic;
 
-  DeviceControlPage({
+  const DeviceControlPage({
     super.key,
     required this.device,
     this.alarmCharacteristic,
@@ -183,10 +183,20 @@ class DeviceControlPage extends StatefulWidget {
 class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay? selectedWakeTime;
   int? selectedTimerMinutes;
-  TimeOfDay? sentWakeTime;
-  int? sentTimerMinutes;
   bool isConnected = true;
   double buttonWidth = double.infinity;
+
+  late BluetoothCharacteristic? alarmCharacteristic;
+  late BluetoothCharacteristic? timerCharacteristic;
+
+  @override
+  void initState() {
+    super.initState();
+    alarmCharacteristic = widget.alarmCharacteristic;
+    timerCharacteristic = widget.timerCharacteristic;
+  }
+}
+
 
   String get wakeTimeText => sentWakeTime != null
       ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
