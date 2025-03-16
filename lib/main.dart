@@ -290,12 +290,14 @@ void sendWakeTimeToESP() async {
           ),
         );
       }
+
+      // 🔹 Charakteristiken neu abrufen, falls das Senden fehlschlägt
+      await refreshBLECharacteristics();
     }
   } else {
     debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden oder keine Weckzeit gesetzt.");
   }
 }
-
 
 void sendTimerToESP() async {
   if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
@@ -328,6 +330,9 @@ void sendTimerToESP() async {
           ),
         );
       }
+
+      // 🔹 Charakteristiken neu abrufen, falls das Senden fehlschlägt
+      await refreshBLECharacteristics();
     }
   } else {
     debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
@@ -337,16 +342,50 @@ void sendTimerToESP() async {
 
 
   void disconnectFromDevice() async {
-    await widget.device.disconnect();
-    setState(() {
-      isConnected = false;
-    });
+  await widget.device.disconnect();
+  setState(() {
+    isConnected = false;
+  });
 
-    if (mounted) {
-      Navigator.pop(context);
-    }
+  if (mounted) {
+    Navigator.pop(context);
   }
+}
 
+Future<void> refreshBLECharacteristics() async {
+  try {
+    if (widget.device.isConnected) {
+      List<BluetoothService> services = await widget.device.discoverServices();
+      BluetoothCharacteristic? newAlarmCharacteristic;
+      BluetoothCharacteristic? newTimerCharacteristic;
+
+      for (var service in services) {
+        for (var characteristic in service.characteristics) {
+          if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+            newAlarmCharacteristic = characteristic;
+          }
+          if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+            newTimerCharacteristic = characteristic;
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          widget.alarmCharacteristic = newAlarmCharacteristic;
+          widget.timerCharacteristic = newTimerCharacteristic;
+        });
+      }
+
+      debugPrint("🔄 BLE-Charakteristiken aktualisiert.");
+    } else {
+      debugPrint("⚠️ Gerät ist nicht mehr verbunden.");
+    }
+  } catch (e) {
+    debugPrint("❌ Fehler beim Abrufen der BLE-Charakteristiken: $e");
+  }
+}
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
