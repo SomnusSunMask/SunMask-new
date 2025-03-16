@@ -348,19 +348,23 @@ import 'package:flutter/material.dart';
    }
 
 Future<void> reconnectToDevice() async {
+  final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
+
   try {
     await widget.device.connect().timeout(Duration(seconds: 2));
 
-    setState(() {
-      isConnected = true;
-    });
+    if (mounted) {
+      setState(() {
+        isConnected = true;
+      });
+    }
 
     debugPrint("✅ Erneute Verbindung erfolgreich");
   } catch (e) {
     debugPrint("⚠️ Erneute Verbindung fehlgeschlagen: $e");
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('❌ Erneute Verbindung fehlgeschlagen!'),
           duration: Duration(seconds: 3),
@@ -370,6 +374,7 @@ Future<void> reconnectToDevice() async {
     }
   }
 }
+
 
   
    @override
