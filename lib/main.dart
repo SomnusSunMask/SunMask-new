@@ -74,7 +74,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     });
 
     try {
-      await device.connect().timeout(Duration(seconds: 5)); // ⏳ Verbindung mit Timeout
+      await device.connect().timeout(Duration(seconds: 2)); // ⏳ Verbindung mit Timeout
 
       BluetoothCharacteristic? alarmCharacteristic;
       BluetoothCharacteristic? timerCharacteristic;
