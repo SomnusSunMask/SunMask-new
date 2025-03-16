@@ -376,82 +376,79 @@ void disconnectFromDevice() async {
   }
 }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(),
-      actions: [
-        TextButton(
-          onPressed: reconnectToDevice,
-          child: const Text(
-            "Erneut verbinden",
-            style: TextStyle(fontSize: 16),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          TextButton(
+            onPressed: reconnectToDevice,
+            child: const Text(
+              "Erneut verbinden",
+              style: TextStyle(fontSize: 16), // Standard-Button-Farbe bleibt erhalten
+            ),
           ),
-        ),
-      ],
-    ),
-    body: Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        Column(
-          children: [
-            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: buttonWidth,
-              child: ElevatedButton(
-                onPressed: () => selectWakeTime(context),
-                child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
+        ],
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Column(
+            children: [
+              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: () => selectWakeTime(context),
+                  child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            SizedBox(
-              width: buttonWidth,
-              child: ElevatedButton(
-                onPressed: sendWakeTimeToESP,
-                child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: sendWakeTimeToESP,
+                  child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Column(
-          children: [
-            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: buttonWidth,
-              child: ElevatedButton(
-                onPressed: () => selectTimer(context),
-                child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
-              ),
-            ),
-            const SizedBox(height: 4),
-            SizedBox(
-              width: buttonWidth,
-              child: ElevatedButton(
-                onPressed: sendTimerToESP,
-                child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: buttonWidth,
-          child: ElevatedButton(
-            onPressed: disconnectFromDevice,
-            child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
+            ],
           ),
-        ),
-      ],
-    ),
-  );
-}
-}
- 
-   
+          const SizedBox(height: 20),
+          Column(
+            children: [
+              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: () => selectTimer(context),
+                  child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
+                ),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: sendTimerToESP,
+                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: buttonWidth,
+            child: ElevatedButton(
+              onPressed: disconnectFromDevice,
+              child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
