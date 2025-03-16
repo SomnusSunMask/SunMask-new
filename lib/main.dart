@@ -348,37 +348,34 @@ import 'package:flutter/material.dart';
    }
 
 Future<void> reconnectToDevice() async {
-  final BuildContext currentContext = context; // 🔹 Speichert `context`, bevor `await` genutzt wird
-  final messenger = ScaffoldMessenger.of(currentContext); // Speichert den Messenger
+  final BuildContext currentContext = context; // 🔹 Context vor `await` speichern
+  final messenger = ScaffoldMessenger.of(currentContext); 
 
   try {
     await widget.device.connect().timeout(Duration(seconds: 2));
 
-    if (!mounted) return; // Erst prüfen, ob das Widget noch existiert
-
-    setState(() {
-      isConnected = true;
-    });
+    if (mounted) {
+      setState(() {
+        isConnected = true;
+      });
+    }
 
     debugPrint("✅ Erneute Verbindung erfolgreich");
   } catch (e) {
-    debugPrint("⚠️ Erneute Verbindung fehlgeschlagen: $e");
-
-    if (!mounted) return; // Nochmal absichern, dass `context` noch gültig ist
-
-    messenger.showSnackBar(
-      const SnackBar(
-        content: Text('❌ Erneute Verbindung fehlgeschlagen!'),
-        duration: Duration(seconds: 3),
-      ),
-    );
+    debugPrint("❌ Erneute Verbindung fehlgeschlagen: $e");
 
     if (mounted) {
-      Navigator.pop(currentContext); // Nur aufrufen, wenn das Widget noch existiert
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('❌ Erneute Verbindung fehlgeschlagen!'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+
+      Navigator.pop(currentContext); // Zurück zur Geräteliste
     }
   }
 }
-
 
 
   
