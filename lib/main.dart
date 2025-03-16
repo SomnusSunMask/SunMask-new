@@ -68,32 +68,47 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.stopScan();
   }
 
-  void connectToDevice(BluetoothDevice device, BuildContext context) async {
-    setState(() {
-      loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
-    });
+void connectToDevice(BluetoothDevice device, BuildContext context) async {
+  setState(() {
+    loadingDevices.add(device); // 🔄 Ladeanimation starten
+  });
 
-    try {
-      await device.connect().timeout(Duration(seconds: 2)); // ⏳ Verbindung mit Timeout
+  try {
+    await device.connect().timeout(Duration(seconds: 2));
 
-      BluetoothCharacteristic? alarmCharacteristic;
-      BluetoothCharacteristic? timerCharacteristic;
-
-      List<BluetoothService> services = await device.discoverServices();
-      for (var service in services) {
-        for (var characteristic in service.characteristics) {
-          if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
-            alarmCharacteristic = characteristic;
-          }
-          if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
-            timerCharacteristic = characteristic;
-          }
+    List<BluetoothService> services = await device.discoverServices();
+    for (var service in services) {
+      for (var characteristic in service.characteristics) {
+        if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+          widget.alarmCharacteristic = characteristic; // 🔹 Hier `widget.` hinzufügen!
+        }
+        if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+          widget.timerCharacteristic = characteristic; // 🔹 Hier `widget.` hinzufügen!
         }
       }
+    }
 
-      setState(() {
-        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
-      });
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DeviceControlPage(
+            device: device,
+            alarmCharacteristic: widget.alarmCharacteristic, // 🔹 Hier wird es weitergegeben
+            timerCharacteristic: widget.timerCharacteristic,
+          ),
+        ),
+      );
+    }
+  } catch (e) {
+    debugPrint("❌ Verbindung fehlgeschlagen: $e");
+  } finally {
+    setState(() {
+      loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+    });
+  }
+}
+
 
       if (context.mounted) {
         Navigator.push(
