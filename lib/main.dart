@@ -256,7 +256,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-  void sendWakeTimeToESP() async {
+void sendWakeTimeToESP() async {
   if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
     try {
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
@@ -265,20 +265,22 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       String combinedData = "$currentTime|$wakeTime";
       await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
 
-      setState(() {
-        sentWakeTime = selectedWakeTime;
-        sentTimerMinutes = null; // Timer zurücksetzen
-      });
+      if (mounted) {
+        setState(() {
+          sentWakeTime = selectedWakeTime;
+          sentTimerMinutes = null; // Timer zurücksetzen
+        });
+      }
 
       debugPrint("✅ Weckzeit gesendet: $combinedData");
     } catch (e) {
       debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
-            duration: Duration(seconds: 2),
+            duration: Duration(seconds: 3),
           ),
         );
       }
@@ -288,26 +290,29 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 }
 
+
  void sendTimerToESP() async {
   if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
     try {
       String timerValue = selectedTimerMinutes.toString();
       await widget.timerCharacteristic!.write(utf8.encode(timerValue));
 
-      setState(() {
-        sentTimerMinutes = selectedTimerMinutes;
-        sentWakeTime = null; // Weckzeit zurücksetzen
-      });
+      if (mounted) {
+        setState(() {
+          sentTimerMinutes = selectedTimerMinutes;
+          sentWakeTime = null; // Weckzeit zurücksetzen
+        });
+      }
 
       debugPrint("✅ Timer gesendet: $timerValue Minuten");
     } catch (e) {
       debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
-            duration: Duration(seconds: 2),
+            duration: Duration(seconds: 3),
           ),
         );
       }
@@ -316,6 +321,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
   }
 }
+
 
   void disconnectFromDevice() async {
     await widget.device.disconnect();
