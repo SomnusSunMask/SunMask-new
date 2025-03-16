@@ -424,11 +424,13 @@ Future<void> reconnectToDevice() async {
             width: buttonWidth,
             child: ElevatedButton(
               onPressed: () async {
+               final currentContext = context; // 🔹 Kontext vor await speichern
                 await widget.device.disconnect();
-                if (mounted) {
-                  Navigator.pop(context);
+                 if (mounted) {
+                  Navigator.pop(currentContext); // 🔹 Gespeicherten Kontext verwenden
                 }
-              },
+               },
+
               child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
             ),
           ),
