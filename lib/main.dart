@@ -164,7 +164,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
 }
 
 class DeviceControlPage extends StatefulWidget {
-  final BluetoothDevice device;
+  BluetoothDevice device;
   BluetoothCharacteristic? alarmCharacteristic;
   BluetoothCharacteristic? timerCharacteristic;
 
