@@ -379,14 +379,13 @@ void disconnectFromDevice() async {
 @override
 Widget build(BuildContext context) {
   return Scaffold(
-    appBar: AppBar(
-      title: const Text('SunMask Steuerung'),
+    appBar: AppBar(),
       actions: [
         TextButton(
           onPressed: reconnectToDevice,
           child: const Text(
             "Erneut verbinden",
-            style: TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(fontSize: 16),
           ),
         ),
       ],
