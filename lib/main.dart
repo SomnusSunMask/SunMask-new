@@ -277,7 +277,8 @@ void sendWakeTimeToESP() async {
     } catch (e) {
       debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
-      final messenger = ScaffoldMessenger.of(context); // 🔹 Kontext vorher speichern
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
 
       await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
 
@@ -294,6 +295,7 @@ void sendWakeTimeToESP() async {
     debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden oder keine Weckzeit gesetzt.");
   }
 }
+
 
 void sendTimerToESP() async {
   if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
@@ -313,7 +315,8 @@ void sendTimerToESP() async {
     } catch (e) {
       debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
-      final messenger = ScaffoldMessenger.of(context); // 🔹 Kontext vorher speichern
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
 
       await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
 
@@ -330,6 +333,7 @@ void sendTimerToESP() async {
     debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
   }
 }
+
 
 
   void disconnectFromDevice() async {
