@@ -37,6 +37,7 @@ class BLEHomePage extends StatefulWidget {
 
 class _BLEHomePageState extends State<BLEHomePage> {
   final List<BluetoothDevice> devices = [];
+  final Set<BluetoothDevice> loadingDevices = {}; // 🔄 Trackt Geräte, die sich verbinden
   BluetoothDevice? selectedDevice;
 
   @override
@@ -47,7 +48,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   void scanForDevices() async {
     setState(() {
-      devices.clear(); // Liste vor erneutem Scan zurücksetzen
+      devices.clear();
     });
 
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
@@ -68,60 +69,71 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void connectToDevice(BluetoothDevice device, BuildContext context) async {
-  try {
-    await device.connect().timeout(Duration(seconds: 2)); // Verkürzt Wartezeit auf 2 Sekunden
+    setState(() {
+      loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
+    });
 
-    BluetoothCharacteristic? alarmCharacteristic;
-    BluetoothCharacteristic? timerCharacteristic;
+    try {
+      await device.connect().timeout(Duration(seconds: 5)); // ⏳ Verbindung mit Timeout
 
-    List<BluetoothService> services = await device.discoverServices();
-    for (var service in services) {
-      for (var characteristic in service.characteristics) {
-        if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
-          alarmCharacteristic = characteristic;
-        }
-        if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
-          timerCharacteristic = characteristic;
+      BluetoothCharacteristic? alarmCharacteristic;
+      BluetoothCharacteristic? timerCharacteristic;
+
+      List<BluetoothService> services = await device.discoverServices();
+      for (var service in services) {
+        for (var characteristic in service.characteristics) {
+          if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+            alarmCharacteristic = characteristic;
+          }
+          if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+            timerCharacteristic = characteristic;
+          }
         }
       }
-    }
 
-    if (context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceControlPage(
-            device: device,
-            alarmCharacteristic: alarmCharacteristic,
-            timerCharacteristic: timerCharacteristic,
+      setState(() {
+        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+      });
+
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DeviceControlPage(
+              device: device,
+              alarmCharacteristic: alarmCharacteristic,
+              timerCharacteristic: timerCharacteristic,
+            ),
           ),
-        ),
-      );
-    }
-  } catch (e) {
-    debugPrint("⚠️ Verbindung fehlgeschlagen: $e");
+        );
+      }
+    } catch (e) {
+      debugPrint("⚠️ Verbindung fehlgeschlagen: $e");
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ Verbindung fehlgeschlagen! Bitte erneut versuchen.'),
-          duration: Duration(seconds: 3),
-        ),
-      );
+      setState(() {
+        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+      });
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Verbindung fehlgeschlagen! Bitte erneut versuchen.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
-}
 
-
-    @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Somnus-Geräte'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh), // 🔄 Standardmäßiges Reload-Icon
-            onPressed: scanForDevices, // Ruft die Scan-Funktion erneut auf
+            icon: const Icon(Icons.refresh),
+            onPressed: scanForDevices,
           ),
         ],
       ),
@@ -130,10 +142,23 @@ class _BLEHomePageState extends State<BLEHomePage> {
         itemBuilder: (context, index) {
           final device = devices[index];
           return ListTile(
-            title: Text(device.platformName),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // 🔹 Gerät links, Ladekreis rechts
+              children: [
+                Text(device.platformName),
+                if (loadingDevices.contains(device)) // 🔄 Ladeanimation nur für aktuelles Gerät
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
+            ),
             subtitle: Text(device.remoteId.toString()),
             onTap: () {
-              connectToDevice(device, context);
+              if (!loadingDevices.contains(device)) {
+                connectToDevice(device, context);
+              }
             },
           );
         },
@@ -141,6 +166,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     );
   }
 }
+
 
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
