@@ -263,7 +263,8 @@ void sendWakeTimeToESP() async {
       String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
 
       String combinedData = "$currentTime|$wakeTime";
-      await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
+      
+      await widget.alarmCharacteristic!.write(utf8.encode(combinedData)); // 🔹 Daten senden
 
       if (mounted) {
         setState(() {
@@ -277,6 +278,7 @@ void sendWakeTimeToESP() async {
       debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
       if (mounted) {
+        await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
@@ -295,7 +297,8 @@ void sendWakeTimeToESP() async {
   if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
     try {
       String timerValue = selectedTimerMinutes.toString();
-      await widget.timerCharacteristic!.write(utf8.encode(timerValue));
+      
+      await widget.timerCharacteristic!.write(utf8.encode(timerValue)); // 🔹 Daten senden
 
       if (mounted) {
         setState(() {
@@ -309,6 +312,7 @@ void sendWakeTimeToESP() async {
       debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
       if (mounted) {
+        await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
@@ -321,6 +325,7 @@ void sendWakeTimeToESP() async {
     debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
   }
 }
+
 
 
   void disconnectFromDevice() async {
