@@ -452,3 +452,4 @@ void disconnectFromDevice() async {
       ),
     );
   }
+}
