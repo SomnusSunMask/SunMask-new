@@ -348,7 +348,8 @@ import 'package:flutter/material.dart';
    }
 
 Future<void> reconnectToDevice() async {
-  final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
+  final BuildContext currentContext = context; // 🔹 Speichert `context`, bevor `await` kommt
+  final messenger = ScaffoldMessenger.of(currentContext); // Jetzt richtig gespeichert
 
   try {
     await widget.device.connect().timeout(Duration(seconds: 2));
@@ -370,7 +371,7 @@ Future<void> reconnectToDevice() async {
           duration: Duration(seconds: 3),
         ),
       );
-      Navigator.pop(context); // Zurück zur Geräteliste
+      Navigator.pop(currentContext); // Zurück zur Geräteliste mit gespeicherten `context`
     }
   }
 }
