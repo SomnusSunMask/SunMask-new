@@ -337,92 +337,83 @@ import 'package:flutter/material.dart';
  
  
    void disconnectFromDevice() async {
-     await widget.device.disconnect();
-     setState(() {
-       isConnected = false;
-     });
+      await widget.device.disconnect();
+      setState(() {
+        isConnected = false;
+      });
  
-     if (mounted) {
-       Navigator.pop(context);
-     }
-   }
-
-Future<void> disconnectFromDevice() async {
-  if (!mounted) return; // Falls das Widget nicht mehr existiert, Abbruch
-
-  final currentContext = context; // Speichert `context` vor dem `await`
-  
-  try {
-    await widget.device.disconnect();
-
-    if (!mounted) return; // Erneute Prüfung, ob Widget existiert
-
-    setState(() {
-      isConnected = false;
-    });
-
-    debugPrint("✅ Verbindung erfolgreich getrennt");
-
-    if (Navigator.canPop(currentContext)) {
-      Navigator.pop(currentContext); // Zurück zur Geräteliste
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
-  } catch (e) {
-    debugPrint("❌ Verbindung trennen fehlgeschlagen: $e");
-
-    if (!mounted) return; // Absicherung nach `await`
-    
-    ScaffoldMessenger.of(currentContext).showSnackBar(
-      const SnackBar(
-        content: Text('❌ Verbindung konnte nicht getrennt werden!'),
-        duration: Duration(seconds: 3),
-      ),
-    );
+ 
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Gerät verbunden'),
+        ),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Column(
+              children: [
+                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: buttonWidth,
+                  child: ElevatedButton(
+                    onPressed: () => selectWakeTime(context),
+                    child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: buttonWidth,
+                  child: ElevatedButton(
+                    onPressed: sendWakeTimeToESP,
+                    child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Column(
+              children: [
+                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: buttonWidth,
+                  child: ElevatedButton(
+                    onPressed: () => selectTimer(context),
+                    child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: buttonWidth,
+                  child: ElevatedButton(
+                    onPressed: sendTimerToESP,
+                    child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: disconnectFromDevice,
+                child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
-}
-
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('SunMask Steuerung'),
-      actions: [
-        TextButton(
-          onPressed: reconnectToDevice,
-          child: const Text(
-            "Erneut verbinden",
-            style: TextStyle(color: Colors.white, fontSize: 16),
-          ),
-        ),
-      ],
-    ),
-    body: Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        Column(
-          children: [
-            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Column(
-          children: [
-            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-          ],
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: buttonWidth,
-          child: ElevatedButton(
-            onPressed: disconnectFromDevice,
-            child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
-          ),
-        ),
-      ],
-    ),
-  );
-}
 
