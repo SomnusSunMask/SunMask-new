@@ -347,39 +347,36 @@ import 'package:flutter/material.dart';
      }
    }
 
-Future<void> reconnectToDevice() async {
-  if (!mounted) return; // Verhindert den Zugriff, falls das Widget nicht mehr existiert
+Future<void> disconnectFromDevice() async {
+  if (!mounted) return; // Falls das Widget nicht mehr existiert, Abbruch
 
-  final currentContext = context; // Speichert `context` vor dem ersten `await`
-  final messenger = ScaffoldMessenger.of(currentContext); // Speichert `ScaffoldMessenger` ebenfalls vorher
-
+  final currentContext = context; // Speichert `context` vor dem `await`
+  
   try {
-    await widget.device.connect().timeout(const Duration(seconds: 2));
+    await widget.device.disconnect();
 
-    if (!mounted) return; // Nach dem await prüfen, ob Widget noch existiert
+    if (!mounted) return; // Erneute Prüfung, ob Widget existiert
 
     setState(() {
-      isConnected = true;
+      isConnected = false;
     });
 
-    debugPrint("✅ Erneute Verbindung erfolgreich");
+    debugPrint("✅ Verbindung erfolgreich getrennt");
+
+    if (Navigator.canPop(currentContext)) {
+      Navigator.pop(currentContext); // Zurück zur Geräteliste
+    }
   } catch (e) {
-    debugPrint("❌ Erneute Verbindung fehlgeschlagen: $e");
+    debugPrint("❌ Verbindung trennen fehlgeschlagen: $e");
 
     if (!mounted) return; // Absicherung nach `await`
-
-    messenger.showSnackBar(
+    
+    ScaffoldMessenger.of(currentContext).showSnackBar(
       const SnackBar(
-        content: Text('❌ Erneute Verbindung fehlgeschlagen!'),
+        content: Text('❌ Verbindung konnte nicht getrennt werden!'),
         duration: Duration(seconds: 3),
       ),
     );
-
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted && Navigator.canPop(currentContext)) {
-        Navigator.pop(currentContext); // Zurück zur Geräteliste
-      }
-    });
   }
 }
 
@@ -420,13 +417,7 @@ Widget build(BuildContext context) {
         SizedBox(
           width: buttonWidth,
           child: ElevatedButton(
-            onPressed: () async {
-              final currentContext = context; // 🔹 Kontext vor await speichern
-              await widget.device.disconnect();
-              if (mounted && Navigator.canPop(currentContext)) {
-                Navigator.pop(currentContext); // 🔹 Gespeicherten Kontext verwenden
-              }
-            },
+            onPressed: disconnectFromDevice,
             child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
           ),
         ),
@@ -434,3 +425,4 @@ Widget build(BuildContext context) {
     ),
   );
 }
+
