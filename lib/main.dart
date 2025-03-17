@@ -57,14 +57,16 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
-      setState(() {
-        devices.clear();
-        for (var result in results) {
-          if (!devices.contains(result.device) && result.device.platformName == "SunMask") {
-            devices.add(result.device);
+      if (mounted) {
+        setState(() {
+          devices.clear();
+          for (var result in results) {
+            if (!devices.contains(result.device) && result.device.platformName == "SunMask") {
+              devices.add(result.device);
+            }
           }
-        }
-      });
+        });
+      }
     });
 
     await Future.delayed(const Duration(seconds: 5));
@@ -72,12 +74,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void connectToDevice(BluetoothDevice device) async {
-    final currentContext = context; // 🔹 Speichert `context`, um Fehler zu vermeiden
+    if (!mounted) return;
 
-    if (isShowingConnectionError &&
-        DateTime.now().difference(lastConnectionErrorTime).inSeconds < 5) {
-      return; // ⛔ Verhindert mehrfach auftretende Fehlermeldungen
-    }
+    final BuildContext currentContext = context; // 🔹 Speichert `context`, um Fehler zu vermeiden
 
     setState(() {
       loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
@@ -101,11 +100,11 @@ class _BLEHomePageState extends State<BLEHomePage> {
         }
       }
 
-      setState(() {
-        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
-      });
-
       if (mounted) {
+        setState(() {
+          loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+        });
+
         Navigator.push(
           currentContext,
           MaterialPageRoute(
@@ -120,34 +119,39 @@ class _BLEHomePageState extends State<BLEHomePage> {
     } catch (e) {
       debugPrint("❌ Verbindung fehlgeschlagen: $e");
 
-      setState(() {
-        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
-      });
-
       if (mounted) {
+        setState(() {
+          loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+        });
+
         showErrorSnackbar(currentContext, "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
       }
     }
   }
 
   void showErrorSnackbar(BuildContext context, String message) {
-    final currentTime = DateTime.now();
+    final DateTime currentTime = DateTime.now();
     if (isShowingConnectionError && currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
 
     isShowingConnectionError = true;
     lastConnectionErrorTime = currentTime; // 🔹 Speichert die Zeit des Fehlers
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehlermeldung
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehlermeldung
+        ),
+      );
 
-    Future.delayed(const Duration(seconds: 5), () {
-      isShowingConnectionError = false; // 🔓 Sperre nach 5 Sekunden aufheben
-    });
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) {
+          isShowingConnectionError = false; // 🔓 Sperre nach 5 Sekunden aufheben
+        }
+      });
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
