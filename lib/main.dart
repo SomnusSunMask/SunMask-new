@@ -258,29 +258,31 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-  void showErrorAndReturnToList(String message) {
-    final currentTime = DateTime.now();
-    if (isShowingError && currentTime.difference(lastErrorTime).inSeconds < 5) return; // ⛔ Blockiert neue Fehler für 5 Sekunden
+void showErrorAndReturnToList(String message) {
+  final currentTime = DateTime.now();
+  
+  if (currentTime.difference(lastErrorTime).inSeconds < 5) return; // 🚫 Sperrt neue Fehler für 5 Sekunden
+  
+  isShowingError = true; // 🛑 Sperre aktivieren
+  lastErrorTime = currentTime; // 🕒 Fehlerzeitpunkt speichern
 
-    isShowingError = true;
-    lastErrorTime = currentTime; // Speichert die Zeit der letzten Fehlermeldung
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehleranzeige
-        ),
-      );
-    }
+  if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehleranzeige
+      ),
+    );
 
     Future.delayed(const Duration(seconds: 5), () {
-      isShowingError = false; // 🟢 Sperre aufheben nach 5 Sek.
       if (mounted) {
+        isShowingError = false; // ✅ Sperre nach 5 Sek. wirklich aufheben
         Navigator.pop(context); // 🔄 Zurück zur Geräteliste
       }
     });
   }
+}
+
 
   void sendWakeTimeToESP() async {
     if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
