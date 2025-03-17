@@ -189,8 +189,10 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay? sentWakeTime;
   int? sentTimerMinutes;
   bool isConnected = true;
-  bool isShowingError = false; // 🆕 Variable zur Fehler-Sperre
   double buttonWidth = double.infinity;
+
+  bool isShowingError = false; // 🛑 Verhindert doppelte Fehlermeldungen
+  DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5)); // ⏳ Startwert: keine Sperre
 
   String get wakeTimeText => sentWakeTime != null
       ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
@@ -257,33 +259,34 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   void showErrorAndReturnToList(String message) {
-    if (isShowingError) return; // 🆕 Verhindert mehrfaches Anzeigen
+    final currentTime = DateTime.now();
+    if (isShowingError && currentTime.difference(lastErrorTime).inSeconds < 5) return; // ⛔ Blockiert neue Fehler für 5 Sekunden
 
-    isShowingError = true; // 🆕 Sperrt erneute Fehlermeldungen für 5 Sek.
+    isShowingError = true;
+    lastErrorTime = currentTime; // Speichert die Zeit der letzten Fehlermeldung
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          duration: const Duration(seconds: 5), // 🕒 5 Sekunden Fehleranzeige
+          duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehleranzeige
         ),
       );
-
-      Future.delayed(const Duration(seconds: 5), () {
-        isShowingError = false; // 🆕 Sperre aufheben nach 5 Sek.
-        if (mounted) {
-          Navigator.pop(context); // 🔄 Zurück zur Geräteliste
-        }
-      });
     }
+
+    Future.delayed(const Duration(seconds: 5), () {
+      isShowingError = false; // 🟢 Sperre aufheben nach 5 Sek.
+      if (mounted) {
+        Navigator.pop(context); // 🔄 Zurück zur Geräteliste
+      }
+    });
   }
 
   void sendWakeTimeToESP() async {
     if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
       try {
         String currentTime = DateFormat("HH:mm").format(DateTime.now());
-        String wakeTime =
-            "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
-
+        String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
         String combinedData = "$currentTime|$wakeTime";
 
         await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
@@ -298,37 +301,17 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         debugPrint("✅ Weckzeit gesendet: $combinedData");
       } catch (e) {
         debugPrint("⚠️ Senden fehlgeschlagen: $e");
-
-        if (!mounted) return;
-        final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
-
-        await Future.delayed(const Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
-
-        if (mounted) {
-          messenger.showSnackBar(
-            SnackBar(
-              content: const Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
-              duration: const Duration(seconds: 5), // 🕒 Fehler 5 Sekunden anzeigen
-            ),
-          );
-
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              Navigator.pop(context); // 🔄 Zurück zur Geräteliste
-            }
-          });
-        }
+        showErrorAndReturnToList("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
       }
     } else {
       debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden oder keine Weckzeit gesetzt.");
     }
   }
 
-    void sendTimerToESP() async {
+  void sendTimerToESP() async {
     if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
       try {
         String timerValue = selectedTimerMinutes.toString();
-
         await widget.timerCharacteristic!.write(utf8.encode(timerValue));
 
         if (mounted) {
@@ -341,26 +324,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         debugPrint("✅ Timer gesendet: $timerValue Minuten");
       } catch (e) {
         debugPrint("⚠️ Senden fehlgeschlagen: $e");
-
-        if (!mounted) return;
-        final messenger = ScaffoldMessenger.of(context);
-
-        await Future.delayed(const Duration(seconds: 2));
-
-        if (mounted) {
-          messenger.showSnackBar(
-            const SnackBar(
-              content: Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
-              duration: Duration(seconds: 5), // 🕒 5 Sekunden Anzeige
-            ),
-          );
-
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              Navigator.pop(context); // 🔄 Zurück zur Geräteliste
-            }
-          });
-        }
+        showErrorAndReturnToList("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
       }
     } else {
       debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
