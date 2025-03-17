@@ -69,61 +69,74 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void connectToDevice(BluetoothDevice device, BuildContext context) async {
-    setState(() {
-      loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
-    });
+  setState(() {
+    loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
+  });
 
-    try {
-      await device.connect().timeout(Duration(seconds: 2)); // ⏳ Verbindung mit Timeout
+  try {
+    await device.connect().timeout(const Duration(seconds: 2)); // ⏳ Verbindung mit Timeout
 
-      BluetoothCharacteristic? alarmCharacteristic;
-      BluetoothCharacteristic? timerCharacteristic;
+    BluetoothCharacteristic? alarmCharacteristic;
+    BluetoothCharacteristic? timerCharacteristic;
 
-      List<BluetoothService> services = await device.discoverServices();
-      for (var service in services) {
-        for (var characteristic in service.characteristics) {
-          if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
-            alarmCharacteristic = characteristic;
-          }
-          if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
-            timerCharacteristic = characteristic;
-          }
+    List<BluetoothService> services = await device.discoverServices();
+    for (var service in services) {
+      for (var characteristic in service.characteristics) {
+        if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+          alarmCharacteristic = characteristic;
+        }
+        if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+          timerCharacteristic = characteristic;
         }
       }
+    }
 
-      setState(() {
-        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
-      });
+    setState(() {
+      loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+    });
 
-      if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DeviceControlPage(
-              device: device,
-              alarmCharacteristic: alarmCharacteristic,
-              timerCharacteristic: timerCharacteristic,
-            ),
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DeviceControlPage(
+            device: device,
+            alarmCharacteristic: alarmCharacteristic,
+            timerCharacteristic: timerCharacteristic,
           ),
-        );
-      }
-    } catch (e) {
-      debugPrint("⚠️ Verbindung fehlgeschlagen: $e");
+        ),
+      );
+    }
+  } catch (e) {
+    debugPrint("⚠️ Verbindung fehlgeschlagen: $e");
 
-      setState(() {
-        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+    setState(() {
+      loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+    });
+
+    // ❗ Sperre für 5 Sekunden gegen mehrfaches Anzeigen der Fehlermeldung
+    final currentTime = DateTime.now();
+    if (isShowingError && currentTime.difference(lastErrorTime).inSeconds < 5) return;
+
+    isShowingError = true;
+    lastErrorTime = currentTime;
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut."),
+          duration: Duration(seconds: 5),
+        ),
+      );
+
+      // ❗ Nach 5 Sekunden Sperre wieder freigeben
+      Future.delayed(const Duration(seconds: 5), () {
+        isShowingError = false;
       });
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.'),
-            duration: Duration(seconds: 5), // Fehler bleibt 5 Sekunden sichtbar
-          ),
-        );
-      }
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
