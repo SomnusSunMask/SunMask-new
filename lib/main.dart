@@ -43,8 +43,6 @@ import 'package:flutter/material.dart';
    @override
 void initState() {
   super.initState();
-  _alarmCharacteristic = widget.alarmCharacteristic;
-  _timerCharacteristic = widget.timerCharacteristic;
 }
 
  
@@ -186,15 +184,25 @@ void initState() {
    State<DeviceControlPage> createState() => _DeviceControlPageState();
  }
  
- class _DeviceControlPageState extends State<DeviceControlPage> {
-   TimeOfDay? selectedWakeTime;
-   int? selectedTimerMinutes;
-   TimeOfDay? sentWakeTime;
-   int? sentTimerMinutes;
-   bool isConnected = true;
-   double buttonWidth = double.infinity;
-   BluetoothCharacteristic? _alarmCharacteristic;
-   BluetoothCharacteristic? _timerCharacteristic;
+class _DeviceControlPageState extends State<DeviceControlPage> {
+  TimeOfDay? selectedWakeTime;
+  int? selectedTimerMinutes;
+  TimeOfDay? sentWakeTime;
+  int? sentTimerMinutes;
+  bool isConnected = true;
+  double buttonWidth = double.infinity;
+
+  BluetoothCharacteristic? _alarmCharacteristic;
+  BluetoothCharacteristic? _timerCharacteristic;
+
+  @override
+  void initState() {
+    super.initState();
+    _alarmCharacteristic = widget.alarmCharacteristic;
+    _timerCharacteristic = widget.timerCharacteristic;
+  }
+}
+
 
  
    String get wakeTimeText => sentWakeTime != null
