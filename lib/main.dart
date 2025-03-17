@@ -259,11 +259,12 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
       try {
         String currentTime = DateFormat("HH:mm").format(DateTime.now());
-        String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
+        String wakeTime =
+            "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
 
         String combinedData = "$currentTime|$wakeTime";
 
-        await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
+        await widget.alarmCharacteristic!.write(utf8.encode(combinedData)); // 🔹 Daten senden
 
         if (mounted) {
           setState(() {
@@ -277,9 +278,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
         if (!mounted) return;
-        final messenger = ScaffoldMessenger.of(context);
+        final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
 
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
 
         if (mounted) {
           messenger.showSnackBar(
@@ -300,7 +301,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       try {
         String timerValue = selectedTimerMinutes.toString();
 
-        await widget.timerCharacteristic!.write(utf8.encode(timerValue));
+        await widget.timerCharacteristic!.write(utf8.encode(timerValue)); // 🔹 Daten senden
 
         if (mounted) {
           setState(() {
@@ -314,9 +315,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
         if (!mounted) return;
-        final messenger = ScaffoldMessenger.of(context);
+        final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
 
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
 
         if (mounted) {
           messenger.showSnackBar(
@@ -450,5 +451,4 @@ Widget build(BuildContext context) {
       ],
     ),
   );
-}
 }
