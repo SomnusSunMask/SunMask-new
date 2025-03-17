@@ -74,6 +74,11 @@ class _BLEHomePageState extends State<BLEHomePage> {
   void connectToDevice(BluetoothDevice device) async {
     final currentContext = context; // 🔹 Speichert `context`, um Fehler zu vermeiden
 
+    if (isShowingConnectionError &&
+        DateTime.now().difference(lastConnectionErrorTime).inSeconds < 5) {
+      return; // ⛔ Verhindert mehrfach auftretende Fehlermeldungen
+    }
+
     setState(() {
       loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
     });
@@ -144,7 +149,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -177,7 +181,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
             subtitle: Text(device.remoteId.toString()),
             onTap: () {
               if (!loadingDevices.contains(device)) {
-                connectToDevice(device, context);
+                connectToDevice(device);
               }
             },
           );
@@ -278,30 +282,30 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-void showErrorAndReturnToList(String message) {
-  final currentTime = DateTime.now();
-  
-  if (currentTime.difference(lastErrorTime).inSeconds < 5) return; // 🚫 Sperrt neue Fehler für 5 Sekunden
-  
-  isShowingError = true; // 🛑 Sperre aktivieren
-  lastErrorTime = currentTime; // 🕒 Fehlerzeitpunkt speichern
+  void showErrorAndReturnToList(String message) {
+    final currentTime = DateTime.now();
 
-  if (mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehleranzeige
-      ),
-    );
+    if (currentTime.difference(lastErrorTime).inSeconds < 5) return; // 🚫 Sperrt neue Fehler für 5 Sekunden
 
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        isShowingError = false; // ✅ Sperre nach 5 Sek. wirklich aufheben
-        Navigator.pop(context); // 🔄 Zurück zur Geräteliste
-      }
-    });
+    isShowingError = true; // 🛑 Sperre aktivieren
+    lastErrorTime = currentTime; // 🕒 Fehlerzeitpunkt speichern
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehleranzeige
+        ),
+      );
+
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) {
+          isShowingError = false; // ✅ Sperre nach 5 Sek. wirklich aufheben
+          Navigator.pop(context); // 🔄 Zurück zur Geräteliste
+        }
+      });
+    }
   }
-}
 
 
   void sendWakeTimeToESP() async {
