@@ -151,9 +151,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
     });
   }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -196,6 +193,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     );
   }
 }
+
 
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
