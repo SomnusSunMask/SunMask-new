@@ -191,6 +191,9 @@ import 'package:flutter/material.dart';
    int? sentTimerMinutes;
    bool isConnected = true;
    double buttonWidth = double.infinity;
+   BluetoothCharacteristic? _alarmCharacteristic;
+   BluetoothCharacteristic? _timerCharacteristic;
+
  
    String get wakeTimeText => sentWakeTime != null
        ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
@@ -363,10 +366,11 @@ Future<void> reconnectToDevice() async {
     if (!mounted) return; // Nochmal prüfen, ob Widget noch existiert
 
     setState(() {
-      isConnected = true;
-      widget.alarmCharacteristic = alarmCharacteristic;  // 🔹 Neu setzen
-      widget.timerCharacteristic = timerCharacteristic;  // 🔹 Neu setzen
-    });
+  isConnected = true;
+  _alarmCharacteristic = widget.alarmCharacteristic;
+  _timerCharacteristic = widget.timerCharacteristic;
+});
+
 
     debugPrint("✅ Erneute Verbindung erfolgreich");
   } catch (e) {
