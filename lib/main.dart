@@ -334,36 +334,61 @@ import 'package:flutter/material.dart';
    }
  }
  
-void reconnectToDevice() async {
+Future<void> reconnectToDevice() async {
+  if (!mounted) return; // Verhindert den Zugriff, falls das Widget nicht mehr existiert
+
+  final currentContext = context; // Speichert `context` vor dem ersten `await`
+  final messenger = ScaffoldMessenger.of(currentContext); // Speichert `ScaffoldMessenger` ebenfalls vorher
+
   try {
     await widget.device.connect().timeout(const Duration(seconds: 2));
 
-    if (mounted) {
-      setState(() {
-        isConnected = true;
-      });
+    if (!mounted) return; // Nach dem await prüfen, ob Widget noch existiert
+
+    // 🔹 BLE-Charakteristiken nach dem erneuten Verbinden neu abrufen
+    BluetoothCharacteristic? alarmCharacteristic;
+    BluetoothCharacteristic? timerCharacteristic;
+    List<BluetoothService> services = await widget.device.discoverServices();
+    for (var service in services) {
+      for (var characteristic in service.characteristics) {
+        if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+          alarmCharacteristic = characteristic;
+        }
+        if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+          timerCharacteristic = characteristic;
+        }
+      }
     }
+
+    if (!mounted) return; // Nochmal prüfen, ob Widget noch existiert
+
+    setState(() {
+      isConnected = true;
+      widget.alarmCharacteristic = alarmCharacteristic;  // 🔹 Neu setzen
+      widget.timerCharacteristic = timerCharacteristic;  // 🔹 Neu setzen
+    });
 
     debugPrint("✅ Erneute Verbindung erfolgreich");
   } catch (e) {
     debugPrint("❌ Erneute Verbindung fehlgeschlagen: $e");
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Erneute Verbindung fehlgeschlagen!'),
-          duration: Duration(seconds: 3),
-        ),
-      );
+    if (!mounted) return; // Absicherung nach `await`
 
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          Navigator.pop(context); // Zurück zur Geräteliste
-        }
-      });
-    }
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('❌ Erneute Verbindung fehlgeschlagen!'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        Navigator.pop(currentContext); // Zurück zur Geräteliste
+      }
+    });
   }
 }
+
 
 void disconnectFromDevice() async {
   await widget.device.disconnect();
