@@ -41,10 +41,12 @@ import 'package:flutter/material.dart';
    BluetoothDevice? selectedDevice;
  
    @override
-   void initState() {
-     super.initState();
-     scanForDevices();
-   }
+void initState() {
+  super.initState();
+  _alarmCharacteristic = widget.alarmCharacteristic;
+  _timerCharacteristic = widget.timerCharacteristic;
+}
+
  
    void scanForDevices() async {
      setState(() {
@@ -260,14 +262,14 @@ import 'package:flutter/material.dart';
    }
  
  void sendWakeTimeToESP() async {
-   if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
+   if (_alarmCharacteristic != null && selectedWakeTime != null) {
      try {
        String currentTime = DateFormat("HH:mm").format(DateTime.now());
        String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
  
        String combinedData = "$currentTime|$wakeTime";
  
-       await widget.alarmCharacteristic!.write(utf8.encode(combinedData)); // 🔹 Daten senden
+       await _alarmCharacteristic!.write(utf8.encode(combinedData)); // 🔹 Daten senden
  
        if (mounted) {
          setState(() {
@@ -301,11 +303,11 @@ import 'package:flutter/material.dart';
  
  
  void sendTimerToESP() async {
-   if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
+   if (_timerCharacteristic != null && selectedTimerMinutes != null) {
      try {
        String timerValue = selectedTimerMinutes.toString();
  
-       await widget.timerCharacteristic!.write(utf8.encode(timerValue)); // 🔹 Daten senden
+       await _timerCharacteristic!.write(utf8.encode(timerValue)); // 🔹 Daten senden
  
        if (mounted) {
          setState(() {
