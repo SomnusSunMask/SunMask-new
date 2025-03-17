@@ -118,7 +118,7 @@ import 'package:flutter/material.dart';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.'),
-              duration: Duration(seconds: 3),
+              duration: Duration(seconds: 5),
             ),
           );
         }
@@ -286,7 +286,7 @@ import 'package:flutter/material.dart';
         messenger.showSnackBar(
           SnackBar(
             content: Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
-            duration: Duration(seconds: 3),
+            duration: Duration(seconds: 5),
           ),
         );
         Future.delayed(Duration(milliseconds: 500), () {
@@ -328,7 +328,7 @@ void sendTimerToESP() async {
         messenger.showSnackBar(
           SnackBar(
             content: Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
-            duration: Duration(seconds: 3),
+            duration: Duration(seconds: 5),
           ),
         );
         Future.delayed(Duration(milliseconds: 500), () {
