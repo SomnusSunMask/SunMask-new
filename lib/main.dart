@@ -43,7 +43,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
   bool isShowingConnectionError = false; // 🔹 Fehlerblocker für 5 Sekunden
   DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0); // 🔹 Zeitpunkt letzter Fehler
 
-
   @override
   void initState() {
     super.initState();
@@ -72,90 +71,78 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.stopScan();
   }
 
-bool isConnecting = false; // 🔹 Sperrt mehrere gleichzeitige Verbindungsversuche
+  void connectToDevice(BluetoothDevice device) async {
+    final currentContext = context; // 🔹 Speichert `context`, um Fehler zu vermeiden
 
-void connectToDevice(BluetoothDevice device, BuildContext context) async {
-  final currentContext = context; // 🔹 Speichert `context`, um Fehler zu vermeiden
+    setState(() {
+      loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
+    });
 
-  if (isShowingConnectionError || isConnecting) return; // 🔹 Blockiert erneute Versuche während laufender Verbindung oder Fehler
+    try {
+      await device.connect().timeout(const Duration(seconds: 2)); // ⏳ Verbindung mit Timeout
 
-  isConnecting = true; // 🔒 Sperre aktivieren
-  setState(() {
-    loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
-  });
+      BluetoothCharacteristic? alarmCharacteristic;
+      BluetoothCharacteristic? timerCharacteristic;
 
-  try {
-    await device.connect().timeout(const Duration(seconds: 2)); // ⏳ Verbindung mit Timeout
-
-    BluetoothCharacteristic? alarmCharacteristic;
-    BluetoothCharacteristic? timerCharacteristic;
-
-    List<BluetoothService> services = await device.discoverServices();
-    for (var service in services) {
-      for (var characteristic in service.characteristics) {
-        if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
-          alarmCharacteristic = characteristic;
-        }
-        if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
-          timerCharacteristic = characteristic;
+      List<BluetoothService> services = await device.discoverServices();
+      for (var service in services) {
+        for (var characteristic in service.characteristics) {
+          if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+            alarmCharacteristic = characteristic;
+          }
+          if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+            timerCharacteristic = characteristic;
+          }
         }
       }
-    }
 
-    setState(() {
-      loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
-    });
+      setState(() {
+        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+      });
 
-    isConnecting = false; // 🔓 Sperre aufheben nach erfolgreicher Verbindung
+      if (mounted) {
+        Navigator.push(
+          currentContext,
+          MaterialPageRoute(
+            builder: (context) => DeviceControlPage(
+              device: device,
+              alarmCharacteristic: alarmCharacteristic,
+              timerCharacteristic: timerCharacteristic,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("❌ Verbindung fehlgeschlagen: $e");
 
-    if (mounted) {
-  final navigator = Navigator.of(currentContext); // 🔹 `Navigator.of(context)` vor `await` sichern
-  Future.microtask(() {
-    navigator.push(
-      MaterialPageRoute(
-        builder: (context) => DeviceControlPage(
-          device: device,
-          alarmCharacteristic: alarmCharacteristic,
-          timerCharacteristic: timerCharacteristic,
-        ),
-      ),
-    );
-  });
-}
-  } catch (e) {
-    debugPrint("❌ Verbindung fehlgeschlagen: $e");
+      setState(() {
+        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+      });
 
-    setState(() {
-      loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
-    });
-
-    isConnecting = false; // 🔓 Sperre aufheben nach Fehlschlag
-
-    if (mounted) {
-      showErrorSnackbar(currentContext, "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
+      if (mounted) {
+        showErrorSnackbar(currentContext, "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
+      }
     }
   }
-}
 
+  void showErrorSnackbar(BuildContext context, String message) {
+    final currentTime = DateTime.now();
+    if (isShowingConnectionError && currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
 
-void showErrorSnackbar(BuildContext context, String message) {
-  final currentTime = DateTime.now();
-  if (isShowingConnectionError && currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
+    isShowingConnectionError = true;
+    lastConnectionErrorTime = currentTime; // 🔹 Speichert die Zeit des Fehlers
 
-  isShowingConnectionError = true;
-  lastConnectionErrorTime = currentTime; // 🔹 Speichert die Zeit des Fehlers
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehlermeldung
+      ),
+    );
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehlermeldung
-    ),
-  );
-
-  Future.delayed(const Duration(seconds: 5), () {
-    isShowingConnectionError = false; // 🔓 Sperre nach 5 Sekunden aufheben
-  });
-}
+    Future.delayed(const Duration(seconds: 5), () {
+      isShowingConnectionError = false; // 🔓 Sperre nach 5 Sekunden aufheben
+    });
+  }
 
 
   @override
