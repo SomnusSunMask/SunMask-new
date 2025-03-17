@@ -117,7 +117,7 @@ import 'package:flutter/material.dart';
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('❌ Verbindung fehlgeschlagen! Bitte erneut versuchen.'),
+              content: Text('❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.'),
               duration: Duration(seconds: 3),
             ),
           );
@@ -285,7 +285,7 @@ import 'package:flutter/material.dart';
         if (mounted) {
           messenger.showSnackBar(
             SnackBar(
-              content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
+              content: Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
               duration: Duration(seconds: 3),
             ),
           );
@@ -323,7 +323,7 @@ import 'package:flutter/material.dart';
         if (mounted) {
           messenger.showSnackBar(
             SnackBar(
-              content: Text('❌ Senden fehlgeschlagen. Starte die SunMask neu.'),
+              content: Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
               duration: Duration(seconds: 3),
             ),
           );
