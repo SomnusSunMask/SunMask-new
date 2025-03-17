@@ -40,8 +40,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
   final Set<BluetoothDevice> loadingDevices = {}; // 🔄 Trackt Geräte, die sich verbinden
   BluetoothDevice? selectedDevice;
 
-  bool isShowingError = false; // ❗ Kontrolliert, ob gerade eine Fehlermeldung aktiv ist
-  DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5)); // ❗ Speichert die Zeit der letzten Fehlermeldung
+  bool isShowingConnectionError = false; // 🔹 Fehlerblocker für 5 Sekunden
+  DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0); // 🔹 Zeitpunkt letzter Fehler
 
 
   @override
