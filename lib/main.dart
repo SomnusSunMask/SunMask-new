@@ -109,17 +109,19 @@ void connectToDevice(BluetoothDevice device, BuildContext context) async {
     isConnecting = false; // 🔓 Sperre aufheben nach erfolgreicher Verbindung
 
     if (mounted) {
-      Navigator.push(
-        currentContext,
-        MaterialPageRoute(
-          builder: (context) => DeviceControlPage(
-            device: device,
-            alarmCharacteristic: alarmCharacteristic,
-            timerCharacteristic: timerCharacteristic,
-          ),
+  Future.microtask(() {
+    Navigator.push(
+      currentContext,
+      MaterialPageRoute(
+        builder: (context) => DeviceControlPage(
+          device: device,
+          alarmCharacteristic: alarmCharacteristic,
+          timerCharacteristic: timerCharacteristic,
         ),
-      );
-    }
+      ),
+    );
+  });
+}
   } catch (e) {
     debugPrint("❌ Verbindung fehlgeschlagen: $e");
 
