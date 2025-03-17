@@ -109,9 +109,9 @@ void connectToDevice(BluetoothDevice device, BuildContext context) async {
     isConnecting = false; // 🔓 Sperre aufheben nach erfolgreicher Verbindung
 
     if (mounted) {
+  final navigator = Navigator.of(currentContext); // 🔹 `Navigator.of(context)` vor `await` sichern
   Future.microtask(() {
-    Navigator.push(
-      currentContext,
+    navigator.push(
       MaterialPageRoute(
         builder: (context) => DeviceControlPage(
           device: device,
