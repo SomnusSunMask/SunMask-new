@@ -259,12 +259,11 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
       try {
         String currentTime = DateFormat("HH:mm").format(DateTime.now());
-        String wakeTime =
-            "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
+        String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
 
         String combinedData = "$currentTime|$wakeTime";
 
-        await widget.alarmCharacteristic!.write(utf8.encode(combinedData)); // 🔹 Daten senden
+        await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
 
         if (mounted) {
           setState(() {
@@ -278,9 +277,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
         if (!mounted) return;
-        final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
+        final messenger = ScaffoldMessenger.of(context);
 
-        await Future.delayed(const Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
+        await Future.delayed(const Duration(seconds: 2));
 
         if (mounted) {
           messenger.showSnackBar(
@@ -301,7 +300,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       try {
         String timerValue = selectedTimerMinutes.toString();
 
-        await widget.timerCharacteristic!.write(utf8.encode(timerValue)); // 🔹 Daten senden
+        await widget.timerCharacteristic!.write(utf8.encode(timerValue));
 
         if (mounted) {
           setState(() {
@@ -315,9 +314,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         debugPrint("⚠️ Senden fehlgeschlagen: $e");
 
         if (!mounted) return;
-        final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
+        final messenger = ScaffoldMessenger.of(context);
 
-        await Future.delayed(const Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
+        await Future.delayed(const Duration(seconds: 2));
 
         if (mounted) {
           messenger.showSnackBar(
@@ -334,122 +333,122 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 }
 
-  void reconnectToDevice() async {
-    try {
-      await widget.device.connect().timeout(const Duration(seconds: 2));
-
-      if (mounted) {
-        setState(() {
-          isConnected = true;
-        });
-      }
-
-      debugPrint("✅ Erneute Verbindung erfolgreich");
-    } catch (e) {
-      debugPrint("❌ Erneute Verbindung fehlgeschlagen: $e");
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Erneute Verbindung fehlgeschlagen!'),
-            duration: Duration(seconds: 3),
-          ),
-        );
-
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            Navigator.pop(context); // Zurück zur Geräteliste
-          }
-        });
-      }
-    }
-  }
-
-  void disconnectFromDevice() async {
-    await widget.device.disconnect();
-    setState(() {
-      isConnected = false;
-    });
+void reconnectToDevice() async {
+  try {
+    await widget.device.connect().timeout(const Duration(seconds: 2));
 
     if (mounted) {
-      Navigator.pop(context);
+      setState(() {
+        isConnected = true;
+      });
+    }
+
+    debugPrint("✅ Erneute Verbindung erfolgreich");
+  } catch (e) {
+    debugPrint("❌ Erneute Verbindung fehlgeschlagen: $e");
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Erneute Verbindung fehlgeschlagen!'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.pop(context); // Zurück zur Geräteliste
+        }
+      });
     }
   }
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        actions: [
-          TextButton(
-            onPressed: reconnectToDevice,
-            child: const Text(
-              "Erneut verbinden",
-              style: TextStyle(fontSize: 16), // Standard-Button-Farbe bleibt erhalten
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Column(
-            children: [
-              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectWakeTime(context),
-                  child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendWakeTimeToESP,
-                  child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Column(
-            children: [
-              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectTimer(context),
-                  child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendTimerToESP,
-                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: buttonWidth,
-            child: ElevatedButton(
-              onPressed: disconnectFromDevice,
-              child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
-            ),
-          ),
-        ],
-      ),
-    );
+void disconnectFromDevice() async {
+  await widget.device.disconnect();
+  setState(() {
+    isConnected = false;
+  });
+
+  if (mounted) {
+    Navigator.pop(context);
   }
+}
+
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      actions: [
+        TextButton(
+          onPressed: reconnectToDevice,
+          child: const Text(
+            "Erneut verbinden",
+            style: TextStyle(fontSize: 16), // Standard-Button-Farbe bleibt erhalten
+          ),
+        ),
+      ],
+    ),
+    body: Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Column(
+          children: [
+            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: () => selectWakeTime(context),
+                child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
+              ),
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: sendWakeTimeToESP,
+                child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Column(
+          children: [
+            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: () => selectTimer(context),
+                child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
+              ),
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: sendTimerToESP,
+                child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: buttonWidth,
+          child: ElevatedButton(
+            onPressed: disconnectFromDevice,
+            child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
