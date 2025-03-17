@@ -73,6 +73,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void connectToDevice(BluetoothDevice device, BuildContext context) async {
+  final currentContext = context; // 🔹 Speichert `context`, um Fehler zu vermeiden
+
   setState(() {
     loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
   });
@@ -99,9 +101,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
       loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
     });
 
-    if (context.mounted) {
+    if (mounted) {
       Navigator.push(
-        context,
+        currentContext,
         MaterialPageRoute(
           builder: (context) => DeviceControlPage(
             device: device,
@@ -112,33 +114,35 @@ class _BLEHomePageState extends State<BLEHomePage> {
       );
     }
   } catch (e) {
-    debugPrint("⚠️ Verbindung fehlgeschlagen: $e");
+    debugPrint("❌ Verbindung fehlgeschlagen: $e");
 
     setState(() {
       loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
     });
 
-    // ❗ Sperre für 5 Sekunden gegen mehrfaches Anzeigen der Fehlermeldung
-    final currentTime = DateTime.now();
-    if (isShowingError && currentTime.difference(lastErrorTime).inSeconds < 5) return;
-
-    isShowingError = true;
-    lastErrorTime = currentTime;
-
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut."),
-          duration: Duration(seconds: 5),
-        ),
-      );
-
-      // ❗ Nach 5 Sekunden Sperre wieder freigeben
-      Future.delayed(const Duration(seconds: 5), () {
-        isShowingError = false;
-      });
+      showErrorSnackbar(currentContext, "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
     }
   }
+}
+
+void showErrorSnackbar(BuildContext context, String message) {
+  final currentTime = DateTime.now();
+  if (isShowingConnectionError && currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
+
+  isShowingConnectionError = true;
+  lastConnectionErrorTime = currentTime; // 🔹 Speichert die Zeit des Fehlers
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehlermeldung
+    ),
+  );
+
+  Future.delayed(const Duration(seconds: 5), () {
+    isShowingConnectionError = false; // 🔓 Sperre nach 5 Sekunden aufheben
+  });
 }
 
 
