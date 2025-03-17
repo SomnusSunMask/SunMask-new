@@ -257,82 +257,92 @@ import 'package:flutter/material.dart';
     }
  
   void sendWakeTimeToESP() async {
-    if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
-      try {
-        String currentTime = DateFormat("HH:mm").format(DateTime.now());
-        String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
- 
-        String combinedData = "$currentTime|$wakeTime";
- 
-        await widget.alarmCharacteristic!.write(utf8.encode(combinedData)); // 🔹 Daten senden
- 
-        if (mounted) {
-          setState(() {
-            sentWakeTime = selectedWakeTime;
-            sentTimerMinutes = null; // Timer zurücksetzen
-          });
-        }
- 
-        debugPrint("✅ Weckzeit gesendet: $combinedData");
-      } catch (e) {
-        debugPrint("⚠️ Senden fehlgeschlagen: $e");
- 
-        if (!mounted) return;
-        final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
- 
-        await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
- 
-        if (mounted) {
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
+  if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
+    try {
+      String currentTime = DateFormat("HH:mm").format(DateTime.now());
+      String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
+
+      String combinedData = "$currentTime|$wakeTime";
+
+      await widget.alarmCharacteristic!.write(utf8.encode(combinedData)); // 🔹 Daten senden
+
+      if (mounted) {
+        setState(() {
+          sentWakeTime = selectedWakeTime;
+          sentTimerMinutes = null; // Timer zurücksetzen
+        });
       }
-    } else {
-      debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden oder keine Weckzeit gesetzt.");
-    }
-  }
- 
- 
-  void sendTimerToESP() async {
-    if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
-      try {
-        String timerValue = selectedTimerMinutes.toString();
- 
-        await widget.timerCharacteristic!.write(utf8.encode(timerValue)); // 🔹 Daten senden
- 
-        if (mounted) {
-          setState(() {
-            sentTimerMinutes = selectedTimerMinutes;
-            sentWakeTime = null; // Weckzeit zurücksetzen
-          });
-        }
- 
-        debugPrint("✅ Timer gesendet: $timerValue Minuten");
-      } catch (e) {
-        debugPrint("⚠️ Senden fehlgeschlagen: $e");
- 
-        if (!mounted) return;
-        final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
- 
-        await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
- 
-        if (mounted) {
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
+
+      debugPrint("✅ Weckzeit gesendet: $combinedData");
+    } catch (e) {
+      debugPrint("⚠️ Senden fehlgeschlagen: $e");
+
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
+
+      await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
+
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        Future.delayed(Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.pop(context); // Zurück zur Geräteliste
+          }
+        });
       }
-    } else {
-      debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
     }
+  } else {
+    debugPrint("⚠️ Weckzeit-Charakteristik nicht gefunden oder keine Weckzeit gesetzt.");
   }
+}
+
+void sendTimerToESP() async {
+  if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
+    try {
+      String timerValue = selectedTimerMinutes.toString();
+
+      await widget.timerCharacteristic!.write(utf8.encode(timerValue)); // 🔹 Daten senden
+
+      if (mounted) {
+        setState(() {
+          sentTimerMinutes = selectedTimerMinutes;
+          sentWakeTime = null; // Weckzeit zurücksetzen
+        });
+      }
+
+      debugPrint("✅ Timer gesendet: $timerValue Minuten");
+    } catch (e) {
+      debugPrint("⚠️ Senden fehlgeschlagen: $e");
+
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context); // 🔹 `context` vor `await` speichern
+
+      await Future.delayed(Duration(seconds: 2)); // 🔹 Wartezeit von 2 Sekunden hinzufügen
+
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('❌ Senden fehlgeschlagen! Verbinde die SunMask neu.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        Future.delayed(Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.pop(context); // Zurück zur Geräteliste
+          }
+        });
+      }
+    }
+  } else {
+    debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
+  }
+}
+
  
  
  void disconnectFromDevice() async {
@@ -350,7 +360,7 @@ import 'package:flutter/material.dart';
     Widget build(BuildContext context) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Gerät verbunden'),
+          title: const Text('Lichtwecker einstellen'),
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
