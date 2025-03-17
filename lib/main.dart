@@ -72,9 +72,14 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.stopScan();
   }
 
-  void connectToDevice(BluetoothDevice device, BuildContext context) async {
+bool isConnecting = false; // 🔹 Sperrt mehrere gleichzeitige Verbindungsversuche
+
+void connectToDevice(BluetoothDevice device, BuildContext context) async {
   final currentContext = context; // 🔹 Speichert `context`, um Fehler zu vermeiden
 
+  if (isShowingConnectionError || isConnecting) return; // 🔹 Blockiert erneute Versuche während laufender Verbindung oder Fehler
+
+  isConnecting = true; // 🔒 Sperre aktivieren
   setState(() {
     loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
   });
@@ -101,6 +106,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
       loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
     });
 
+    isConnecting = false; // 🔓 Sperre aufheben nach erfolgreicher Verbindung
+
     if (mounted) {
       Navigator.push(
         currentContext,
@@ -120,11 +127,14 @@ class _BLEHomePageState extends State<BLEHomePage> {
       loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
     });
 
+    isConnecting = false; // 🔓 Sperre aufheben nach Fehlschlag
+
     if (mounted) {
       showErrorSnackbar(currentContext, "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
     }
   }
 }
+
 
 void showErrorSnackbar(BuildContext context, String message) {
   final currentTime = DateTime.now();
