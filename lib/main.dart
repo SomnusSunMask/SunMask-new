@@ -286,7 +286,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-  void showErrorAndReturnToList(String message) {
+    void showErrorAndReturnToList(String message) {
     final currentTime = DateTime.now();
 
     if (currentTime.difference(lastErrorTime).inSeconds < 5) return; // 🚫 Sperrt neue Fehler für 5 Sekunden
@@ -310,7 +310,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       });
     }
   }
-
 
   void sendWakeTimeToESP() async {
     if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
@@ -361,14 +360,26 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-  void disconnectFromDevice() async {
-    await widget.device.disconnect();
-    setState(() {
-      isConnected = false;
-    });
+  void clearWakeTimeOrTimer() async {
+    if (widget.alarmCharacteristic != null || widget.timerCharacteristic != null) {
+      try {
+        await widget.alarmCharacteristic?.write(utf8.encode("CLEAR"));
+        await widget.timerCharacteristic?.write(utf8.encode("CLEAR"));
 
-    if (mounted) {
-      Navigator.pop(context);
+        if (mounted) {
+          setState(() {
+            sentWakeTime = null;
+            sentTimerMinutes = null;
+          });
+        }
+
+        debugPrint("✅ Weckzeit/Timer gelöscht");
+      } catch (e) {
+        debugPrint("⚠️ Löschen fehlgeschlagen: $e");
+        showErrorAndReturnToList("❌ Löschen fehlgeschlagen! Verbinde die SunMask neu.");
+      }
+    } else {
+      debugPrint("⚠️ Keine gültige Verbindung zur Löschung vorhanden.");
     }
   }
 
@@ -432,8 +443,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           SizedBox(
             width: buttonWidth,
             child: ElevatedButton(
-              onPressed: disconnectFromDevice,
-              child: const Text("Verbindung trennen", style: TextStyle(fontSize: 18)),
+              onPressed: clearWakeTimeOrTimer,
+              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
             ),
           ),
         ],
@@ -441,3 +452,4 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     );
   }
 }
+
