@@ -338,27 +338,30 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   void sendTimerToESP() async {
-    if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
-      try {
-        String timerValue = selectedTimerMinutes.toString();
-        await widget.timerCharacteristic!.write(utf8.encode(timerValue));
+  if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
+    try {
+      String currentTime = DateFormat("HH:mm").format(DateTime.now());
+      String timerValue = selectedTimerMinutes.toString();
+      String combinedData = "$currentTime|$timerValue";
 
-        if (mounted) {
-          setState(() {
-            sentTimerMinutes = selectedTimerMinutes;
-            sentWakeTime = null; // Weckzeit zurücksetzen
-          });
-        }
+      await widget.timerCharacteristic!.write(utf8.encode(combinedData));
 
-        debugPrint("✅ Timer gesendet: $timerValue Minuten");
-      } catch (e) {
-        debugPrint("⚠️ Senden fehlgeschlagen: $e");
-        showErrorAndReturnToList("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
+      if (mounted) {
+        setState(() {
+          sentTimerMinutes = selectedTimerMinutes;
+          sentWakeTime = null; // Weckzeit zurücksetzen
+        });
       }
-    } else {
-      debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
+
+      debugPrint("✅ Timer gesendet: $combinedData");
+    } catch (e) {
+      debugPrint("⚠️ Senden fehlgeschlagen: $e");
+      showErrorAndReturnToList("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
     }
+  } else {
+    debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
   }
+}
 
   void clearWakeTimeOrTimer() async {
     if (widget.alarmCharacteristic != null || widget.timerCharacteristic != null) {
