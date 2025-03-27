@@ -217,6 +217,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   int? batteryLevel;
   bool isConnected = true;
   double buttonWidth = double.infinity;
+  bool isShowingError = false;
+  DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5));
+
 
   final String batteryUuid = "abcdef06-1234-5678-1234-56789abcdef0";
 @override
