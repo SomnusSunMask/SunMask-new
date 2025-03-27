@@ -419,13 +419,15 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lichtwecker einstellen'),
+        style: TextStyle(fontSize: 14), // <–– HIER Schriftgröße angepasst
+        ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 10.0),
+            padding: const EdgeInsets.only(right: 14.0),
             child: Center(
               child: Text(
                 batteryLevel != null ? 'Akku: $batteryLevel%' : 'Akku: ...',
-                style: const TextStyle(fontSize: 10),
+                style: const TextStyle(fontSize: 14),
               ),
             ),
           ),
