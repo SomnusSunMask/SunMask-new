@@ -1,3 +1,5 @@
+// main.dart – Teil 1 von 4 (oben links)
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -20,9 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BLE Weckzeit & Timer',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const BLEHomePage(),
     );
   }
@@ -55,14 +55,13 @@ class _BLEHomePageState extends State<BLEHomePage> {
     });
 
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+
     FlutterBluePlus.scanResults.listen((results) {
       if (!mounted) return;
-
       setState(() {
         devices.clear();
         for (var result in results) {
-          if (!devices.contains(result.device) &&
-              result.device.platformName == "SunMask") {
+          if (!devices.contains(result.device) && result.device.platformName == "SunMask") {
             devices.add(result.device);
           }
         }
@@ -90,57 +89,48 @@ class _BLEHomePageState extends State<BLEHomePage> {
       List<BluetoothService> services = await device.discoverServices();
       for (var service in services) {
         for (var characteristic in service.characteristics) {
-          if (characteristic.uuid.toString() ==
-              "abcdef03-1234-5678-1234-56789abcdef0") {
+          final uuid = characteristic.uuid.toString();
+          if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
             alarmCharacteristic = characteristic;
-          }
-          if (characteristic.uuid.toString() ==
-              "abcdef04-1234-5678-1234-56789abcdef0") {
+          } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
             timerCharacteristic = characteristic;
-          }
-          if (characteristic.uuid.toString() ==
-              "abcdef06-1234-5678-1234-56789abcdef0") {
+          } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
             batteryCharacteristic = characteristic;
           }
         }
       }
+
       if (!mounted) return;
 
       setState(() {
         loadingDevices.remove(device);
       });
 
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DeviceControlPage(
-              device: device,
-              alarmCharacteristic: alarmCharacteristic,
-              timerCharacteristic: timerCharacteristic,
-              batteryCharacteristic: batteryCharacteristic,
-            ),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DeviceControlPage(
+            device: device,
+            alarmCharacteristic: alarmCharacteristic,
+            timerCharacteristic: timerCharacteristic,
+            batteryCharacteristic: batteryCharacteristic,
           ),
-        );
-      }
+        ),
+      );
     } catch (e) {
       debugPrint("❌ Verbindung fehlgeschlagen: $e");
-
       if (!mounted) return;
-
       setState(() {
         loadingDevices.remove(device);
       });
-
-      showErrorSnackbar(
-          "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
     }
   }
 
   void showErrorSnackbar(String message) {
+    if (!mounted) return;
     final currentTime = DateTime.now();
-    if (isShowingConnectionError &&
-        currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
+    if (isShowingConnectionError && currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
 
     isShowingConnectionError = true;
     lastConnectionErrorTime = currentTime;
@@ -158,6 +148,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
     });
   }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -238,14 +230,35 @@ class _BLEHomePageState extends State<BLEHomePage> {
     );
   }
 }
+// main.dart – Teil 2 von 4 (oben links)
+
+class DeviceControlPage extends StatefulWidget {
+  final BluetoothDevice device;
+  final BluetoothCharacteristic? alarmCharacteristic;
+  final BluetoothCharacteristic? timerCharacteristic;
+  final BluetoothCharacteristic? batteryCharacteristic;
+
+  const DeviceControlPage({
+    super.key,
+    required this.device,
+    this.alarmCharacteristic,
+    this.timerCharacteristic,
+    this.batteryCharacteristic,
+  });
+
+  @override
+  State<DeviceControlPage> createState() => _DeviceControlPageState();
+}
+
 class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay? selectedWakeTime;
   int? selectedTimerMinutes;
   TimeOfDay? sentWakeTime;
   int? sentTimerMinutes;
-  int? batteryLevel; // Neu: Akkustand
   bool isConnected = true;
   double buttonWidth = double.infinity;
+
+  int? batteryLevelPercent;
 
   bool isShowingError = false;
   DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5));
@@ -264,6 +277,31 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   String get timerButtonText => selectedTimerMinutes != null
       ? "Timer wählen – $selectedTimerMinutes Minuten"
       : "Timer wählen";
+
+  @override
+  void initState() {
+    super.initState();
+    readBatteryLevel();
+  }
+
+  Future<void> readBatteryLevel() async {
+    if (widget.batteryCharacteristic != null) {
+      try {
+        await widget.batteryCharacteristic!.read();
+        final value = widget.batteryCharacteristic!.lastValue;
+        if (value.isNotEmpty) {
+          final percent = int.tryParse(utf8.decode(value));
+          if (percent != null && mounted) {
+            setState(() {
+              batteryLevelPercent = percent;
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint("⚠️ Akku lesen fehlgeschlagen: $e");
+      }
+    }
+  }
 
   Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -313,10 +351,11 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       });
     }
   }
-
   void showErrorAndReturnToList(String message) {
     final currentTime = DateTime.now();
+
     if (currentTime.difference(lastErrorTime).inSeconds < 5) return;
+
     isShowingError = true;
     lastErrorTime = currentTime;
 
@@ -411,20 +450,21 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       debugPrint("⚠️ Keine gültige Verbindung zur Löschung vorhanden.");
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lichtwecker einstellen'),
         actions: [
-          if (batteryLevel != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Center(
-                child: Text("$batteryLevel%", style: const TextStyle(fontSize: 16)),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                "Akku: $batteryLevel%",
+                style: const TextStyle(fontSize: 18),
               ),
             ),
+          ),
         ],
       ),
       body: Column(
