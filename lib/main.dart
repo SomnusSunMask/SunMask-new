@@ -420,15 +420,15 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       appBar: AppBar(
   title: const Text(
     'Lichtwecker einstellen',
-    style: TextStyle(fontSize: 26), // Gültig innerhalb von Text
+    style: TextStyle(fontSize: 14), // Gültig innerhalb von Text
   ),
   actions: [
     Padding(
-      padding: const EdgeInsets.only(right: 16.0),
+      padding: const EdgeInsets.only(right: 14.0),
       child: Center(
         child: Text(
           batteryLevel != null ? 'Akku: $batteryLevel%' : '...',
-          style: const TextStyle(fontSize: 18), // Auch hier korrekt
+          style: const TextStyle(fontSize: 14), // Auch hier korrekt
         ),
       ),
     ),
