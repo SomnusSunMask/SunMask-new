@@ -260,6 +260,42 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   int? batteryLevelPercent;
 
+  // In der Klasse _DeviceControlPageState hinzufügen:
+
+// UUID der Battery-Characteristic (muss zu deinem ESP-Code passen)
+final String batteryUuid = "abcdef06-1234-5678-1234-56789abcdef0";
+
+@override
+void initState() {
+  super.initState();
+  discoverBatteryCharacteristic();
+}
+
+void discoverBatteryCharacteristic() async {
+  try {
+    List<BluetoothService> services = await widget.device.discoverServices();
+    for (var service in services) {
+      for (var characteristic in service.characteristics) {
+        if (characteristic.uuid.toString() == batteryUuid) {
+          await characteristic.setNotifyValue(true);
+          characteristic.onValueReceived.listen((value) {
+            final decoded = utf8.decode(value);
+            final parsed = int.tryParse(decoded);
+            if (parsed != null && mounted) {
+              setState(() {
+                batteryLevel = parsed;
+              });
+            }
+          });
+        }
+      }
+    }
+  } catch (e) {
+    debugPrint("⚠️ Fehler beim Entdecken der Battery-Characteristic: $e");
+  }
+}
+
+
   bool isShowingError = false;
   DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5));
 
