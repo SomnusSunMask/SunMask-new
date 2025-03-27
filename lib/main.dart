@@ -434,82 +434,85 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lichtwecker einstellen'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Text(
-                batteryLevel != null ? "Akku: $batteryLevel%" : "...",
-                style: const TextStyle(fontSize: 16),
-              ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text(
+        'Lichtwecker einstellen',
+        style: TextStyle(fontSize: 17), // Schriftgröße angepasst
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0),
+          child: Center(
+            child: Text(
+              batteryLevel != null ? 'Akku: $batteryLevel%' : '...',
+              style: const TextStyle(fontSize: 16), // Schriftgröße angepasst
             ),
           ),
-        ],
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Column(
-            children: [
-              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectWakeTime(context),
-                  child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
-                ),
+        ),
+      ],
+    ),
+    body: Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Column(
+          children: [
+            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: () => selectWakeTime(context),
+                child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
               ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendWakeTimeToESP,
-                  child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Column(
-            children: [
-              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectTimer(context),
-                  child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendTimerToESP,
-                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: buttonWidth,
-            child: ElevatedButton(
-              onPressed: clearWakeTimeOrTimer,
-              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
             ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: sendWakeTimeToESP,
+                child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Column(
+          children: [
+            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: () => selectTimer(context),
+                child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
+              ),
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: buttonWidth,
+              child: ElevatedButton(
+                onPressed: sendTimerToESP,
+                child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: buttonWidth,
+          child: ElevatedButton(
+            onPressed: clearWakeTimeOrTimer,
+            child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }
+
