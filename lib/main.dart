@@ -418,21 +418,22 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lichtwecker einstellen'),
-        style: TextStyle(fontSize: 14), // <–– HIER Schriftgröße angepasst
+  title: const Text(
+    'Lichtwecker einstellen',
+    style: TextStyle(fontSize: 26), // Gültig innerhalb von Text
+  ),
+  actions: [
+    Padding(
+      padding: const EdgeInsets.only(right: 16.0),
+      child: Center(
+        child: Text(
+          batteryLevelPercent != null ? 'Akku: $batteryLevelPercent%' : '...',
+          style: const TextStyle(fontSize: 18), // Auch hier korrekt
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 14.0),
-            child: Center(
-              child: Text(
-                batteryLevel != null ? 'Akku: $batteryLevel%' : 'Akku: ...',
-                style: const TextStyle(fontSize: 14),
-              ),
-            ),
-          ),
-        ],
       ),
+    ),
+  ],
+),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
