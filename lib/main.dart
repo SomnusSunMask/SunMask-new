@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import für die Bildschirmrotation-Kontrolle
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized(); // Stellt sicher, dass alles initialisiert ist
+  WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp, // Nur Hochformat erlaubt
+    DeviceOrientation.portraitUp,
   ]).then((_) {
     runApp(const MyApp());
   });
@@ -20,9 +20,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BLE Weckzeit & Timer',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const BLEHomePage(),
     );
   }
@@ -37,11 +35,11 @@ class BLEHomePage extends StatefulWidget {
 
 class _BLEHomePageState extends State<BLEHomePage> {
   final List<BluetoothDevice> devices = [];
-  final Set<BluetoothDevice> loadingDevices = {}; // 🔄 Trackt Geräte, die sich verbinden
+  final Set<BluetoothDevice> loadingDevices = {};
   BluetoothDevice? selectedDevice;
 
-  bool isShowingConnectionError = false; // 🔹 Fehlerblocker für 5 Sekunden
-  DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0); // 🔹 Zeitpunkt letzter Fehler
+  bool isShowingConnectionError = false;
+  DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
   void initState() {
@@ -57,8 +55,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
 
     FlutterBluePlus.scanResults.listen((results) {
-      if (!mounted) return; // Sicherstellen, dass das Widget noch existiert
-
+      if (!mounted) return;
       setState(() {
         devices.clear();
         for (var result in results) {
@@ -72,57 +69,58 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await Future.delayed(const Duration(seconds: 5));
     await FlutterBluePlus.stopScan();
   }
-
   void connectToDevice(BluetoothDevice device) async {
-    if (!mounted) return; // Sicherstellen, dass `context` noch gültig ist
+    if (!mounted) return;
 
     setState(() {
-      loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
+      loadingDevices.add(device);
     });
 
     try {
-      await device.connect().timeout(const Duration(seconds: 2)); // ⏳ Verbindung mit Timeout
+      await device.connect().timeout(const Duration(seconds: 2));
 
       BluetoothCharacteristic? alarmCharacteristic;
       BluetoothCharacteristic? timerCharacteristic;
+      BluetoothCharacteristic? batteryCharacteristic;
 
       List<BluetoothService> services = await device.discoverServices();
       for (var service in services) {
         for (var characteristic in service.characteristics) {
-          if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+          final uuid = characteristic.uuid.toString();
+          if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
             alarmCharacteristic = characteristic;
-          }
-          if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+          } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
             timerCharacteristic = characteristic;
+          } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
+            batteryCharacteristic = characteristic;
           }
         }
       }
 
-      if (!mounted) return; // Bevor `setState` oder `Navigator` verwendet wird
+      if (!mounted) return;
 
       setState(() {
-        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+        loadingDevices.remove(device);
       });
 
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DeviceControlPage(
-              device: device,
-              alarmCharacteristic: alarmCharacteristic,
-              timerCharacteristic: timerCharacteristic,
-            ),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DeviceControlPage(
+            device: device,
+            alarmCharacteristic: alarmCharacteristic,
+            timerCharacteristic: timerCharacteristic,
+            batteryCharacteristic: batteryCharacteristic,
           ),
-        );
-      }
+        ),
+      );
     } catch (e) {
       debugPrint("❌ Verbindung fehlgeschlagen: $e");
 
-      if (!mounted) return; // Verhindert `context`-Fehler
+      if (!mounted) return;
 
       setState(() {
-        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+        loadingDevices.remove(device);
       });
 
       showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
@@ -130,28 +128,27 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void showErrorSnackbar(String message) {
-    if (!mounted) return; // Sicherstellen, dass das Widget existiert
+    if (!mounted) return;
 
     final currentTime = DateTime.now();
     if (isShowingConnectionError && currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
 
     isShowingConnectionError = true;
-    lastConnectionErrorTime = currentTime; // 🔹 Speichert die Zeit des Fehlers
+    lastConnectionErrorTime = currentTime;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehlermeldung
+        duration: const Duration(seconds: 5),
       ),
     );
 
     Future.delayed(const Duration(seconds: 5), () {
       if (mounted) {
-        isShowingConnectionError = false; // 🔓 Sperre nach 5 Sekunden aufheben
+        isShowingConnectionError = false;
       }
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -170,10 +167,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
           final device = devices[index];
           return ListTile(
             title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // 🔹 Gerät links, Ladekreis rechts
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(device.platformName),
-                if (loadingDevices.contains(device)) // 🔄 Ladeanimation nur für aktuelles Gerät
+                if (loadingDevices.contains(device))
                   const SizedBox(
                     width: 24,
                     height: 24,
@@ -194,17 +191,18 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 }
 
-
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
   final BluetoothCharacteristic? timerCharacteristic;
+  final BluetoothCharacteristic? batteryCharacteristic;
 
   const DeviceControlPage({
     super.key,
     required this.device,
     this.alarmCharacteristic,
     this.timerCharacteristic,
+    this.batteryCharacteristic,
   });
 
   @override
@@ -216,18 +214,62 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   int? selectedTimerMinutes;
   TimeOfDay? sentWakeTime;
   int? sentTimerMinutes;
+  int? batteryLevel;
   bool isConnected = true;
   double buttonWidth = double.infinity;
 
-  bool isShowingError = false; // 🛑 Verhindert doppelte Fehlermeldungen
-  DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5)); // ⏳ Startwert: keine Sperre
+  final String batteryUuid = "abcdef06-1234-5678-1234-56789abcdef0";
+@override
+  void initState() {
+    super.initState();
+    readBatteryLevel();
+    listenToBatteryNotifications();
+  }
+
+  void readBatteryLevel() async {
+    if (widget.batteryCharacteristic != null) {
+      try {
+        await widget.batteryCharacteristic!.read();
+        final value = widget.batteryCharacteristic!.lastValue;
+        if (value.isNotEmpty) {
+          final percent = int.tryParse(utf8.decode(value));
+          if (percent != null && mounted) {
+            setState(() {
+              batteryLevel = percent;
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint("⚠️ Akku lesen fehlgeschlagen: $e");
+      }
+    }
+  }
+
+  void listenToBatteryNotifications() async {
+    if (widget.batteryCharacteristic != null) {
+      try {
+        await widget.batteryCharacteristic!.setNotifyValue(true);
+        widget.batteryCharacteristic!.onValueReceived.listen((value) {
+          final percent = int.tryParse(utf8.decode(value));
+          if (percent != null && mounted) {
+            setState(() {
+              batteryLevel = percent;
+            });
+          }
+        });
+      } catch (e) {
+        debugPrint("⚠️ Akku-Benachrichtigungen fehlgeschlagen: $e");
+      }
+    }
+  }
 
   String get wakeTimeText => sentWakeTime != null
       ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
       : "Nicht aktiv";
 
-  String get timerText =>
-      sentTimerMinutes != null ? "$sentTimerMinutes Minuten" : "Nicht aktiv";
+  String get timerText => sentTimerMinutes != null
+      ? "$sentTimerMinutes Minuten"
+      : "Nicht aktiv";
 
   String get wakeTimeButtonText => selectedWakeTime != null
       ? "Weckzeit wählen – ${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}"
@@ -383,11 +425,22 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lichtwecker einstellen'),
+        title: const Text('Lichtwecker einstellen', style: TextStyle(fontSize: 16)),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                batteryLevel != null ? 'Akku: $batteryLevel%' : '...',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -452,3 +505,4 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     );
   }
 }
+  
