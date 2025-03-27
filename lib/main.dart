@@ -427,7 +427,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       padding: const EdgeInsets.only(right: 16.0),
       child: Center(
         child: Text(
-          batteryLevelPercent != null ? 'Akku: $batteryLevelPercent%' : '...',
+          batteryLevel != null ? 'Akku: $batteryLevel%' : '...',
           style: const TextStyle(fontSize: 18), // Auch hier korrekt
         ),
       ),
