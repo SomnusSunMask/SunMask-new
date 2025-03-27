@@ -421,11 +421,11 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         title: const Text('Lichtwecker einstellen'),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 10.0),
             child: Center(
               child: Text(
                 batteryLevel != null ? 'Akku: $batteryLevel%' : 'Akku: ...',
-                style: const TextStyle(fontSize: 18),
+                style: const TextStyle(fontSize: 10),
               ),
             ),
           ),
