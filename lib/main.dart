@@ -187,7 +187,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
     );
   }
 }
-
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
@@ -221,7 +220,27 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   @override
   void initState() {
     super.initState();
+    readBatteryLevel();
     discoverBatteryCharacteristic();
+  }
+
+  Future<void> readBatteryLevel() async {
+    try {
+      if (widget.batteryCharacteristic != null) {
+        await widget.batteryCharacteristic!.read();
+        final value = widget.batteryCharacteristic!.lastValue;
+        if (value.isNotEmpty) {
+          final percent = int.tryParse(utf8.decode(value));
+          if (percent != null && mounted) {
+            setState(() {
+              batteryLevel = percent;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("⚠️ Fehler beim Lesen der Batterie: $e");
+    }
   }
 
   void discoverBatteryCharacteristic() async {
@@ -247,6 +266,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       debugPrint("⚠️ Fehler beim Entdecken der Battery-Characteristic: $e");
     }
   }
+
   bool isShowingError = false;
   DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5));
 
@@ -264,7 +284,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   String get timerButtonText => selectedTimerMinutes != null
       ? "Timer wählen – $selectedTimerMinutes Minuten"
       : "Timer wählen";
-
   Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -418,22 +437,19 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-  title: const Text(
-    'Lichtwecker einstellen',
-    style: TextStyle(fontSize: 14), // Gültig innerhalb von Text
-  ),
-  actions: [
-    Padding(
-      padding: const EdgeInsets.only(right: 14.0),
-      child: Center(
-        child: Text(
-          batteryLevel != null ? 'Akku: $batteryLevel%' : '...',
-          style: const TextStyle(fontSize: 14), // Auch hier korrekt
-        ),
+        title: const Text('Lichtwecker einstellen'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                batteryLevel != null ? "Akku: $batteryLevel%" : "...",
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+        ],
       ),
-    ),
-  ],
-),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
