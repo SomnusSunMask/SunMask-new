@@ -1,5 +1,3 @@
-// main.dart – Teil 1 von 4 (oben links)
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -71,7 +69,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await Future.delayed(const Duration(seconds: 5));
     await FlutterBluePlus.stopScan();
   }
-
   void connectToDevice(BluetoothDevice device) async {
     if (!mounted) return;
 
@@ -148,89 +145,48 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
     });
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lichtwecker einstellen'),
+        title: const Text('Somnus-Geräte'),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Text(
-                batteryLevel != null ? '$batteryLevel%' : '...',
-                style: const TextStyle(fontSize: 18),
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: scanForDevices,
           ),
         ],
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Column(
-            children: [
-              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectWakeTime(context),
-                  child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendWakeTimeToESP,
-                  child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Column(
-            children: [
-              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: () => selectTimer(context),
-                  child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  onPressed: sendTimerToESP,
-                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: buttonWidth,
-            child: ElevatedButton(
-              onPressed: clearWakeTimeOrTimer,
-              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
+      body: ListView.builder(
+        itemCount: devices.length,
+        itemBuilder: (context, index) {
+          final device = devices[index];
+          return ListTile(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(device.platformName),
+                if (loadingDevices.contains(device))
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+              ],
             ),
-          ),
-        ],
+            subtitle: Text(device.remoteId.toString()),
+            onTap: () {
+              if (!loadingDevices.contains(device)) {
+                connectToDevice(device);
+              }
+            },
+          );
+        },
       ),
     );
   }
 }
-// main.dart – Teil 2 von 4 (oben links)
 
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
@@ -258,44 +214,39 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   bool isConnected = true;
   double buttonWidth = double.infinity;
 
-  int? batteryLevelPercent;
+  int? batteryLevel;
 
-  // In der Klasse _DeviceControlPageState hinzufügen:
+  final String batteryUuid = "abcdef06-1234-5678-1234-56789abcdef0";
 
-// UUID der Battery-Characteristic (muss zu deinem ESP-Code passen)
-final String batteryUuid = "abcdef06-1234-5678-1234-56789abcdef0";
+  @override
+  void initState() {
+    super.initState();
+    discoverBatteryCharacteristic();
+  }
 
-@override
-void initState() {
-  super.initState();
-  discoverBatteryCharacteristic();
-}
-
-void discoverBatteryCharacteristic() async {
-  try {
-    List<BluetoothService> services = await widget.device.discoverServices();
-    for (var service in services) {
-      for (var characteristic in service.characteristics) {
-        if (characteristic.uuid.toString() == batteryUuid) {
-          await characteristic.setNotifyValue(true);
-          characteristic.onValueReceived.listen((value) {
-            final decoded = utf8.decode(value);
-            final parsed = int.tryParse(decoded);
-            if (parsed != null && mounted) {
-              setState(() {
-                batteryLevel = parsed;
-              });
-            }
-          });
+  void discoverBatteryCharacteristic() async {
+    try {
+      List<BluetoothService> services = await widget.device.discoverServices();
+      for (var service in services) {
+        for (var characteristic in service.characteristics) {
+          if (characteristic.uuid.toString() == batteryUuid) {
+            await characteristic.setNotifyValue(true);
+            characteristic.onValueReceived.listen((value) {
+              final decoded = utf8.decode(value);
+              final parsed = int.tryParse(decoded);
+              if (parsed != null && mounted) {
+                setState(() {
+                  batteryLevel = parsed;
+                });
+              }
+            });
+          }
         }
       }
+    } catch (e) {
+      debugPrint("⚠️ Fehler beim Entdecken der Battery-Characteristic: $e");
     }
-  } catch (e) {
-    debugPrint("⚠️ Fehler beim Entdecken der Battery-Characteristic: $e");
   }
-}
-
-
   bool isShowingError = false;
   DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5));
 
@@ -313,31 +264,6 @@ void discoverBatteryCharacteristic() async {
   String get timerButtonText => selectedTimerMinutes != null
       ? "Timer wählen – $selectedTimerMinutes Minuten"
       : "Timer wählen";
-
-  @override
-  void initState() {
-    super.initState();
-    readBatteryLevel();
-  }
-
-  Future<void> readBatteryLevel() async {
-    if (widget.batteryCharacteristic != null) {
-      try {
-        await widget.batteryCharacteristic!.read();
-        final value = widget.batteryCharacteristic!.lastValue;
-        if (value.isNotEmpty) {
-          final percent = int.tryParse(utf8.decode(value));
-          if (percent != null && mounted) {
-            setState(() {
-              batteryLevelPercent = percent;
-            });
-          }
-        }
-      } catch (e) {
-        debugPrint("⚠️ Akku lesen fehlgeschlagen: $e");
-      }
-    }
-  }
 
   Future<void> selectWakeTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -387,6 +313,7 @@ void discoverBatteryCharacteristic() async {
       });
     }
   }
+
   void showErrorAndReturnToList(String message) {
     final currentTime = DateTime.now();
 
@@ -486,6 +413,7 @@ void discoverBatteryCharacteristic() async {
       debugPrint("⚠️ Keine gültige Verbindung zur Löschung vorhanden.");
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -496,7 +424,7 @@ void discoverBatteryCharacteristic() async {
             padding: const EdgeInsets.only(right: 16.0),
             child: Center(
               child: Text(
-                "Akku: $batteryLevel%",
+                batteryLevel != null ? 'Akku: $batteryLevel%' : 'Akku: ...',
                 style: const TextStyle(fontSize: 18),
               ),
             ),
