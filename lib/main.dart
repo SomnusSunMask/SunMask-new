@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import für die Bildschirmrotation-Kontrolle
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized(); // Stellt sicher, dass alles initialisiert ist
+  WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp, // Nur Hochformat erlaubt
+    DeviceOrientation.portraitUp,
   ]).then((_) {
     runApp(const MyApp());
   });
@@ -37,11 +37,11 @@ class BLEHomePage extends StatefulWidget {
 
 class _BLEHomePageState extends State<BLEHomePage> {
   final List<BluetoothDevice> devices = [];
-  final Set<BluetoothDevice> loadingDevices = {}; // 🔄 Trackt Geräte, die sich verbinden
+  final Set<BluetoothDevice> loadingDevices = {};
   BluetoothDevice? selectedDevice;
 
-  bool isShowingConnectionError = false; // 🔹 Fehlerblocker für 5 Sekunden
-  DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0); // 🔹 Zeitpunkt letzter Fehler
+  bool isShowingConnectionError = false;
+  DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
   void initState() {
@@ -55,14 +55,14 @@ class _BLEHomePageState extends State<BLEHomePage> {
     });
 
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
-
     FlutterBluePlus.scanResults.listen((results) {
-      if (!mounted) return; // Sicherstellen, dass das Widget noch existiert
+      if (!mounted) return;
 
       setState(() {
         devices.clear();
         for (var result in results) {
-          if (!devices.contains(result.device) && result.device.platformName == "SunMask") {
+          if (!devices.contains(result.device) &&
+              result.device.platformName == "SunMask") {
             devices.add(result.device);
           }
         }
@@ -74,34 +74,40 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void connectToDevice(BluetoothDevice device) async {
-    if (!mounted) return; // Sicherstellen, dass `context` noch gültig ist
+    if (!mounted) return;
 
     setState(() {
-      loadingDevices.add(device); // 🔄 Ladeanimation aktivieren
+      loadingDevices.add(device);
     });
 
     try {
-      await device.connect().timeout(const Duration(seconds: 2)); // ⏳ Verbindung mit Timeout
+      await device.connect().timeout(const Duration(seconds: 2));
 
       BluetoothCharacteristic? alarmCharacteristic;
       BluetoothCharacteristic? timerCharacteristic;
+      BluetoothCharacteristic? batteryCharacteristic;
 
       List<BluetoothService> services = await device.discoverServices();
       for (var service in services) {
         for (var characteristic in service.characteristics) {
-          if (characteristic.uuid.toString() == "abcdef03-1234-5678-1234-56789abcdef0") {
+          if (characteristic.uuid.toString() ==
+              "abcdef03-1234-5678-1234-56789abcdef0") {
             alarmCharacteristic = characteristic;
           }
-          if (characteristic.uuid.toString() == "abcdef04-1234-5678-1234-56789abcdef0") {
+          if (characteristic.uuid.toString() ==
+              "abcdef04-1234-5678-1234-56789abcdef0") {
             timerCharacteristic = characteristic;
+          }
+          if (characteristic.uuid.toString() ==
+              "abcdef06-1234-5678-1234-56789abcdef0") {
+            batteryCharacteristic = characteristic;
           }
         }
       }
-
-      if (!mounted) return; // Bevor `setState` oder `Navigator` verwendet wird
+      if (!mounted) return;
 
       setState(() {
-        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+        loadingDevices.remove(device);
       });
 
       if (mounted) {
@@ -112,6 +118,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
               device: device,
               alarmCharacteristic: alarmCharacteristic,
               timerCharacteristic: timerCharacteristic,
+              batteryCharacteristic: batteryCharacteristic,
             ),
           ),
         );
@@ -119,108 +126,129 @@ class _BLEHomePageState extends State<BLEHomePage> {
     } catch (e) {
       debugPrint("❌ Verbindung fehlgeschlagen: $e");
 
-      if (!mounted) return; // Verhindert `context`-Fehler
+      if (!mounted) return;
 
       setState(() {
-        loadingDevices.remove(device); // 🔄 Ladeanimation stoppen
+        loadingDevices.remove(device);
       });
 
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
+      showErrorSnackbar(
+          "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
     }
   }
 
   void showErrorSnackbar(String message) {
-    if (!mounted) return; // Sicherstellen, dass das Widget existiert
-
     final currentTime = DateTime.now();
-    if (isShowingConnectionError && currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
+    if (isShowingConnectionError &&
+        currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
 
     isShowingConnectionError = true;
-    lastConnectionErrorTime = currentTime; // 🔹 Speichert die Zeit des Fehlers
+    lastConnectionErrorTime = currentTime;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehlermeldung
+        duration: const Duration(seconds: 5),
       ),
     );
 
     Future.delayed(const Duration(seconds: 5), () {
       if (mounted) {
-        isShowingConnectionError = false; // 🔓 Sperre nach 5 Sekunden aufheben
+        isShowingConnectionError = false;
       }
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Somnus-Geräte'),
+        title: const Text('Lichtwecker einstellen'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: scanForDevices,
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                batteryLevel != null ? '$batteryLevel%' : '...',
+                style: const TextStyle(fontSize: 18),
+              ),
+            ),
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: devices.length,
-        itemBuilder: (context, index) {
-          final device = devices[index];
-          return ListTile(
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // 🔹 Gerät links, Ladekreis rechts
-              children: [
-                Text(device.platformName),
-                if (loadingDevices.contains(device)) // 🔄 Ladeanimation nur für aktuelles Gerät
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Column(
+            children: [
+              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: () => selectWakeTime(context),
+                  child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
+                ),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: sendWakeTimeToESP,
+                  child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Column(
+            children: [
+              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: () => selectTimer(context),
+                  child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
+                ),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: buttonWidth,
+                child: ElevatedButton(
+                  onPressed: sendTimerToESP,
+                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: buttonWidth,
+            child: ElevatedButton(
+              onPressed: clearWakeTimeOrTimer,
+              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
             ),
-            subtitle: Text(device.remoteId.toString()),
-            onTap: () {
-              if (!loadingDevices.contains(device)) {
-                connectToDevice(device);
-              }
-            },
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 }
-
-
-class DeviceControlPage extends StatefulWidget {
-  final BluetoothDevice device;
-  final BluetoothCharacteristic? alarmCharacteristic;
-  final BluetoothCharacteristic? timerCharacteristic;
-
-  const DeviceControlPage({
-    super.key,
-    required this.device,
-    this.alarmCharacteristic,
-    this.timerCharacteristic,
-  });
-
-  @override
-  State<DeviceControlPage> createState() => _DeviceControlPageState();
-}
-
 class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay? selectedWakeTime;
   int? selectedTimerMinutes;
   TimeOfDay? sentWakeTime;
   int? sentTimerMinutes;
+  int? batteryLevel; // Neu: Akkustand
   bool isConnected = true;
   double buttonWidth = double.infinity;
 
-  bool isShowingError = false; // 🛑 Verhindert doppelte Fehlermeldungen
-  DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5)); // ⏳ Startwert: keine Sperre
+  bool isShowingError = false;
+  DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5));
 
   String get wakeTimeText => sentWakeTime != null
       ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
@@ -286,26 +314,24 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-    void showErrorAndReturnToList(String message) {
+  void showErrorAndReturnToList(String message) {
     final currentTime = DateTime.now();
-
-    if (currentTime.difference(lastErrorTime).inSeconds < 5) return; // 🚫 Sperrt neue Fehler für 5 Sekunden
-
-    isShowingError = true; // 🛑 Sperre aktivieren
-    lastErrorTime = currentTime; // 🕒 Fehlerzeitpunkt speichern
+    if (currentTime.difference(lastErrorTime).inSeconds < 5) return;
+    isShowingError = true;
+    lastErrorTime = currentTime;
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehleranzeige
+          duration: const Duration(seconds: 5),
         ),
       );
 
       Future.delayed(const Duration(seconds: 5), () {
         if (mounted) {
-          isShowingError = false; // ✅ Sperre nach 5 Sek. wirklich aufheben
-          Navigator.pop(context); // 🔄 Zurück zur Geräteliste
+          isShowingError = false;
+          Navigator.pop(context);
         }
       });
     }
@@ -323,7 +349,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         if (mounted) {
           setState(() {
             sentWakeTime = selectedWakeTime;
-            sentTimerMinutes = null; // Timer zurücksetzen
+            sentTimerMinutes = null;
           });
         }
 
@@ -338,30 +364,30 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   void sendTimerToESP() async {
-  if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
-    try {
-      String currentTime = DateFormat("HH:mm").format(DateTime.now());
-      String timerValue = selectedTimerMinutes.toString();
-      String combinedData = "$currentTime|$timerValue";
+    if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
+      try {
+        String currentTime = DateFormat("HH:mm").format(DateTime.now());
+        String timerValue = selectedTimerMinutes.toString();
+        String combinedData = "$currentTime|$timerValue";
 
-      await widget.timerCharacteristic!.write(utf8.encode(combinedData));
+        await widget.timerCharacteristic!.write(utf8.encode(combinedData));
 
-      if (mounted) {
-        setState(() {
-          sentTimerMinutes = selectedTimerMinutes;
-          sentWakeTime = null; // Weckzeit zurücksetzen
-        });
+        if (mounted) {
+          setState(() {
+            sentTimerMinutes = selectedTimerMinutes;
+            sentWakeTime = null;
+          });
+        }
+
+        debugPrint("✅ Timer gesendet: $combinedData");
+      } catch (e) {
+        debugPrint("⚠️ Senden fehlgeschlagen: $e");
+        showErrorAndReturnToList("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
       }
-
-      debugPrint("✅ Timer gesendet: $combinedData");
-    } catch (e) {
-      debugPrint("⚠️ Senden fehlgeschlagen: $e");
-      showErrorAndReturnToList("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
+    } else {
+      debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
     }
-  } else {
-    debugPrint("⚠️ Timer-Charakteristik nicht gefunden oder kein Timer gesetzt.");
   }
-}
 
   void clearWakeTimeOrTimer() async {
     if (widget.alarmCharacteristic != null || widget.timerCharacteristic != null) {
@@ -391,6 +417,15 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lichtwecker einstellen'),
+        actions: [
+          if (batteryLevel != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Text("$batteryLevel%", style: const TextStyle(fontSize: 16)),
+              ),
+            ),
+        ],
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -455,4 +490,3 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     );
   }
 }
-
