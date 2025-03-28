@@ -432,7 +432,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lichtwecker einstellen', style: TextStyle(fontSize: 16)),
+        title: const Text('Lichtwecker einstellen', style: TextStyle(fontSize: 18)),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
