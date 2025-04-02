@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 void main() {
@@ -37,6 +38,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
   final List<BluetoothDevice> devices = [];
   final Set<BluetoothDevice> loadingDevices = {};
   BluetoothDevice? selectedDevice;
+  List<String> knownDeviceIds = [];
 
   bool isShowingConnectionError = false;
   DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0);
@@ -44,7 +46,22 @@ class _BLEHomePageState extends State<BLEHomePage> {
   @override
   void initState() {
     super.initState();
-    scanForDevices();
+    loadKnownDevices().then((_) => scanForDevices());
+  }
+
+  Future<void> loadKnownDevices() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      knownDeviceIds = prefs.getStringList('knownDevices') ?? [];
+    });
+  }
+
+  Future<void> saveKnownDevice(String id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (!knownDeviceIds.contains(id)) {
+      knownDeviceIds.add(id);
+      await prefs.setStringList('knownDevices', knownDeviceIds);
+    }
   }
 
   void scanForDevices() async {
@@ -57,10 +74,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
     FlutterBluePlus.scanResults.listen((results) {
       if (!mounted) return;
       setState(() {
-        devices.clear();
         for (var result in results) {
-          if (!devices.contains(result.device) && result.device.platformName == "SunMask") {
-            devices.add(result.device);
+          final device = result.device;
+          if (!devices.contains(device) && device.platformName == "SunMask") {
+            devices.add(device);
           }
         }
       });
@@ -68,6 +85,14 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
     await Future.delayed(const Duration(seconds: 5));
     await FlutterBluePlus.stopScan();
+
+    setState(() {
+      for (var id in knownDeviceIds) {
+        if (!devices.any((d) => d.remoteId.toString() == id)) {
+          devices.add(BluetoothDevice(remoteId: DeviceIdentifier(id)));
+        }
+      }
+    });
   }
   void connectToDevice(BluetoothDevice device) async {
     if (!mounted) return;
@@ -77,7 +102,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
     });
 
     try {
-      await device.connect().timeout(const Duration(seconds: 2));
+      await device.connect(autoConnect: false).timeout(const Duration(seconds: 5));
+
+      await saveKnownDevice(device.remoteId.toString());
 
       BluetoothCharacteristic? alarmCharacteristic;
       BluetoothCharacteristic? timerCharacteristic;
@@ -149,6 +176,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -169,7 +197,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(device.platformName),
+                Text(device.platformName.isNotEmpty ? device.platformName : "Unbekanntes Gerät"),
                 if (loadingDevices.contains(device))
                   const SizedBox(
                     width: 24,
@@ -190,7 +218,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
     );
   }
 }
-
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
@@ -220,9 +247,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   bool isShowingError = false;
   DateTime lastErrorTime = DateTime.now().subtract(const Duration(seconds: 5));
 
-
   final String batteryUuid = "abcdef06-1234-5678-1234-56789abcdef0";
-@override
+
+  @override
   void initState() {
     super.initState();
     readBatteryLevel();
@@ -330,27 +357,26 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       });
     }
   }
-
-    void showErrorAndReturnToList(String message) {
+  void showErrorAndReturnToList(String message) {
     final currentTime = DateTime.now();
 
-    if (currentTime.difference(lastErrorTime).inSeconds < 5) return; // 🚫 Sperrt neue Fehler für 5 Sekunden
+    if (currentTime.difference(lastErrorTime).inSeconds < 5) return;
 
-    isShowingError = true; // 🛑 Sperre aktivieren
-    lastErrorTime = currentTime; // 🕒 Fehlerzeitpunkt speichern
+    isShowingError = true;
+    lastErrorTime = currentTime;
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          duration: const Duration(seconds: 5), // ⏳ 5 Sekunden Fehleranzeige
+          duration: const Duration(seconds: 5),
         ),
       );
 
       Future.delayed(const Duration(seconds: 5), () {
         if (mounted) {
-          isShowingError = false; // ✅ Sperre nach 5 Sek. wirklich aufheben
-          Navigator.pop(context); // 🔄 Zurück zur Geräteliste
+          isShowingError = false;
+          Navigator.pop(context);
         }
       });
     }
@@ -368,7 +394,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         if (mounted) {
           setState(() {
             sentWakeTime = selectedWakeTime;
-            sentTimerMinutes = null; // Timer zurücksetzen
+            sentTimerMinutes = null;
           });
         }
 
@@ -391,7 +417,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         if (mounted) {
           setState(() {
             sentTimerMinutes = selectedTimerMinutes;
-            sentWakeTime = null; // Weckzeit zurücksetzen
+            sentWakeTime = null;
           });
         }
 
@@ -428,7 +454,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -508,4 +534,3 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     );
   }
 }
-  
