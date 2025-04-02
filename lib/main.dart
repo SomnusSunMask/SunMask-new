@@ -224,54 +224,57 @@ Widget build(BuildContext context) {
             : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
 
         return ListTile(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (loadingDevices.contains(device))
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              if (storedDevices.contains(id))
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => removeStoredDevice(id),
-                ),
-            ],
-          ),
-          subtitle: Text(id),
-          onTap: () async {
-            if (isAvailable && !loadingDevices.contains(device)) {
-              connectToDevice(device);
-            } else if (storedDevices.contains(id)) {
-              final prefs = await SharedPreferences.getInstance();
-              final wakeTime = prefs.getString('lastWakeTime_$id');
-              final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+  title: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Expanded(
+        child: Text(
+          "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      if (loadingDevices.contains(device))
+        const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      if (storedDevices.contains(id))
+        IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: () => removeStoredDevice(id),
+        ),
+    ],
+  ),
+  subtitle: Text(id),
+  onTap: () async {
+    if (isAvailable && !loadingDevices.contains(device)) {
+      connectToDevice(device);
+    } else if (storedDevices.contains(id)) {
+      final prefs = await SharedPreferences.getInstance();
+      final wakeTime = prefs.getString('lastWakeTime_$id');
+      final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
 
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DeviceOverviewPage(
-                    deviceName: name,
-                    lastWakeTime: wakeTime,
-                    lastTimerMinutes: timerMinutes,
-                  ),
-                ),
-              );
-            }
-          },
-        );
-      },
-    ),
-  );
-}
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DeviceOverviewPage(
+            deviceName: name,
+            lastWakeTime: wakeTime,
+            lastTimerMinutes: timerMinutes,
+          ),
+        ),
+      );
+    }
+  },
+);
+
+           );
+         },
+       ),
+     );
+   }
+ }
 
 
 class DeviceControlPage extends StatefulWidget {
