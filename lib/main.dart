@@ -140,7 +140,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       });
 
       Navigator.push(
-        context,
+        currentContext,
         MaterialPageRoute(
           builder: (context) => DeviceControlPage(
             device: device,
