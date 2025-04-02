@@ -267,13 +267,7 @@ Widget build(BuildContext context) {
       );
     }
   },
-);     
-      );
-         },
-       
-     );
-   }
- }
+
 
 
 class DeviceControlPage extends StatefulWidget {
