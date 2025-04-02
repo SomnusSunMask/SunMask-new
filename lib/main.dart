@@ -1,4 +1,3 @@
-// main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -40,7 +39,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
   final Set<BluetoothDevice> loadingDevices = {};
   List<String> storedDevices = [];
   Map<String, String> storedDeviceNames = {};
-  Map<String, Map<String, dynamic>> deviceData = {};
   BluetoothDevice? selectedDevice;
 
   bool isShowingConnectionError = false;
@@ -57,13 +55,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
     final prefs = await SharedPreferences.getInstance();
     storedDevices = prefs.getStringList('storedDevices') ?? [];
     final nameMap = prefs.getString('deviceNameMap');
-    final dataMap = prefs.getString('deviceDataMap');
     if (nameMap != null) {
       storedDeviceNames = Map<String, String>.from(jsonDecode(nameMap));
-    }
-    if (dataMap != null) {
-      deviceData = Map<String, dynamic>.from(jsonDecode(dataMap))
-          .map((key, value) => MapEntry(key, Map<String, dynamic>.from(value)));
     }
     setState(() {});
   }
@@ -72,24 +65,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('storedDevices', storedDevices);
     await prefs.setString('deviceNameMap', jsonEncode(storedDeviceNames));
-    await prefs.setString('deviceDataMap', jsonEncode(deviceData));
   }
 
-  void updateStoredDeviceData(String id, String? wakeTime, int? timerMinutes) {
-    deviceData[id] = {
-      'wakeTime': wakeTime,
-      'timerMinutes': timerMinutes,
-    };
-    saveKnownDevices();
-  }
-
-  void removeStoredDevice(String deviceId) async {
-    storedDevices.remove(deviceId);
-    storedDeviceNames.remove(deviceId);
-    deviceData.remove(deviceId);
-    await saveKnownDevices();
-    setState(() {});
-  }
   void scanForDevices() async {
     setState(() {
       devices.clear();
@@ -102,26 +79,26 @@ class _BLEHomePageState extends State<BLEHomePage> {
       setState(() {
         devices.clear();
         for (var result in results) {
-          final id = result.device.remoteId.str;
-          final name = result.device.platformName;
+        final id = result.device.remoteId.str;
+        final name = result.device.platformName;
 
-          // Nur Geräte mit Namen "SunMask" anzeigen
-          if (name == "SunMask" && !devices.contains(result.device)) {
-            devices.add(result.device);
-          }
+        // Nur Geräte mit Namen "SunMask" anzeigen
+        if (name == "SunMask" && !devices.contains(result.device)) {
+        devices.add(result.device);
+  }
 
-          // Name speichern, falls noch nicht vorhanden
-          if (name.isNotEmpty && !storedDeviceNames.containsKey(id)) {
-            storedDeviceNames[id] = name;
-          }
-        }
+  // Name speichern, falls noch nicht vorhanden
+  if (name.isNotEmpty && !storedDeviceNames.containsKey(id)) {
+    storedDeviceNames[id] = name;
+  }
+}
+
       });
     });
 
     await Future.delayed(const Duration(seconds: 5));
     await FlutterBluePlus.stopScan();
   }
-
   void connectToDevice(BluetoothDevice device) async {
     if (!mounted) return;
 
@@ -171,9 +148,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
             alarmCharacteristic: alarmCharacteristic,
             timerCharacteristic: timerCharacteristic,
             batteryCharacteristic: batteryCharacteristic,
-            onDataUpdated: (wakeTime, timerMinutes) {
-              updateStoredDeviceData(device.remoteId.str, wakeTime, timerMinutes);
-            },
           ),
         ),
       );
@@ -188,6 +162,13 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
       showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut.");
     }
+  }
+
+  void removeStoredDevice(String deviceId) async {
+    storedDevices.remove(deviceId);
+    storedDeviceNames.remove(deviceId);
+    await saveKnownDevices();
+    setState(() {});
   }
 
   void showErrorSnackbar(String message) {
@@ -212,43 +193,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
     });
   }
-  void removeStoredDevice(String deviceId) async {
-    storedDevices.remove(deviceId);
-    storedDeviceNames.remove(deviceId);
-    await saveKnownDevices();
-    setState(() {});
-  }
-
-  void updateStoredDeviceData(String deviceId, String? wakeTime, int? timerMinutes) async {
-    final prefs = await SharedPreferences.getInstance();
-    Map<String, dynamic> data = {
-      'wakeTime': wakeTime,
-      'timerMinutes': timerMinutes,
-    };
-    await prefs.setString('device_data_$deviceId', jsonEncode(data));
-  }
-
-  void openStoredDeviceOverview(String id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final json = prefs.getString('device_data_$id');
-    if (json != null) {
-      final data = jsonDecode(json);
-      final wakeTime = data['wakeTime'];
-      final timerMinutes = data['timerMinutes'];
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => StoredDeviceOverviewPage(
-            deviceId: id,
-            name: storedDeviceNames[id] ?? "Unbekannt",
-            wakeTime: wakeTime,
-            timerMinutes: timerMinutes,
-          ),
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     List<String> allDeviceIds = {
@@ -302,56 +246,45 @@ class _BLEHomePageState extends State<BLEHomePage> {
               ],
             ),
             subtitle: Text(id),
-            onTap: isAvailable && !loadingDevices.contains(device)
-                ? () => connectToDevice(device)
-                : () => openStoredDeviceOverview(id),
+            onTap: () {
+  if (isAvailable && !loadingDevices.contains(device)) {
+    connectToDevice(device);
+  } else if (storedDevices.contains(id)) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DeviceOverviewPage(
+          deviceName: name,
+          lastWakeTime: null,         // Platzhalter, später dynamisch ersetzen
+          lastTimerMinutes: null,     // Platzhalter, später dynamisch ersetzen
+        ),
+      ),
+    );
+  }
+},
           );
         },
       ),
     );
   }
 }
-class StoredDeviceOverviewPage extends StatelessWidget {
-  final String deviceId;
-  final String name;
-  final String? wakeTime;
-  final int? timerMinutes;
+class DeviceControlPage extends StatefulWidget {
+  final BluetoothDevice device;
+  final BluetoothCharacteristic? alarmCharacteristic;
+  final BluetoothCharacteristic? timerCharacteristic;
+  final BluetoothCharacteristic? batteryCharacteristic;
 
-  const StoredDeviceOverviewPage({
+  const DeviceControlPage({
     super.key,
-    required this.deviceId,
-    required this.name,
-    this.wakeTime,
-    this.timerMinutes,
+    required this.device,
+    this.alarmCharacteristic,
+    this.timerCharacteristic,
+    this.batteryCharacteristic,
   });
 
   @override
-  Widget build(BuildContext context) {
-    String wakeTimeText = wakeTime != null ? wakeTime! : "Nicht aktiv";
-    String timerText =
-        timerMinutes != null ? "$timerMinutes Minuten" : "Nicht aktiv";
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Geräte-Übersicht"),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Gerät: $name", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 16),
-            Text("WakeTime: $wakeTimeText", style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 8),
-            Text("Timer: $timerText", style: const TextStyle(fontSize: 18)),
-          ],
-        ),
-      ),
-    );
-  }
+  State<DeviceControlPage> createState() => _DeviceControlPageState();
 }
-
 
 class _DeviceControlPageState extends State<DeviceControlPage> {
   TimeOfDay? selectedWakeTime;
@@ -607,6 +540,45 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+class DeviceOverviewPage extends StatelessWidget {
+  final String deviceName;
+  final String? lastWakeTime;
+  final int? lastTimerMinutes;
+
+  const DeviceOverviewPage({
+    super.key,
+    required this.deviceName,
+    this.lastWakeTime,
+    this.lastTimerMinutes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final timerText = lastTimerMinutes != null
+        ? "$lastTimerMinutes Minuten"
+        : "Nicht aktiv";
+
+    final wakeTimeText = lastWakeTime ?? "Nicht aktiv";
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Übersicht – $deviceName', style: const TextStyle(fontSize: 18)),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Letzte bekannte Einstellungen", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            Text("Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 16),
+            Text("Timer: $timerText", style: const TextStyle(fontSize: 20)),
+          ],
+        ),
       ),
     );
   }
