@@ -1,3 +1,5 @@
+// Teil 1/4 – main.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -35,10 +37,11 @@ class BLEHomePage extends StatefulWidget {
 }
 
 class _BLEHomePageState extends State<BLEHomePage> {
-  final List<BluetoothDevice> devices = [];
+  final List<BluetoothDevice> availableDevices = [];
+  final Map<String, String> knownDevices = {};
+  final Set<String> scanningIds = {};
   final Set<BluetoothDevice> loadingDevices = {};
   BluetoothDevice? selectedDevice;
-  List<String> knownDeviceIds = [];
 
   bool isShowingConnectionError = false;
   DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0);
@@ -46,27 +49,34 @@ class _BLEHomePageState extends State<BLEHomePage> {
   @override
   void initState() {
     super.initState();
-    loadKnownDevices().then((_) => scanForDevices());
+    loadKnownDevices();
+    scanForDevices();
   }
 
   Future<void> loadKnownDevices() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    final Map<String, String> loaded = {};
+    for (var key in keys) {
+      loaded[key] = prefs.getString(key) ?? "SunMask";
+    }
     setState(() {
-      knownDeviceIds = prefs.getStringList('knownDevices') ?? [];
+      knownDevices.addAll(loaded);
     });
   }
 
-  Future<void> saveKnownDevice(String id) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (!knownDeviceIds.contains(id)) {
-      knownDeviceIds.add(id);
-      await prefs.setStringList('knownDevices', knownDeviceIds);
-    }
+  Future<void> saveKnownDevice(String id, String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(id, name);
+    setState(() {
+      knownDevices[id] = name;
+    });
   }
 
   void scanForDevices() async {
     setState(() {
-      devices.clear();
+      availableDevices.clear();
+      scanningIds.clear();
     });
 
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
@@ -74,10 +84,13 @@ class _BLEHomePageState extends State<BLEHomePage> {
     FlutterBluePlus.scanResults.listen((results) {
       if (!mounted) return;
       setState(() {
+        availableDevices.clear();
+        scanningIds.clear();
         for (var result in results) {
           final device = result.device;
-          if (!devices.contains(device) && device.platformName == "SunMask") {
-            devices.add(device);
+          if (device.platformName == "SunMask") {
+            availableDevices.add(device);
+            scanningIds.add(device.remoteId.str);
           }
         }
       });
@@ -85,15 +98,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
     await Future.delayed(const Duration(seconds: 5));
     await FlutterBluePlus.stopScan();
-
-    setState(() {
-      for (var id in knownDeviceIds) {
-        if (!devices.any((d) => d.remoteId.toString() == id)) {
-          devices.add(BluetoothDevice(remoteId: DeviceIdentifier(id)));
-        }
-      }
-    });
   }
+// Teil 2/4 – main.dart (Fortsetzung)
+
   void connectToDevice(BluetoothDevice device) async {
     if (!mounted) return;
 
@@ -102,9 +109,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     });
 
     try {
-      await device.connect(autoConnect: false).timeout(const Duration(seconds: 5));
-
-      await saveKnownDevice(device.remoteId.toString());
+      await device.connect().timeout(const Duration(seconds: 2));
 
       BluetoothCharacteristic? alarmCharacteristic;
       BluetoothCharacteristic? timerCharacteristic;
@@ -125,6 +130,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
 
       if (!mounted) return;
+
+      await saveKnownDevice(device.remoteId.str, device.platformName);
 
       setState(() {
         loadingDevices.remove(device);
@@ -179,25 +186,41 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final allDeviceIds = {
+      ...knownDevices.keys,
+      ...scanningIds,
+    }.toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Somnus-Geräte'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: scanForDevices,
+            onPressed: () {
+              scanForDevices();
+            },
           ),
         ],
       ),
       body: ListView.builder(
-        itemCount: devices.length,
+        itemCount: allDeviceIds.length,
         itemBuilder: (context, index) {
-          final device = devices[index];
+          final id = allDeviceIds[index];
+          final name = knownDevices[id] ?? "Unbekanntes Gerät";
+          final isAvailable = scanningIds.contains(id);
+          final displayName = "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})";
+
+          final device = availableDevices.firstWhere(
+            (d) => d.remoteId.str == id,
+            orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)),
+          );
+
           return ListTile(
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(device.platformName.isNotEmpty ? device.platformName : "Unbekanntes Gerät"),
+                Text(displayName),
                 if (loadingDevices.contains(device))
                   const SizedBox(
                     width: 24,
@@ -206,18 +229,20 @@ class _BLEHomePageState extends State<BLEHomePage> {
                   ),
               ],
             ),
-            subtitle: Text(device.remoteId.toString()),
-            onTap: () {
-              if (!loadingDevices.contains(device)) {
-                connectToDevice(device);
-              }
-            },
+            subtitle: Text(device.remoteId.str),
+            onTap: isAvailable && !loadingDevices.contains(device)
+                ? () {
+                    connectToDevice(device);
+                  }
+                : null,
           );
         },
       ),
     );
   }
 }
+// Teil 3/4 – main.dart (Fortsetzung)
+
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
@@ -357,6 +382,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       });
     }
   }
+// Teil 4/4 – main.dart (Fortsetzung)
+
   void showErrorAndReturnToList(String message) {
     final currentTime = DateTime.now();
 
