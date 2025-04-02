@@ -194,82 +194,85 @@ class _BLEHomePageState extends State<BLEHomePage> {
     });
   }
   @override
-  Widget build(BuildContext context) {
-    List<String> allDeviceIds = {
-      ...devices.map((d) => d.remoteId.str),
-      ...storedDevices
-    }.toList();
+Widget build(BuildContext context) {
+  List<String> allDeviceIds = {
+    ...devices.map((d) => d.remoteId.str),
+    ...storedDevices
+  }.toList();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Somnus-Geräte'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: scanForDevices,
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Somnus-Geräte'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: scanForDevices,
+        ),
+      ],
+    ),
+    body: ListView.builder(
+      itemCount: allDeviceIds.length,
+      itemBuilder: (context, index) {
+        final id = allDeviceIds[index];
+        final device = devices.firstWhere(
+          (d) => d.remoteId.str == id,
+          orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)),
+        );
+        final isAvailable = devices.any((d) => d.remoteId.str == id);
+        final name = isAvailable
+            ? device.platformName
+            : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
+
+        return ListTile(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (loadingDevices.contains(device))
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              if (storedDevices.contains(id))
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () => removeStoredDevice(id),
+                ),
+            ],
           ),
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: allDeviceIds.length,
-        itemBuilder: (context, index) {
-          final id = allDeviceIds[index];
-          final device = devices.firstWhere(
-              (d) => d.remoteId.str == id,
-              orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)));
-          final isAvailable = devices.any((d) => d.remoteId.str == id);
-          final name = isAvailable
-              ? device.platformName
-              : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
+          subtitle: Text(id),
+          onTap: () async {
+            if (isAvailable && !loadingDevices.contains(device)) {
+              connectToDevice(device);
+            } else if (storedDevices.contains(id)) {
+              final prefs = await SharedPreferences.getInstance();
+              final wakeTime = prefs.getString('lastWakeTime_$id');
+              final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
 
-          return ListTile(
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
-                    overflow: TextOverflow.ellipsis,
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DeviceOverviewPage(
+                    deviceName: name,
+                    lastWakeTime: wakeTime,
+                    lastTimerMinutes: timerMinutes,
                   ),
                 ),
-                if (loadingDevices.contains(device))
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                if (storedDevices.contains(id))
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => removeStoredDevice(id),
-                  ),
-              ],
-            ),
-            subtitle: Text(id),
-            onTap: () async {
-  if (isAvailable && !loadingDevices.contains(device)) {
-    connectToDevice(device);
-  } else if (storedDevices.contains(id)) {
-    final prefs = await SharedPreferences.getInstance();
-    final wakeTime = prefs.getString('lastWakeTime_$id');
-    final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+              );
+            }
+          },
+        );
+      },
+    ),
+  );
+}
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DeviceOverviewPage(
-          deviceName: name,
-          lastWakeTime: wakeTime,
-          lastTimerMinutes: timerMinutes,
-        ),
-      ),
-    );
-  }
-},
-),
-);
- }
- }
 
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
