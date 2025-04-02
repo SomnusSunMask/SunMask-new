@@ -267,8 +267,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
     );
   }();
 }
-
-          );
         },
       ),
     );
