@@ -253,7 +253,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     final prefs = await SharedPreferences.getInstance();
     final wakeTime = prefs.getString('lastWakeTime_$id');
     final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-
+if (!context.mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
