@@ -1,4 +1,3 @@
-/// dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -6,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'device_overview_page.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -255,14 +256,16 @@ class DeviceControlPage extends StatefulWidget {
   final BluetoothCharacteristic? alarmCharacteristic;
   final BluetoothCharacteristic? timerCharacteristic;
   final BluetoothCharacteristic? batteryCharacteristic;
+  final Function(String?, int?)? onDataUpdated;
 
-  const DeviceControlPage({
-    super.key,
-    required this.device,
-    this.alarmCharacteristic,
-    this.timerCharacteristic,
-    this.batteryCharacteristic,
-  });
+const DeviceControlPage({
+  Key? key,
+  required this.device,
+  required this.alarmCharacteristic,
+  required this.timerCharacteristic,
+  required this.batteryCharacteristic,
+  this.onDataUpdated,
+}) : super(key: key);
 
   @override
   State<DeviceControlPage> createState() => _DeviceControlPageState();
