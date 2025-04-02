@@ -131,6 +131,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
       if (!mounted) return;
 
+      final currentContext = context;
+
       await saveKnownDevice(device.remoteId.str, device.platformName);
 
       setState(() {
