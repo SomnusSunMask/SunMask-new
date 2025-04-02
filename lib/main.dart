@@ -131,25 +131,26 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
       if (!mounted) return;
 
-      final currentContext = context;
-
       await saveKnownDevice(device.remoteId.str, device.platformName);
 
-      setState(() {
-        loadingDevices.remove(device);
-      });
+      if (!mounted) return;  // wichtig: erneut prüfen nach await!
 
-      Navigator.push(
-        currentContext,
-        MaterialPageRoute(
-          builder: (context) => DeviceControlPage(
-            device: device,
-            alarmCharacteristic: alarmCharacteristic,
-            timerCharacteristic: timerCharacteristic,
-            batteryCharacteristic: batteryCharacteristic,
-          ),
-        ),
-      );
+setState(() {
+  loadingDevices.remove(device);
+});
+
+Navigator.push(
+  context, // ✅ direkt nutzen – weil vorher auf mounted geprüft
+  MaterialPageRoute(
+    builder: (context) => DeviceControlPage(
+      device: device,
+      alarmCharacteristic: alarmCharacteristic,
+      timerCharacteristic: timerCharacteristic,
+      batteryCharacteristic: batteryCharacteristic,
+    ),
+  ),
+);
+
     } catch (e) {
       debugPrint("❌ Verbindung fehlgeschlagen: $e");
 
