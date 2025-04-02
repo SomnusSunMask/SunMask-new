@@ -1,9 +1,10 @@
+// Teil 1 von 4
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,8 +38,9 @@ class BLEHomePage extends StatefulWidget {
 class _BLEHomePageState extends State<BLEHomePage> {
   final List<BluetoothDevice> devices = [];
   final Set<BluetoothDevice> loadingDevices = {};
-  List<String> storedDevices = [];
-  Map<String, String> storedDeviceNames = {};
+  final Map<String, String> storedDeviceNames = {};
+  final Map<String, bool> availabilityMap = {};
+  final Map<String, Map<String, dynamic>> deviceData = {};
   BluetoothDevice? selectedDevice;
 
   bool isShowingConnectionError = false;
@@ -53,18 +55,55 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   Future<void> loadKnownDevices() async {
     final prefs = await SharedPreferences.getInstance();
-    storedDevices = prefs.getStringList('storedDevices') ?? [];
-    final nameMap = prefs.getString('deviceNameMap');
-    if (nameMap != null) {
-      storedDeviceNames = Map<String, String>.from(jsonDecode(nameMap));
+    final keys = prefs.getKeys();
+
+    for (String key in keys) {
+      final jsonString = prefs.getString(key);
+      if (jsonString != null) {
+        final data = json.decode(jsonString);
+        storedDeviceNames[key] = data['name'];
+        deviceData[key] = data;
+        availabilityMap[key] = false;
+      }
     }
+
     setState(() {});
   }
 
-  Future<void> saveKnownDevices() async {
+  Future<void> saveKnownDevice(String id, String name) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('storedDevices', storedDevices);
-    await prefs.setString('deviceNameMap', jsonEncode(storedDeviceNames));
+    final data = {
+      'name': name,
+      'wakeTime': null,
+      'timerMinutes': null,
+    };
+    await prefs.setString(id, json.encode(data));
+    storedDeviceNames[id] = name;
+    deviceData[id] = data;
+    setState(() {});
+  }
+
+  // folgt in Teil 2...
+  Future<void> updateStoredDeviceData(String id, String? wakeTime, int? timerMinutes) async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getString(id);
+    if (existing != null) {
+      final data = json.decode(existing);
+      data['wakeTime'] = wakeTime;
+      data['timerMinutes'] = timerMinutes;
+      await prefs.setString(id, json.encode(data));
+      deviceData[id] = data;
+      setState(() {});
+    }
+  }
+
+  Future<void> deleteKnownDevice(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(id);
+    storedDeviceNames.remove(id);
+    deviceData.remove(id);
+    availabilityMap.remove(id);
+    setState(() {});
   }
 
   void scanForDevices() async {
@@ -79,26 +118,26 @@ class _BLEHomePageState extends State<BLEHomePage> {
       setState(() {
         devices.clear();
         for (var result in results) {
-        final id = result.device.remoteId.str;
-        final name = result.device.platformName;
+          final id = result.device.remoteId.str;
+          final name = result.device.platformName;
 
-        // Nur Geräte mit Namen "SunMask" anzeigen
-        if (name == "SunMask" && !devices.contains(result.device)) {
-        devices.add(result.device);
-  }
-
-  // Name speichern, falls noch nicht vorhanden
-  if (name.isNotEmpty && !storedDeviceNames.containsKey(id)) {
-    storedDeviceNames[id] = name;
-  }
-}
-
+          if (name == "SunMask") {
+            if (!devices.contains(result.device)) {
+              devices.add(result.device);
+              availabilityMap[id] = true;
+              if (!storedDeviceNames.containsKey(id)) {
+                storedDeviceNames[id] = name;
+              }
+            }
+          }
+        }
       });
     });
 
     await Future.delayed(const Duration(seconds: 5));
     await FlutterBluePlus.stopScan();
   }
+
   void connectToDevice(BluetoothDevice device) async {
     if (!mounted) return;
 
@@ -108,13 +147,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
     try {
       await device.connect().timeout(const Duration(seconds: 2));
-
-      final id = device.remoteId.str;
-      if (!storedDevices.contains(id)) {
-        storedDevices.add(id);
-      }
-      storedDeviceNames[id] = device.platformName;
-      await saveKnownDevices();
 
       BluetoothCharacteristic? alarmCharacteristic;
       BluetoothCharacteristic? timerCharacteristic;
@@ -136,6 +168,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
       if (!mounted) return;
 
+      await saveKnownDevice(device.remoteId.str, device.platformName);
+
       setState(() {
         loadingDevices.remove(device);
       });
@@ -148,6 +182,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
             alarmCharacteristic: alarmCharacteristic,
             timerCharacteristic: timerCharacteristic,
             batteryCharacteristic: batteryCharacteristic,
+            onDataUpdated: (wakeTime, timerMinutes) {
+              updateStoredDeviceData(device.remoteId.str, wakeTime, timerMinutes);
+            },
           ),
         ),
       );
@@ -164,41 +201,34 @@ class _BLEHomePageState extends State<BLEHomePage> {
     }
   }
 
-  void removeStoredDevice(String deviceId) async {
-    storedDevices.remove(deviceId);
-    storedDeviceNames.remove(deviceId);
-    await saveKnownDevices();
-    setState(() {});
-  }
+  // ...weiter in Teil 3
+  void openStoredDeviceOverview(String id) {
+    final data = deviceData[id];
+    final wakeTime = data?['wakeTime'];
+    final timerMinutes = data?['timerMinutes'];
 
-  void showErrorSnackbar(String message) {
-    if (!mounted) return;
-
-    final currentTime = DateTime.now();
-    if (isShowingConnectionError && currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
-
-    isShowingConnectionError = true;
-    lastConnectionErrorTime = currentTime;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 5),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StoredDeviceOverviewPage(
+          deviceId: id,
+          name: storedDeviceNames[id] ?? "Unbekannt",
+          wakeTime: wakeTime,
+          timerMinutes: timerMinutes,
+        ),
       ),
     );
-
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        isShowingConnectionError = false;
-      }
-    });
   }
+
   @override
   Widget build(BuildContext context) {
-    List<String> allDeviceIds = {
-      ...devices.map((d) => d.remoteId.str),
-      ...storedDevices
-    }.toList();
+    final allDeviceIds = <String>{};
+    for (var device in devices) {
+      allDeviceIds.add(device.remoteId.str);
+    }
+    allDeviceIds.addAll(storedDeviceNames.keys);
+
+    final allDevices = allDeviceIds.toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -211,50 +241,116 @@ class _BLEHomePageState extends State<BLEHomePage> {
         ],
       ),
       body: ListView.builder(
-        itemCount: allDeviceIds.length,
+        itemCount: allDevices.length,
         itemBuilder: (context, index) {
-          final id = allDeviceIds[index];
+          final id = allDevices[index];
           final device = devices.firstWhere(
-              (d) => d.remoteId.str == id,
-              orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)));
-          final isAvailable = devices.any((d) => d.remoteId.str == id);
-          final name = isAvailable
-              ? device.platformName
-              : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
+            (d) => d.remoteId.str == id,
+            orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)),
+          );
+          final isAvailable = availabilityMap[id] ?? false;
+          final name = storedDeviceNames[id] ?? (device.platformName == "SunMask" ? "SunMask" : "Unbekanntes Gerät");
 
           return ListTile(
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Text(
-                    "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                Text("$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})"),
+                Row(
+                  children: [
+                    if (loadingDevices.contains(device))
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => deleteKnownDevice(id),
+                    ),
+                  ],
                 ),
-                if (loadingDevices.contains(device))
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                if (storedDevices.contains(id))
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => removeStoredDevice(id),
-                  ),
               ],
             ),
             subtitle: Text(id),
-            onTap: isAvailable && !loadingDevices.contains(device)
-                ? () => connectToDevice(device)
-                : null,
+            onTap: () {
+              if (isAvailable && !loadingDevices.contains(device)) {
+                connectToDevice(device);
+              } else {
+                openStoredDeviceOverview(id);
+              }
+            },
           );
         },
       ),
     );
   }
 }
+class StoredDeviceOverviewPage extends StatelessWidget {
+  final String deviceId;
+  final String name;
+  final String? wakeTime;
+  final int? timerMinutes;
+
+  const StoredDeviceOverviewPage({
+    super.key,
+    required this.deviceId,
+    required this.name,
+    this.wakeTime,
+    this.timerMinutes,
+  });
+
+  String get formattedWakeTime {
+    return wakeTime != null ? wakeTime! : "Nicht aktiv";
+  }
+
+  String get formattedTimer {
+    return timerMinutes != null ? "$timerMinutes Minuten" : "Nicht aktiv";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("$name Übersicht"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Gespeicherte Einstellungen", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Icon(Icons.alarm, size: 30),
+                const SizedBox(width: 10),
+                Text("Weckzeit: $formattedWakeTime", style: const TextStyle(fontSize: 18)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Icon(Icons.timer, size: 30),
+                const SizedBox(width: 10),
+                Text("Timer: $formattedTimer", style: const TextStyle(fontSize: 18)),
+              ],
+            ),
+            const Spacer(),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text("Zurück zur Geräteliste"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
