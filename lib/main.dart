@@ -246,11 +246,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
               ],
             ),
             subtitle: Text(id),
-            onTap: () {
+            onTap: () async {
   if (isAvailable && !loadingDevices.contains(device)) {
     connectToDevice(device);
-} else if (storedDevices.contains(id)) {
-  () async {
+  } else if (storedDevices.contains(id)) {
     final prefs = await SharedPreferences.getInstance();
     final wakeTime = prefs.getString('lastWakeTime_$id');
     final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
@@ -265,13 +264,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
         ),
       ),
     );
-  }();
-}
-        },
-      ),
-    );
   }
-}
+},
+
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
