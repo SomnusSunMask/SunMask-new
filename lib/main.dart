@@ -79,15 +79,20 @@ class _BLEHomePageState extends State<BLEHomePage> {
       setState(() {
         devices.clear();
         for (var result in results) {
-          final id = result.device.remoteId.str;
-          final name = result.device.platformName;
-          if (!devices.contains(result.device)) {
-            devices.add(result.device);
-          }
-          if (name.isNotEmpty && !storedDeviceNames.containsKey(id)) {
-            storedDeviceNames[id] = name;
-          }
-        }
+        final id = result.device.remoteId.str;
+        final name = result.device.platformName;
+
+        // Nur Geräte mit Namen "SunMask" anzeigen
+        if (name == "SunMask" && !devices.contains(result.device)) {
+        devices.add(result.device);
+  }
+
+  // Name speichern, falls noch nicht vorhanden
+  if (name.isNotEmpty && !storedDeviceNames.containsKey(id)) {
+    storedDeviceNames[id] = name;
+  }
+}
+
       });
     });
 
