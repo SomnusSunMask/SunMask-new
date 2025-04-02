@@ -249,19 +249,25 @@ class _BLEHomePageState extends State<BLEHomePage> {
             onTap: () {
   if (isAvailable && !loadingDevices.contains(device)) {
     connectToDevice(device);
-  } else if (storedDevices.contains(id)) {
+} else if (storedDevices.contains(id)) {
+  () async {
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTime = prefs.getString('lastWakeTime_$id');
+    final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => DeviceOverviewPage(
           deviceName: name,
-          lastWakeTime: null,         // Platzhalter, später dynamisch ersetzen
-          lastTimerMinutes: null,     // Platzhalter, später dynamisch ersetzen
+          lastWakeTime: wakeTime,
+          lastTimerMinutes: timerMinutes,
         ),
       ),
     );
-  }
-},
+  }();
+}
+
           );
         },
       ),
@@ -420,6 +426,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         }
 
         debugPrint("✅ Weckzeit gesendet: $combinedData");
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
+        await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
       } catch (e) {
         debugPrint("⚠️ Senden fehlgeschlagen: $e");
       }
@@ -440,6 +449,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         }
 
         debugPrint("✅ Timer gesendet: $timerValue Minuten");
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('lastTimerMinutes_${widget.device.remoteId.str}', selectedTimerMinutes!);
+        await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
       } catch (e) {
         debugPrint("⚠️ Senden fehlgeschlagen: $e");
       }
