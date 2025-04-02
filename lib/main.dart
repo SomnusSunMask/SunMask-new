@@ -83,6 +83,17 @@ class _BLEHomePageState extends State<BLEHomePage> {
     setState(() {});
   }
 
+  void showErrorSnackbar(String message) {
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 5),
+    ),
+  );
+}
+
   // folgt in Teil 2...
   Future<void> updateStoredDeviceData(String id, String? wakeTime, int? timerMinutes) async {
     final prefs = await SharedPreferences.getInstance();
@@ -356,14 +367,16 @@ class DeviceControlPage extends StatefulWidget {
   final BluetoothCharacteristic? alarmCharacteristic;
   final BluetoothCharacteristic? timerCharacteristic;
   final BluetoothCharacteristic? batteryCharacteristic;
+  final void Function(String wakeTime, int timerMinutes)? onDataUpdated;
 
-  const DeviceControlPage({
-    super.key,
-    required this.device,
-    this.alarmCharacteristic,
-    this.timerCharacteristic,
-    this.batteryCharacteristic,
-  });
+const DeviceControlPage({
+  super.key,
+  required this.device,
+  this.alarmCharacteristic,
+  this.timerCharacteristic,
+  this.batteryCharacteristic,
+  this.onDataUpdated, // <- NEU!
+});
 
   @override
   State<DeviceControlPage> createState() => _DeviceControlPageState();
@@ -500,6 +513,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
             sentWakeTime = selectedWakeTime;
             sentTimerMinutes = null;
           });
+          widget.onDataUpdated?.call(selectedWakeTime, null);
         }
 
         debugPrint("✅ Weckzeit gesendet: $combinedData");
@@ -520,6 +534,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
             sentTimerMinutes = selectedTimerMinutes;
             sentWakeTime = null;
           });
+          widget.onDataUpdated?.call(null, selectedTimerMinutes);
         }
 
         debugPrint("✅ Timer gesendet: $timerValue Minuten");
