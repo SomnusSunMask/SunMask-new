@@ -604,7 +604,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
       final results = await FlutterBluePlus.scanResults.first;
       for (var result in results) {
-        if (result.device.platformName == widget.deviceName) {
+        if (result.device.remoteId.str == widget.deviceName) {
           targetDevice = result.device;
           break;
         }
@@ -676,30 +676,23 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Weckzeit-Block
-            Expanded(
-              flex: 3,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-                ],
-              ),
-            ),
             const SizedBox(height: 32),
+            // Weckzeit-Block
+            Column(
+              children: [
+                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+              ],
+            ),
+            const Spacer(),
             // Timer-Block
-            Expanded(
-              flex: 3,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-                ],
-              ),
+            Column(
+              children: [
+                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+              ],
             ),
             const SizedBox(height: 32),
             // Button
