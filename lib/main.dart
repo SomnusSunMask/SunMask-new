@@ -561,7 +561,7 @@ await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
     );
   }
 }
-class DeviceOverviewPage extends StatelessWidget {
+class DeviceOverviewPage extends StatefulWidget {
   final String deviceName;
   final String? lastWakeTime;
   final int? lastTimerMinutes;
@@ -574,92 +574,145 @@ class DeviceOverviewPage extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final timerText = lastTimerMinutes != null
-        ? "$lastTimerMinutes Minuten"
-        : "Nicht aktiv";
-    final wakeTimeText = lastWakeTime ?? "Nicht aktiv";
+  State<DeviceOverviewPage> createState() => _DeviceOverviewPageState();
+}
 
+class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
+  bool isConnecting = false;
+
+  String get wakeTimeText =>
+      widget.lastWakeTime != null ? widget.lastWakeTime! : "Nicht aktiv";
+
+  String get timerText =>
+      widget.lastTimerMinutes != null ? "${widget.lastTimerMinutes} Minuten" : "Nicht aktiv";
+
+  void showErrorSnackbar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void connectToDeviceById() async {
+    setState(() {
+      isConnecting = true;
+    });
+
+    try {
+      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+      BluetoothDevice? targetDevice;
+
+      // Gerät mit gleichem Namen finden
+      final results = await FlutterBluePlus.scanResults.first;
+      for (var result in results) {
+        if (result.device.platformName == widget.deviceName) {
+          targetDevice = result.device;
+          break;
+        }
+      }
+
+      await FlutterBluePlus.stopScan();
+
+      if (targetDevice == null) {
+        throw Exception("Gerät nicht gefunden");
+      }
+
+      await targetDevice.connect(timeout: const Duration(seconds: 6));
+
+      List<BluetoothService> services = await targetDevice.discoverServices();
+
+      BluetoothCharacteristic? alarmCharacteristic;
+      BluetoothCharacteristic? timerCharacteristic;
+      BluetoothCharacteristic? batteryCharacteristic;
+
+      for (var service in services) {
+        for (var characteristic in service.characteristics) {
+          final uuid = characteristic.uuid.toString();
+          if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
+            alarmCharacteristic = characteristic;
+          } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
+            timerCharacteristic = characteristic;
+          } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
+            batteryCharacteristic = characteristic;
+          }
+        }
+      }
+
+      if (alarmCharacteristic == null || timerCharacteristic == null) {
+        throw Exception("Charakteristiken nicht gefunden");
+      }
+
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DeviceControlPage(
+              device: targetDevice!,
+              alarmCharacteristic: alarmCharacteristic,
+              timerCharacteristic: timerCharacteristic,
+              batteryCharacteristic: batteryCharacteristic,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Starte die SunMask neu.");
+    } finally {
+      if (mounted) {
+        setState(() {
+          isConnecting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Übersicht – $deviceName', style: const TextStyle(fontSize: 18)),
+        title: Text('Übersicht – ${widget.deviceName}', style: const TextStyle(fontSize: 18)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Column(
-              children: [
-                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-              ],
+            // Weckzeit-Block weiter oben
+            Expanded(
+              flex: 3,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            Column(
-              children: [
-                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-              ],
+            const SizedBox(height: 32),
+            // Timer-Block
+            Expanded(
+              flex: 3,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+            // Button unten
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
-                  final device = BluetoothDevice(remoteId: DeviceIdentifier(deviceName));
-                  try {
-                    await device.connect(timeout: const Duration(seconds: 6));
-                    final services = await device.discoverServices();
-
-                    BluetoothCharacteristic? alarmCharacteristic;
-                    BluetoothCharacteristic? timerCharacteristic;
-                    BluetoothCharacteristic? batteryCharacteristic;
-
-                    for (var service in services) {
-                      for (var characteristic in service.characteristics) {
-                        final uuid = characteristic.uuid.toString();
-                        if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
-                          alarmCharacteristic = characteristic;
-                        } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
-                          timerCharacteristic = characteristic;
-                        } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
-                          batteryCharacteristic = characteristic;
-                        }
-                      }
-                    }
-
-                    if (alarmCharacteristic != null && timerCharacteristic != null) {
-                      if (context.mounted) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DeviceControlPage(
-                              device: device,
-                              alarmCharacteristic: alarmCharacteristic,
-                              timerCharacteristic: timerCharacteristic,
-                              batteryCharacteristic: batteryCharacteristic,
-                            ),
-                          ),
-                        );
-                      }
-                    } else {
-                      throw Exception("Charakteristiken nicht gefunden");
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut"),
-                        ),
-                      );
-                    }
-                  }
-                },
-                child: const Text("SunMask verbinden", style: TextStyle(fontSize: 18)),
+                onPressed: isConnecting ? null : connectToDeviceById,
+                child: Text(
+                  isConnecting ? "Verbinden..." : "SunMask verbinden",
+                  style: const TextStyle(fontSize: 18),
+                ),
               ),
             ),
           ],
@@ -668,6 +721,3 @@ class DeviceOverviewPage extends StatelessWidget {
     );
   }
 }
-
-
-
