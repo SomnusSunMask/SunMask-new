@@ -561,7 +561,7 @@ await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
     );
   }
 }
-class DeviceOverviewPage extends StatelessWidget {
+class DeviceOverviewPage extends StatefulWidget {
   final String deviceName;
   final String? lastWakeTime;
   final int? lastTimerMinutes;
@@ -569,84 +569,116 @@ class DeviceOverviewPage extends StatelessWidget {
   const DeviceOverviewPage({
     Key? key,
     required this.deviceName,
-    required this.lastWakeTime,
-    required this.lastTimerMinutes,
+    this.lastWakeTime,
+    this.lastTimerMinutes,
   }) : super(key: key);
 
   @override
+  _DeviceOverviewPageState createState() => _DeviceOverviewPageState();
+}
+
+class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
+  @override
   Widget build(BuildContext context) {
-    String timerText = lastTimerMinutes == null || lastTimerMinutes == 0
-        ? 'Nicht aktiv'
-        : '$lastTimerMinutes Minuten';
-    String wakeTimeText =
-        (lastWakeTime == null || lastWakeTime == 'Nicht aktiv') ? 'Nicht aktiv' : lastWakeTime!;
+    final wakeTime = widget.lastWakeTime ?? 'Nicht aktiv';
+    final timerText = (widget.lastTimerMinutes != null && widget.lastTimerMinutes! > 0)
+        ? '${widget.lastTimerMinutes} Minuten'
+        : 'Nicht aktiv';
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('eingestellte Lichtwecker'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 16),
-            Text('Weckzeit', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('Aktuelle Weckzeit: $wakeTimeText',
-                style: const TextStyle(fontSize: 16), textAlign: TextAlign.center),
+            const Center(
+              child: Text(
+                'Weckzeit',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                'Aktuelle Weckzeit: $wakeTime',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
             const SizedBox(height: 24),
-            Text('Timer', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Center(
+              child: Text(
+                'Timer',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
             const SizedBox(height: 8),
-            Text('Aktueller Timer: $timerText',
-                style: const TextStyle(fontSize: 16), textAlign: TextAlign.center),
+            Center(
+              child: Text(
+                'Aktueller Timer: $timerText',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
             const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final navigator = Navigator.of(context);
-                  BluetoothDevice? sunMask;
+            ElevatedButton(
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                BluetoothDevice? sunMask;
 
-                  FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
+                FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
+                await Future.delayed(const Duration(seconds: 4));
 
-                  await Future.delayed(const Duration(seconds: 4));
-                  var results = FlutterBluePlus.scanResults;
-                  for (var r in results) {
-                    if (r.device.platformName == "SunMask") {
+                await for (final result in FlutterBluePlus.scanResults) {
+                  for (final r in result) {
+                    if (r.device.platformName == 'SunMask') {
                       sunMask = r.device;
                       break;
                     }
                   }
+                  if (sunMask != null) break;
+                }
 
-                  FlutterBluePlus.stopScan();
+                FlutterBluePlus.stopScan();
 
-                  if (sunMask != null) {
-                    try {
-                      await sunMask.connect(timeout: const Duration(seconds: 5));
-                      navigator.pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => DeviceControlPage(
-                            device: sunMask!,
-                            alarmCharacteristic: null,
-                            timerCharacteristic: null,
-                            batteryCharacteristic: null,
-                          ),
+                if (sunMask != null) {
+                  try {
+                    await sunMask.connect(timeout: const Duration(seconds: 5));
+                    navigator.pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => DeviceControlPage(
+                          device: sunMask!,
+                          alarmCharacteristic: null,
+                          timerCharacteristic: null,
+                          batteryCharacteristic: null,
                         ),
-                      );
-                    } catch (_) {
-                      navigator.pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.')),
-                      );
-                    }
-                  } else {
+                      ),
+                    );
+                  } catch (_) {
                     navigator.pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.')),
+                      const SnackBar(
+                        content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.'),
+                      ),
                     );
                   }
-                },
-                child: const Text("SunMask verbinden", style: TextStyle(fontSize: 18)),
+                } else {
+                  navigator.pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.'),
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              child: const Text(
+                'SunMask verbinden',
+                style: TextStyle(fontSize: 18),
               ),
             ),
           ],
@@ -655,3 +687,4 @@ class DeviceOverviewPage extends StatelessWidget {
     );
   }
 }
+
