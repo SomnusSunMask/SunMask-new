@@ -464,6 +464,10 @@ await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
       await widget.alarmCharacteristic?.write(utf8.encode("CLEAR"));
       await widget.timerCharacteristic?.write(utf8.encode("CLEAR"));
 
+      final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
+    await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
+
       if (mounted) {
         setState(() {
           sentWakeTime = null;
