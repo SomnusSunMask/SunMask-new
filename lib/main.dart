@@ -574,29 +574,73 @@ class DeviceOverviewPage extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final timerText = lastTimerMinutes != null
-        ? "$lastTimerMinutes Minuten"
-        : "Nicht aktiv";
+Widget build(BuildContext context) {
+  final timerText = lastTimerMinutes != null ? "$lastTimerMinutes Minuten" : "Nicht aktiv";
+  final wakeTimeText = lastWakeTime ?? "Nicht aktiv";
 
-    final wakeTimeText = lastWakeTime ?? "Nicht aktiv";
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Übersicht – $deviceName', style: const TextStyle(fontSize: 18)),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  return Scaffold(
+    appBar: AppBar(
+      title: Text('eingestellte Lichtwecker', style: const TextStyle(fontSize: 16)),
+    ),
+    body: Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Column(
           children: [
-            const Text("Letzte bekannte Einstellungen", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 24),
-            Text("Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 16),
-            Text("Timer: $timerText", style: const TextStyle(fontSize: 20)),
+            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
           ],
         ),
-      ),
-    );
-  }
+        Column(
+          children: [
+            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+          ],
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+
+            BluetoothDevice? sunMask;
+            await for (final result in FlutterBluePlus.scanResults) {
+              for (final r in result) {
+                if (r.device.platformName == "SunMask") {
+                  sunMask = r.device;
+                  break;
+                }
+              }
+              if (sunMask != null) break;
+            }
+
+            FlutterBluePlus.stopScan();
+
+            if (sunMask != null) {
+              try {
+                await sunMask.connect(timeout: const Duration(seconds: 5));
+
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DeviceControlPage(
+                      device: sunMask!,
+                      alarmCharacteristic: null,
+                      timerCharacteristic: null,
+                      batteryCharacteristic: null,
+                    ),
+                  ),
+                );
+              } catch (_) {
+                Navigator.pop(context);
+              }
+            } else {
+              Navigator.pop(context);
+            }
+          },
+          child: const Text("SunMask verbinden", style: TextStyle(fontSize: 18)),
+        ),
+      ],
+    ),
+  );
 }
