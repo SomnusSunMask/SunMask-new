@@ -617,27 +617,27 @@ Widget build(BuildContext context) {
             FlutterBluePlus.stopScan();
 
             if (sunMask != null) {
-              try {
-                final navigator = Navigator.of(context); // Kontext merken
-                await sunMask.connect(timeout: const Duration(seconds: 5));
-                
+  final navigator = Navigator.of(context); // Vor try/catch platzieren!
+  try {
+    await sunMask.connect(timeout: const Duration(seconds: 5));
 
-                navigator.pushReplacement(
-                  MaterialPageRoute(
-                    builder: (context) => DeviceControlPage(
-                      device: sunMask!,
-                      alarmCharacteristic: null,
-                      timerCharacteristic: null,
-                      batteryCharacteristic: null,
-                    ),
-                  ),
-                );
-              } catch (_) {
-                navigator.pop();
-              }
-            } else {
-              navigator.pop();
-            }
+    navigator.pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => DeviceControlPage(
+          device: sunMask!,
+          alarmCharacteristic: null,
+          timerCharacteristic: null,
+          batteryCharacteristic: null,
+        ),
+      ),
+    );
+  } catch (_) {
+    navigator.pop();
+  }
+} else {
+  Navigator.of(context).pop();
+}
+
           },
           child: const Text("SunMask verbinden", style: TextStyle(fontSize: 18)),
         ),
