@@ -633,10 +633,10 @@ Widget build(BuildContext context) {
                   ),
                 );
               } catch (_) {
-                Navigator.pop();
+                navigator.pop();
               }
             } else {
-              Navigator.pop();
+              navigator.pop();
             }
           },
           child: const Text("SunMask verbinden", style: TextStyle(fontSize: 18)),
