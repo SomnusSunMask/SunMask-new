@@ -622,8 +622,7 @@ Widget build(BuildContext context) {
                 await sunMask.connect(timeout: const Duration(seconds: 5));
                 
 
-                Navigator.pushReplacement(
-                  context,
+                navigator.pushReplacement(
                   MaterialPageRoute(
                     builder: (context) => DeviceControlPage(
                       device: sunMask!,
