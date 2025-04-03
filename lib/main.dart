@@ -575,41 +575,30 @@ class DeviceOverviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle headerStyle = const TextStyle(fontSize: 20, fontWeight: FontWeight.bold);
-    final TextStyle contentStyle = const TextStyle(fontSize: 16);
+    String timerText = lastTimerMinutes == null || lastTimerMinutes == 0
+        ? 'Nicht aktiv'
+        : '$lastTimerMinutes Minuten';
+    String wakeTimeText =
+        (lastWakeTime == null || lastWakeTime == 'Nicht aktiv') ? 'Nicht aktiv' : lastWakeTime!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Eingestellte Lichtwecker'),
+        title: const Text('eingestellte Lichtwecker'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Column(
-              children: [
-                Text('Weckzeit', style: headerStyle, textAlign: TextAlign.center),
-                const SizedBox(height: 8),
-                Text(
-                  lastWakeTime != null ? 'Aktuelle Weckzeit: $lastWakeTime' : 'Aktuelle Weckzeit: Nicht aktiv',
-                  style: contentStyle,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Column(
-              children: [
-                Text('Timer', style: headerStyle, textAlign: TextAlign.center),
-                const SizedBox(height: 8),
-                Text(
-                  lastTimerMinutes != null ? 'Aktueller Timer: $lastTimerMinutes Minuten' : 'Aktueller Timer: Nicht aktiv',
-                  style: contentStyle,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+            const SizedBox(height: 16),
+            Text('Weckzeit', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('Aktuelle Weckzeit: $wakeTimeText',
+                style: const TextStyle(fontSize: 16), textAlign: TextAlign.center),
+            const SizedBox(height: 24),
+            Text('Timer', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('Aktueller Timer: $timerText',
+                style: const TextStyle(fontSize: 16), textAlign: TextAlign.center),
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -647,17 +636,13 @@ class DeviceOverviewPage extends StatelessWidget {
                     } catch (_) {
                       navigator.pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.'),
-                        ),
+                        const SnackBar(content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.')),
                       );
                     }
                   } else {
                     navigator.pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.'),
-                      ),
+                      const SnackBar(content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.')),
                     );
                   }
                 },
@@ -670,6 +655,3 @@ class DeviceOverviewPage extends StatelessWidget {
     );
   }
 }
-
-
-
