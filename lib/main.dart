@@ -561,124 +561,101 @@ await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
     );
   }
 }
-class DeviceOverviewPage extends StatefulWidget {
+class DeviceOverviewPage extends StatelessWidget {
   final String deviceName;
   final String? lastWakeTime;
   final int? lastTimerMinutes;
 
   const DeviceOverviewPage({
-    Key? key,
+    super.key,
     required this.deviceName,
     this.lastWakeTime,
     this.lastTimerMinutes,
-  }) : super(key: key);
+  });
 
-  @override
-  _DeviceOverviewPageState createState() => _DeviceOverviewPageState();
-}
-
-class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   @override
   Widget build(BuildContext context) {
-    final wakeTime = widget.lastWakeTime ?? 'Nicht aktiv';
-    final timerText = (widget.lastTimerMinutes != null && widget.lastTimerMinutes! > 0)
-        ? '${widget.lastTimerMinutes} Minuten'
-        : 'Nicht aktiv';
+    final timerText = lastTimerMinutes != null
+        ? "$lastTimerMinutes Minuten"
+        : "Nicht aktiv";
+
+    final wakeTimeText = lastWakeTime ?? "Nicht aktiv";
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('eingestellte Lichtwecker'),
+        title: Text('Übersicht – $deviceName', style: const TextStyle(fontSize: 18)),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            const SizedBox(height: 8),
-            const Center(
-              child: Text(
-                'Weckzeit',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+            Column(
+              children: [
+                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+              ],
             ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                'Aktuelle Weckzeit: $wakeTime',
-                style: const TextStyle(fontSize: 16),
-              ),
+            Column(
+              children: [
+                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+              ],
             ),
             const SizedBox(height: 24),
-            const Center(
-              child: Text(
-                'Timer',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                'Aktueller Timer: $timerText',
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: () async {
-                final navigator = Navigator.of(context);
-                BluetoothDevice? sunMask;
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final device = BluetoothDevice(remoteId: DeviceIdentifier(deviceName));
+                  try {
+                    await device.connect(timeout: const Duration(seconds: 4));
+                    final services = await device.discoverServices();
 
-                FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
-                await Future.delayed(const Duration(seconds: 4));
+                    BluetoothCharacteristic? alarmCharacteristic;
+                    BluetoothCharacteristic? timerCharacteristic;
+                    BluetoothCharacteristic? batteryCharacteristic;
 
-                await for (final result in FlutterBluePlus.scanResults) {
-                  for (final r in result) {
-                    if (r.device.platformName == 'SunMask') {
-                      sunMask = r.device;
-                      break;
+                    for (var service in services) {
+                      for (var characteristic in service.characteristics) {
+                        final uuid = characteristic.uuid.toString();
+                        if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
+                          alarmCharacteristic = characteristic;
+                        } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
+                          timerCharacteristic = characteristic;
+                        } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
+                          batteryCharacteristic = characteristic;
+                        }
+                      }
+                    }
+
+                    if (context.mounted) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DeviceControlPage(
+                            device: device,
+                            alarmCharacteristic: alarmCharacteristic,
+                            timerCharacteristic: timerCharacteristic,
+                            batteryCharacteristic: batteryCharacteristic,
+                          ),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      Navigator.pop(context); // zurück zur Geräteliste
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Verbindung fehlgeschlagen! Starte die SunMask neu."),
+                        ),
+                      );
                     }
                   }
-                  if (sunMask != null) break;
-                }
-
-                FlutterBluePlus.stopScan();
-
-                if (sunMask != null) {
-                  try {
-                    await sunMask.connect(timeout: const Duration(seconds: 5));
-                    navigator.pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => DeviceControlPage(
-                          device: sunMask!,
-                          alarmCharacteristic: null,
-                          timerCharacteristic: null,
-                          batteryCharacteristic: null,
-                        ),
-                      ),
-                    );
-                  } catch (_) {
-                    navigator.pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.'),
-                      ),
-                    );
-                  }
-                } else {
-                  navigator.pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.'),
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-              ),
-              child: const Text(
-                'SunMask verbinden',
-                style: TextStyle(fontSize: 18),
+                },
+                child: const Text("SunMask verbinden", style: TextStyle(fontSize: 18)),
               ),
             ),
           ],
@@ -687,4 +664,5 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
+
 
