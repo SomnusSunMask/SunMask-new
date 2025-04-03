@@ -642,18 +642,20 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
         throw Exception("Charakteristiken nicht gefunden");
       }
 
-      if (context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DeviceControlPage(
-              device: targetDevice!,
-              alarmCharacteristic: alarmCharacteristic,
-              timerCharacteristic: timerCharacteristic,
-              batteryCharacteristic: batteryCharacteristic,
-            ),
-          ),
-        );
+      if (!mounted) return;
+
+Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(
+    builder: (_) => DeviceControlPage(
+      device: targetDevice!,
+      alarmCharacteristic: alarmCharacteristic,
+      timerCharacteristic: timerCharacteristic,
+      batteryCharacteristic: batteryCharacteristic,
+    ),
+  ),
+);
+
       }
     } catch (e) {
       if (!mounted) return;
