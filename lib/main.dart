@@ -618,6 +618,7 @@ Widget build(BuildContext context) {
 
             if (sunMask != null) {
               try {
+                final navigator = Navigator.of(context); // Kontext merken
                 await sunMask.connect(timeout: const Duration(seconds: 5));
                 
 
