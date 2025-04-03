@@ -258,7 +258,7 @@ if (!context.mounted) return;
       context,
       MaterialPageRoute(
         builder: (context) => DeviceOverviewPage(
-          deviceName: name,
+          deviceId: id,
           lastWakeTime: wakeTime,
           lastTimerMinutes: timerMinutes,
         ),
@@ -542,33 +542,14 @@ await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
               SizedBox(
                 width: buttonWidth,
                 child: ElevatedButton(
-                  onPressed: sendTimerToESP,
-                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: buttonWidth,
-            child: ElevatedButton(
-              onPressed: clearWakeTimeOrTimer,
-              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-class DeviceOverviewPage extends StatefulWidget {
-  final String deviceName;
+  class DeviceOverviewPage extends StatefulWidget {
+  final String deviceId;
   final String? lastWakeTime;
   final int? lastTimerMinutes;
 
   const DeviceOverviewPage({
     super.key,
-    required this.deviceName,
+    required this.deviceId,
     this.lastWakeTime,
     this.lastTimerMinutes,
   });
@@ -604,7 +585,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
       final results = await FlutterBluePlus.scanResults.first;
       for (var result in results) {
-        if (result.device.remoteId.str == widget.deviceName) {
+        if (result.device.remoteId.str == widget.deviceId) {
           targetDevice = result.device;
           break;
         }
@@ -670,32 +651,21 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Übersicht – ${widget.deviceName}', style: const TextStyle(fontSize: 18)),
+        title: Text('Übersicht – SunMask', style: const TextStyle(fontSize: 18)),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 32),
-            // Weckzeit-Block
-            Column(
-              children: [
-                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-              ],
-            ),
+            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 48),
+            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
             const Spacer(),
-            // Timer-Block
-            Column(
-              children: [
-                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-              ],
-            ),
-            const SizedBox(height: 32),
-            // Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -708,6 +678,25 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+                onPressed: sendTimerToESP,
+                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: buttonWidth,
+            child: ElevatedButton(
+              onPressed: clearWakeTimeOrTimer,
+              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
+            ),
+          ),
+        ],
       ),
     );
   }
