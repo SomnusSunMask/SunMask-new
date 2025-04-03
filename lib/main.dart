@@ -602,7 +602,6 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
       BluetoothDevice? targetDevice;
 
-      // Gerät mit gleichem Namen finden
       final results = await FlutterBluePlus.scanResults.first;
       for (var result in results) {
         if (result.device.platformName == widget.deviceName) {
@@ -618,7 +617,6 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
       }
 
       await targetDevice.connect(timeout: const Duration(seconds: 6));
-
       List<BluetoothService> services = await targetDevice.discoverServices();
 
       BluetoothCharacteristic? alarmCharacteristic;
@@ -644,19 +642,17 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
       if (!mounted) return;
 
-Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(
-    builder: (_) => DeviceControlPage(
-      device: targetDevice!,
-      alarmCharacteristic: alarmCharacteristic,
-      timerCharacteristic: timerCharacteristic,
-      batteryCharacteristic: batteryCharacteristic,
-    ),
-  ),
-);
-
-      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DeviceControlPage(
+            device: targetDevice!,
+            alarmCharacteristic: alarmCharacteristic,
+            timerCharacteristic: timerCharacteristic,
+            batteryCharacteristic: batteryCharacteristic,
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
@@ -680,7 +676,7 @@ Navigator.pushReplacement(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Weckzeit-Block weiter oben
+            // Weckzeit-Block
             Expanded(
               flex: 3,
               child: Column(
@@ -706,7 +702,7 @@ Navigator.pushReplacement(
               ),
             ),
             const SizedBox(height: 32),
-            // Button unten
+            // Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
