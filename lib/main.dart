@@ -578,7 +578,6 @@ class DeviceOverviewPage extends StatelessWidget {
     final timerText = lastTimerMinutes != null
         ? "$lastTimerMinutes Minuten"
         : "Nicht aktiv";
-
     final wakeTimeText = lastWakeTime ?? "Nicht aktiv";
 
     return Scaffold(
@@ -597,6 +596,7 @@ class DeviceOverviewPage extends StatelessWidget {
                 Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
               ],
             ),
+            const SizedBox(height: 20),
             Column(
               children: [
                 const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
@@ -611,7 +611,7 @@ class DeviceOverviewPage extends StatelessWidget {
                 onPressed: () async {
                   final device = BluetoothDevice(remoteId: DeviceIdentifier(deviceName));
                   try {
-                    await device.connect(timeout: const Duration(seconds: 4));
+                    await device.connect(timeout: const Duration(seconds: 6));
                     final services = await device.discoverServices();
 
                     BluetoothCharacteristic? alarmCharacteristic;
@@ -631,25 +631,29 @@ class DeviceOverviewPage extends StatelessWidget {
                       }
                     }
 
-                    if (context.mounted) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DeviceControlPage(
-                            device: device,
-                            alarmCharacteristic: alarmCharacteristic,
-                            timerCharacteristic: timerCharacteristic,
-                            batteryCharacteristic: batteryCharacteristic,
+                    if (alarmCharacteristic != null && timerCharacteristic != null) {
+                      if (context.mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DeviceControlPage(
+                              device: device,
+                              alarmCharacteristic: alarmCharacteristic,
+                              timerCharacteristic: timerCharacteristic,
+                              batteryCharacteristic: batteryCharacteristic,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
+                    } else {
+                      throw Exception("Charakteristiken nicht gefunden");
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      Navigator.pop(context); // zurück zur Geräteliste
+                      Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("Verbindung fehlgeschlagen! Starte die SunMask neu."),
+                          content: Text("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask und versuche es erneut"),
                         ),
                       );
                     }
@@ -664,5 +668,6 @@ class DeviceOverviewPage extends StatelessWidget {
     );
   }
 }
+
 
 
