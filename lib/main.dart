@@ -619,6 +619,7 @@ Widget build(BuildContext context) {
             if (sunMask != null) {
               try {
                 await sunMask.connect(timeout: const Duration(seconds: 5));
+                if (!mounted) return; // Sicherstellen, dass der Kontext noch gültig ist
 
                 Navigator.pushReplacement(
                   context,
