@@ -567,62 +567,76 @@ class DeviceOverviewPage extends StatelessWidget {
   final int? lastTimerMinutes;
 
   const DeviceOverviewPage({
-    super.key,
+    Key? key,
     required this.deviceName,
-    this.lastWakeTime,
-    this.lastTimerMinutes,
-  });
+    required this.lastWakeTime,
+    required this.lastTimerMinutes,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final timerText = lastTimerMinutes != null ? "$lastTimerMinutes Minuten" : "Nicht aktiv";
-    final wakeTimeText = lastWakeTime ?? "Nicht aktiv";
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lichtwecker einstellen', style: const TextStyle(fontSize: 18)),
+        title: const Text('eingestellte Lichtwecker'),
+        automaticallyImplyLeading: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Column(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+                const Text(
+                  'Weckzeit',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 16),
               ],
             ),
-            Column(
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                lastWakeTime != null ? 'Aktuelle Weckzeit: $lastWakeTime' : 'Aktuelle Weckzeit: Nicht aktiv',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+                const Text(
+                  'Timer',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 16),
               ],
             ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                lastTimerMinutes != null ? 'Aktueller Timer: $lastTimerMinutes Minuten' : 'Aktueller Timer: Nicht aktiv',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+            const Spacer(),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
-
+                  final navigator = Navigator.of(context);
+                  FlutterBluePlus.stopScan();
                   BluetoothDevice? sunMask;
-                  await for (final result in FlutterBluePlus.scanResults) {
+                  try {
+                    var result = await FlutterBluePlus.systemDevices;
                     for (final r in result) {
-                      if (r.device.platformName == "SunMask") {
-                        sunMask = r.device;
+                      if (r.platformName == "SunMask") {
+                        sunMask = r;
                         break;
                       }
                     }
-                    if (sunMask != null) break;
-                  }
-
-                  FlutterBluePlus.stopScan();
-
-                  if (sunMask != null) {
-                    final navigator = Navigator.of(context);
-                    try {
+                    if (sunMask != null) {
                       await sunMask.connect(timeout: const Duration(seconds: 5));
                       navigator.pushReplacement(
                         MaterialPageRoute(
@@ -634,21 +648,17 @@ class DeviceOverviewPage extends StatelessWidget {
                           ),
                         ),
                       );
-                    } catch (_) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Verbindung fehlgeschlagen! Starte die SunMask neu."),
-                        ),
+                    } else {
+                      navigator.pop();
+                      ScaffoldMessenger.of(navigator.context).showSnackBar(
+                        const SnackBar(content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.')),
                       );
-                      navigator.pop(); // Zur Geräteliste zurück
                     }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Verbindung fehlgeschlagen! Starte die SunMask neu."),
-                      ),
+                  } catch (_) {
+                    navigator.pop();
+                    ScaffoldMessenger.of(navigator.context).showSnackBar(
+                      const SnackBar(content: Text('Verbindung fehlgeschlagen! Starte die SunMask neu.')),
                     );
-                    Navigator.of(context).pop(); // Zur Geräteliste zurück
                   }
                 },
                 child: const Text("SunMask verbinden", style: TextStyle(fontSize: 18)),
@@ -660,4 +670,5 @@ class DeviceOverviewPage extends StatelessWidget {
     );
   }
 }
+
 
