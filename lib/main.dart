@@ -79,20 +79,17 @@ class _BLEHomePageState extends State<BLEHomePage> {
       setState(() {
         devices.clear();
         for (var result in results) {
-        final id = result.device.remoteId.str;
-        final name = result.device.platformName;
+          final id = result.device.remoteId.str;
+          final name = result.device.platformName;
 
-        // Nur Geräte mit Namen "SunMask" anzeigen
-        if (name == "SunMask" && !devices.contains(result.device)) {
-        devices.add(result.device);
-  }
+          if (name == "SunMask" && !devices.contains(result.device)) {
+            devices.add(result.device);
+          }
 
-  // Name speichern, falls noch nicht vorhanden
-  if (name.isNotEmpty && !storedDeviceNames.containsKey(id)) {
-    storedDeviceNames[id] = name;
-  }
-}
-
+          if (name.isNotEmpty && !storedDeviceNames.containsKey(id)) {
+            storedDeviceNames[id] = name;
+          }
+        }
       });
     });
 
@@ -193,6 +190,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
     });
   }
+
   @override
   Widget build(BuildContext context) {
     List<String> allDeviceIds = {
@@ -247,26 +245,25 @@ class _BLEHomePageState extends State<BLEHomePage> {
             ),
             subtitle: Text(id),
             onTap: () async {
-  if (isAvailable && !loadingDevices.contains(device)) {
-    connectToDevice(device);
-  } else if (storedDevices.contains(id)) {
-    final prefs = await SharedPreferences.getInstance();
-    final wakeTime = prefs.getString('lastWakeTime_$id');
-    final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-if (!context.mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DeviceOverviewPage(
-          deviceId: id,
-          lastWakeTime: wakeTime,
-          lastTimerMinutes: timerMinutes,
-        ),
-      ),
-    );
-  }
-},
-
+              if (isAvailable && !loadingDevices.contains(device)) {
+                connectToDevice(device);
+              } else if (storedDevices.contains(id)) {
+                final prefs = await SharedPreferences.getInstance();
+                final wakeTime = prefs.getString('lastWakeTime_$id');
+                final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+                if (!context.mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DeviceOverviewPage(
+                      deviceId: id,
+                      lastWakeTime: wakeTime,
+                      lastTimerMinutes: timerMinutes,
+                    ),
+                  ),
+                );
+              }
+            },
           );
         },
       ),
@@ -350,7 +347,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   String get timerText => sentTimerMinutes != null
       ? "$sentTimerMinutes Minuten"
       : "Nicht aktiv";
-
   String get wakeTimeButtonText => selectedWakeTime != null
       ? "Weckzeit wählen – ${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}"
       : "Weckzeit wählen";
@@ -417,9 +413,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
         await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
         final prefs = await SharedPreferences.getInstance();
-await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
-await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
-
+        await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
+        await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
 
         if (mounted) {
           setState(() {
@@ -441,9 +436,8 @@ await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
         String timerValue = selectedTimerMinutes.toString();
         await widget.timerCharacteristic!.write(utf8.encode(timerValue));
         final prefs = await SharedPreferences.getInstance();
-await prefs.setInt('lastTimerMinutes_${widget.device.remoteId.str}', selectedTimerMinutes!);
-await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
-
+        await prefs.setInt('lastTimerMinutes_${widget.device.remoteId.str}', selectedTimerMinutes!);
+        await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
 
         if (mounted) {
           setState(() {
@@ -465,8 +459,8 @@ await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
       await widget.timerCharacteristic?.write(utf8.encode("CLEAR"));
 
       final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
-    await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
+      await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
+      await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
 
       if (mounted) {
         setState(() {
@@ -542,7 +536,26 @@ await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
               SizedBox(
                 width: buttonWidth,
                 child: ElevatedButton(
-  class DeviceOverviewPage extends StatefulWidget {
+                  onPressed: sendTimerToESP,
+                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: buttonWidth,
+            child: ElevatedButton(
+              onPressed: clearWakeTimeOrTimer,
+              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+class DeviceOverviewPage extends StatefulWidget {
   final String deviceId;
   final String? lastWakeTime;
   final int? lastTimerMinutes;
@@ -651,7 +664,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Übersicht – SunMask', style: const TextStyle(fontSize: 18)),
+        title: const Text('Übersicht – SunMask', style: TextStyle(fontSize: 18)),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
@@ -678,25 +691,6 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-                onPressed: sendTimerToESP,
-                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: buttonWidth,
-            child: ElevatedButton(
-              onPressed: clearWakeTimeOrTimer,
-              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
-            ),
-          ),
-        ],
       ),
     );
   }
