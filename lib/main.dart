@@ -41,16 +41,31 @@ class _BLEHomePageState extends State<BLEHomePage> {
   List<String> storedDevices = [];
   Map<String, String> storedDeviceNames = {};
   BluetoothDevice? selectedDevice;
+  Timer? autoRefreshTimer;
+
 
   bool isShowingConnectionError = false;
   DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
-  void initState() {
-    super.initState();
-    loadKnownDevices();
-    scanForDevices();
-  }
+void initState() {
+  super.initState();
+  loadKnownDevices();
+  scanForDevices();
+
+  // Auto-Refresh alle 5 Sekunden starten
+  autoRefreshTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+    if (mounted) {
+      scanForDevices();
+    }
+  });
+}
+@override
+void dispose() {
+  autoRefreshTimer?.cancel();
+  super.dispose();
+}
+
 
   Future<void> loadKnownDevices() async {
     final prefs = await SharedPreferences.getInstance();
