@@ -615,8 +615,6 @@ class DeviceOverviewPage extends StatefulWidget {
 
 class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   bool isConnecting = false;
-  BluetoothDevice? targetDevice;
-  late final StreamSubscription<List<ScanResult>> scanSubscription;
 
   String get wakeTimeText =>
       widget.lastWakeTime != null ? widget.lastWakeTime! : "Nicht aktiv";
@@ -631,48 +629,31 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 
-  Future<void> connectToDeviceById() async {
+  void connectToDeviceById() async {
     setState(() {
       isConnecting = true;
     });
 
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+      BluetoothDevice? targetDevice;
 
-      scanSubscription = FlutterBluePlus.scanResults.listen((results) async {
-        for (var result in results) {
-          if (result.device.remoteId.str == widget.deviceId) {
-            targetDevice = result.device;
-            await FlutterBluePlus.stopScan();
-            await scanSubscription.cancel();
-            await establishConnection(targetDevice!);
-            return;
-          }
+      final results = await FlutterBluePlus.scanResults.first;
+      for (var result in results) {
+        if (result.device.remoteId.str == widget.deviceId) {
+          targetDevice = result.device;
+          break;
         }
-      });
+      }
 
-      await Future.delayed(const Duration(seconds: 6));
+      await FlutterBluePlus.stopScan();
 
       if (targetDevice == null) {
         throw Exception("Gerät nicht gefunden");
       }
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Starte die SunMask neu.");
-    } finally {
-      if (mounted) {
-        setState(() {
-          isConnecting = false;
-        });
-      }
-    }
-  }
 
-  Future<void> establishConnection(BluetoothDevice device) async {
-    try {
-      await device.connect(timeout: const Duration(seconds: 6));
-      List<BluetoothService> services = await device.discoverServices();
+      await targetDevice.connect(timeout: const Duration(seconds: 6));
+      List<BluetoothService> services = await targetDevice.discoverServices();
 
       BluetoothCharacteristic? alarmCharacteristic;
       BluetoothCharacteristic? timerCharacteristic;
@@ -701,7 +682,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
         context,
         MaterialPageRoute(
           builder: (_) => DeviceControlPage(
-            device: device,
+            device: targetDevice!,
             alarmCharacteristic: alarmCharacteristic,
             timerCharacteristic: timerCharacteristic,
             batteryCharacteristic: batteryCharacteristic,
@@ -712,13 +693,13 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
       if (!mounted) return;
       Navigator.pop(context);
       showErrorSnackbar("❌ Verbindung fehlgeschlagen! Starte die SunMask neu.");
+    } finally {
+      if (mounted) {
+        setState(() {
+          isConnecting = false;
+        });
+      }
     }
-  }
-
-  @override
-  void dispose() {
-    scanSubscription.cancel();
-    super.dispose();
   }
 
   @override
@@ -736,9 +717,25 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             const SizedBox(height: 8),
             Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 48),
+            const SizedBox(height: 48), // Zusätzlicher Abstand für Timer
             const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.info_outline, size: 20),
+                SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    "Zum Ändern bzw. Löschen des Timers bzw. der Weckzeit, muss die SunMask gestartet und verbunden werden.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
             const Spacer(),
             SizedBox(
               width: double.infinity,
