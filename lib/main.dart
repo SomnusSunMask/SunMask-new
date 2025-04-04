@@ -1,3 +1,5 @@
+// Teil 1: main + BLEHomePage komplett
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -11,7 +13,6 @@ void main() {
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]).then((_) {
-    // Systemleisten dunkel für Dark Mode
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.black,
       systemNavigationBarColor: Colors.black,
@@ -27,52 +28,66 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const blaugrau = Color(0xFF7A9CA3);
+
     return MaterialApp(
       title: 'SunMask',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.black, // Hintergrund überall schwarz
-
+        scaffoldBackgroundColor: Colors.black,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.black,
-          iconTheme: IconThemeData(color: Color(0xFF7A9CA3)), // Iconfarbe AppBar
-          titleTextStyle: TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
+          iconTheme: IconThemeData(color: blaugrau),
+          titleTextStyle: TextStyle(color: blaugrau, fontSize: 20),
         ),
-
-        iconTheme: const IconThemeData(
-          color: Color(0xFF7A9CA3), // Globale Icon-Farbe
-        ),
-
+        iconTheme: const IconThemeData(color: blaugrau),
         textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Color(0xFF7A9CA3)),
-          bodyMedium: TextStyle(color: Color(0xFF7A9CA3)),
-          titleLarge: TextStyle(color: Color(0xFF7A9CA3)),
-          titleMedium: TextStyle(color: Color(0xFF7A9CA3)),
-          titleSmall: TextStyle(color: Color(0xFF7A9CA3)),
-          labelLarge: TextStyle(color: Color(0xFF7A9CA3)),
-          labelMedium: TextStyle(color: Color(0xFF7A9CA3)),
-          labelSmall: TextStyle(color: Color(0xFF7A9CA3)),
+          bodyLarge: TextStyle(color: blaugrau),
+          bodyMedium: TextStyle(color: blaugrau),
+          titleLarge: TextStyle(color: blaugrau),
+          titleMedium: TextStyle(color: blaugrau),
+          titleSmall: TextStyle(color: blaugrau),
+          labelLarge: TextStyle(color: blaugrau),
+          labelMedium: TextStyle(color: blaugrau),
+          labelSmall: TextStyle(color: blaugrau),
         ),
-
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            foregroundColor: Color(0xFF7A9CA3), // Schriftfarbe Buttons
+            backgroundColor: blaugrau,
+            foregroundColor: Colors.white,
           ),
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: Color(0xFF7A9CA3),
+            foregroundColor: blaugrau,
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: Color(0xFF7A9CA3),
+            foregroundColor: blaugrau,
           ),
         ),
-
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          color: blaugrau,
+        ),
         snackBarTheme: const SnackBarThemeData(
           backgroundColor: Colors.white,
           contentTextStyle: TextStyle(color: Colors.black),
+        ),
+        dialogTheme: const DialogTheme(
+          backgroundColor: Colors.black,
+          titleTextStyle: TextStyle(color: blaugrau, fontSize: 20),
+          contentTextStyle: TextStyle(color: blaugrau),
+        ),
+        timePickerTheme: const TimePickerThemeData(
+          backgroundColor: Colors.black,
+          dialHandColor: blaugrau,
+          dialTextColor: Colors.white,
+          entryModeIconColor: blaugrau,
+          hourMinuteTextColor: Colors.white,
+          hourMinuteColor: blaugrau,
+          dayPeriodColor: blaugrau,
+          dayPeriodTextColor: Colors.white,
         ),
       ),
       home: const BLEHomePage(),
@@ -149,6 +164,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await Future.delayed(const Duration(seconds: 5));
     await FlutterBluePlus.stopScan();
   }
+
   void connectToDevice(BluetoothDevice device) async {
     if (!mounted) return;
 
@@ -210,7 +226,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
         loadingDevices.remove(device);
       });
 
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
+      showErrorSnackbar(
+        "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.",
+      );
     }
   }
 
@@ -225,7 +243,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
     if (!mounted) return;
 
     final currentTime = DateTime.now();
-    if (isShowingConnectionError && currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
+    if (isShowingConnectionError &&
+        currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
 
     isShowingConnectionError = true;
     lastConnectionErrorTime = currentTime;
@@ -246,6 +265,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    const blaugrau = Color(0xFF7A9CA3);
+
     List<String> allDeviceIds = {
       ...devices.map((d) => d.remoteId.str),
       ...storedDevices
@@ -266,59 +287,57 @@ class _BLEHomePageState extends State<BLEHomePage> {
         itemBuilder: (context, index) {
           final id = allDeviceIds[index];
           final device = devices.firstWhere(
-              (d) => d.remoteId.str == id,
-              orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)));
+            (d) => d.remoteId.str == id,
+            orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)),
+          );
           final isAvailable = devices.any((d) => d.remoteId.str == id);
           final name = isAvailable
               ? device.platformName
               : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
 
           return ListTile(
-  title: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Expanded(
-        child: Text(
-          "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: Color(0xFF7A9CA3)), // Farbe für Namen + Status
-        ),
-      ),
-      if (loadingDevices.contains(device))
-        const SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      if (storedDevices.contains(id))
-        IconButton(
-          icon: const Icon(
-            Icons.delete,
-            color: Color(0xFF7A9CA3), // Farbe für Mülleimer
-          ),
-          onPressed: () => removeStoredDevice(id),
-        ),
-    ],
-  ),
-  subtitle: Text(
-    id,
-    style: const TextStyle(color: Color(0xFF7A9CA3)), // Farbe für MAC-Adresse
-  ),
-  onTap: () async {
-    if (isAvailable && !loadingDevices.contains(device)) {
-      connectToDevice(device);
-    } else if (storedDevices.contains(id)) {
-      final prefs = await SharedPreferences.getInstance();
-      final wakeTime = prefs.getString('lastWakeTime_$id');
-      final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-      if (!context.mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceOverviewPage(
-            deviceId: id,
-            lastWakeTime: wakeTime,
-            lastTimerMinutes: timerMinutes,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: blaugrau),
+                  ),
+                ),
+                if (loadingDevices.contains(device))
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                if (storedDevices.contains(id))
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: blaugrau),
+                    onPressed: () => removeStoredDevice(id),
+                  ),
+              ],
+            ),
+            subtitle: Text(
+              id,
+              style: const TextStyle(color: blaugrau),
+            ),
+            onTap: () async {
+              if (isAvailable && !loadingDevices.contains(device)) {
+                connectToDevice(device);
+              } else if (storedDevices.contains(id)) {
+                final prefs = await SharedPreferences.getInstance();
+                final wakeTime = prefs.getString('lastWakeTime_$id');
+                final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+                if (!context.mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DeviceOverviewPage(
+                      deviceId: id,
+                      lastWakeTime: wakeTime,
+                      lastTimerMinutes: timerMinutes,
                     ),
                   ),
                 );
@@ -330,6 +349,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
     );
   }
 }
+// Teil 2: DeviceControlPage komplett + DeviceOverviewPage
+
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
@@ -362,17 +383,16 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     readBatteryLevel();
     listenToBatteryNotifications();
   }
- 
-@override
-void dispose() {
-  try {
-    widget.device.disconnect();
-  } catch (e) {
-    debugPrint('⚠️ Fehler beim Trennen der Verbindung (dispose): $e');
-  }
-  super.dispose();
-}
 
+  @override
+  void dispose() {
+    try {
+      widget.device.disconnect();
+    } catch (e) {
+      debugPrint('⚠️ Fehler beim Trennen der Verbindung (dispose): $e');
+    }
+    super.dispose();
+  }
 
   void readBatteryLevel() async {
     if (widget.batteryCharacteristic != null) {
@@ -418,6 +438,7 @@ void dispose() {
   String get timerText => sentTimerMinutes != null
       ? "$sentTimerMinutes Minuten"
       : "Nicht aktiv";
+
   String get wakeTimeButtonText => selectedWakeTime != null
       ? "Weckzeit wählen – ${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}"
       : "Weckzeit wählen";
@@ -430,6 +451,20 @@ void dispose() {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: selectedWakeTime ?? TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF7A9CA3),
+              onPrimary: Colors.white,
+              surface: Colors.black,
+              onSurface: Colors.white,
+            ),
+            dialogBackgroundColor: Colors.black,
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != selectedWakeTime) {
       setState(() {
@@ -447,9 +482,18 @@ void dispose() {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Dauer in Minuten:", style: TextStyle(fontSize: 18)),
+              const Text("Dauer in Minuten:", style: TextStyle(fontSize: 18, color: Color(0xFF7A9CA3))),
               TextField(
                 keyboardType: TextInputType.number,
+                style: const TextStyle(color: Color(0xFF7A9CA3)),
+                decoration: const InputDecoration(
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+                  ),
+                ),
                 onChanged: (value) {
                   selectedTimerMinutes = int.tryParse(value) ?? 30;
                 },
@@ -548,39 +592,40 @@ void dispose() {
 
   @override
   Widget build(BuildContext context) {
+    const blaugrau = Color(0xFF7A9CA3);
+
     return Scaffold(
-appBar: AppBar(
-  title: const Text('Lichtwecker einstellen', style: TextStyle(fontSize: 18)),
-  leading: IconButton(
-    icon: const Icon(Icons.arrow_back),
-    onPressed: () async {
-      try {
-        await widget.device.disconnect();
-      } catch (e) {
-        debugPrint('⚠️ Fehler beim Trennen der Verbindung: $e');
-      }
+      appBar: AppBar(
+        title: const Text('Lichtwecker einstellen', style: TextStyle(fontSize: 18)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () async {
+            try {
+              await widget.device.disconnect();
+            } catch (e) {
+              debugPrint('⚠️ Fehler beim Trennen der Verbindung: $e');
+            }
 
-      if (context.mounted) {
-        Navigator.pop(context);
-      }
-    },
-  ),
-  actions: [
-    Padding(
-      padding: const EdgeInsets.only(right: 16.0),
-      child: Center(
-        child: Text(
-  batteryLevel != null ? 'Akku: $batteryLevel%' : '',
-  style: const TextStyle(
-    color: Color(0xFF7A9CA3), // Deine Wunschfarbe!
-    fontSize: 16,
-  ),
-),
+            if (context.mounted) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                batteryLevel != null ? 'Akku: $batteryLevel%' : '',
+                style: const TextStyle(
+                  color: blaugrau,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-    ),
-  ],
-),
-
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -593,6 +638,10 @@ appBar: AppBar(
               SizedBox(
                 width: buttonWidth,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: blaugrau,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: () => selectWakeTime(context),
                   child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
                 ),
@@ -601,6 +650,10 @@ appBar: AppBar(
               SizedBox(
                 width: buttonWidth,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: blaugrau,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: sendWakeTimeToESP,
                   child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
                 ),
@@ -617,6 +670,10 @@ appBar: AppBar(
               SizedBox(
                 width: buttonWidth,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: blaugrau,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: () => selectTimer(context),
                   child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
                 ),
@@ -625,6 +682,10 @@ appBar: AppBar(
               SizedBox(
                 width: buttonWidth,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: blaugrau,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: sendTimerToESP,
                   child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
                 ),
@@ -635,6 +696,10 @@ appBar: AppBar(
           SizedBox(
             width: buttonWidth,
             child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: blaugrau,
+                foregroundColor: Colors.white,
+              ),
               onPressed: clearWakeTimeOrTimer,
               child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
             ),
@@ -644,6 +709,11 @@ appBar: AppBar(
     );
   }
 }
+
+// -------------------------
+// DeviceOverviewPage
+// -------------------------
+
 class DeviceOverviewPage extends StatefulWidget {
   final String deviceId;
   final String? lastWakeTime;
@@ -770,9 +840,11 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
   @override
   Widget build(BuildContext context) {
+    const blaugrau = Color(0xFF7A9CA3);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('eingestellter Lichtwecker', style: TextStyle(fontSize: 18)),
+        title: const Text('Eingestellter Lichtwecker', style: TextStyle(fontSize: 18)),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
@@ -782,28 +854,32 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 181), // Mehr Abstand nach Weckzeit-Block
+            const SizedBox(height: 181),
             const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
             const Spacer(),
             Row(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Icon(Icons.info, color: Color(0xFF7A9CA3)),
-    const SizedBox(width: 8),
-    const Expanded(
-      child: Text(
-        "Zum Ändern oder Löschen von Timer oder Weckzeit bitte die SunMask starten und verbinden.",
-        style: TextStyle(color: Color(0xFF7A9CA3)),
-      ),
-    ),
-  ],
-),
-const SizedBox(height: 24),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info, color: blaugrau),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    "Zum Ändern oder Löschen von Timer oder Weckzeit bitte die SunMask starten und verbinden.",
+                    style: TextStyle(color: blaugrau),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: blaugrau,
+                  foregroundColor: Colors.white,
+                ),
                 onPressed: isConnecting ? null : connectToDeviceById,
                 child: Text(
                   isConnecting ? "Verbinden..." : "SunMask verbinden",
@@ -817,3 +893,4 @@ const SizedBox(height: 24),
     );
   }
 }
+
