@@ -778,20 +778,19 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
             const Spacer(),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Icon(Icons.info_outline, size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Zum Ändern bzw. Löschen des Timers bzw. der Weckzeit, muss die SunMask gestartet und verbunden werden.",
-                    textAlign: TextAlign.left,
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Icon(Icons.info, color: Colors.white),
+    const SizedBox(width: 8),
+    const Expanded(
+      child: Text(
+        "Zum Ändern oder Löschen von Timer oder Weckzeit bitte die SunMask starten und verbinden.",
+        style: TextStyle(color: Colors.white),
+      ),
+    ),
+  ],
+),
+const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
