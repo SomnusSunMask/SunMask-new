@@ -23,27 +23,57 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SunMask',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Color(0xFF7BA3A6), // Schriftfarbe Buttons
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: Color(0xFF7BA3A6), // Schriftfarbe TextButton
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Color(0xFF7BA3A6), // Schriftfarbe OutlinedButton
-          ),
-        ),
-      ),
-      home: const BLEHomePage(),
-    );
-  }
-}
+  primarySwatch: Colors.blue,
+  scaffoldBackgroundColor: Colors.black, // Hintergrund überall schwarz
+
+  // AppBar anpassen (Hintergrund + Text + Icons)
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.black,
+    iconTheme: IconThemeData(color: Color(0xFFF7BAA6)), // AppBar Icons
+    titleTextStyle: TextStyle(color: Color(0xFFF7BAA6), fontSize: 20), // AppBar Text
+  ),
+
+  // Icon-Farbe global
+  iconTheme: const IconThemeData(
+    color: Color(0xFFF7BAA6),
+  ),
+
+  // Alle Texte
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Color(0xFFF7BAA6)),
+    bodyMedium: TextStyle(color: Color(0xFFF7BAA6)),
+    titleLarge: TextStyle(color: Color(0xFFF7BAA6)),
+    titleMedium: TextStyle(color: Color(0xFFF7BAA6)),
+    titleSmall: TextStyle(color: Color(0xFFF7BAA6)),
+    labelLarge: TextStyle(color: Color(0xFFF7BAA6)),
+    labelMedium: TextStyle(color: Color(0xFFF7BAA6)),
+    labelSmall: TextStyle(color: Color(0xFFF7BAA6)),
+  ),
+
+  // Buttons (Schriftfarbe!)
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      foregroundColor: Color(0xFFF7BAA6), // Schriftfarbe ElevatedButton
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: Color(0xFFF7BAA6), // Schriftfarbe TextButton
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      foregroundColor: Color(0xFFF7BAA6), // Schriftfarbe OutlinedButton
+    ),
+  ),
+
+  // Snackbar ✅ Hintergrund weiß, Text schwarz
+  snackBarTheme: const SnackBarThemeData(
+    backgroundColor: Colors.white,
+    contentTextStyle: TextStyle(color: Colors.black),
+  ),
+),
+
 
 
 
@@ -739,7 +769,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 180), // Mehr Abstand nach Weckzeit-Block
+            const SizedBox(height: 181), // Mehr Abstand nach Weckzeit-Block
             const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
