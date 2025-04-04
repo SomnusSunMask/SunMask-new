@@ -19,60 +19,58 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SunMask',
-      theme: ThemeData(
-  primarySwatch: Colors.blue,
-  scaffoldBackgroundColor: Colors.black, // Hintergrund überall schwarz
+Widget build(BuildContext context) {
+  return MaterialApp(
+    title: 'SunMask',
+    theme: ThemeData(
+      primarySwatch: Colors.blue,
+      scaffoldBackgroundColor: Colors.black, // Hintergrund überall schwarz
 
-  // AppBar anpassen (Hintergrund + Text + Icons)
-  appBarTheme: const AppBarTheme(
-    backgroundColor: Colors.black,
-    iconTheme: IconThemeData(color: Color(0xFFF7BAA6)), // AppBar Icons
-    titleTextStyle: TextStyle(color: Color(0xFFF7BAA6), fontSize: 20), // AppBar Text
-  ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.black,
+        iconTheme: IconThemeData(color: Color(0xFFF7BAA6)),
+        titleTextStyle: TextStyle(color: Color(0xFFF7BAA6), fontSize: 20),
+      ),
 
-  // Icon-Farbe global
-  iconTheme: const IconThemeData(
-    color: Color(0xFFF7BAA6),
-  ),
+      iconTheme: const IconThemeData(
+        color: Color(0xFFF7BAA6),
+      ),
 
-  // Alle Texte
-  textTheme: const TextTheme(
-    bodyLarge: TextStyle(color: Color(0xFFF7BAA6)),
-    bodyMedium: TextStyle(color: Color(0xFFF7BAA6)),
-    titleLarge: TextStyle(color: Color(0xFFF7BAA6)),
-    titleMedium: TextStyle(color: Color(0xFFF7BAA6)),
-    titleSmall: TextStyle(color: Color(0xFFF7BAA6)),
-    labelLarge: TextStyle(color: Color(0xFFF7BAA6)),
-    labelMedium: TextStyle(color: Color(0xFFF7BAA6)),
-    labelSmall: TextStyle(color: Color(0xFFF7BAA6)),
-  ),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: Color(0xFFF7BAA6)),
+        bodyMedium: TextStyle(color: Color(0xFFF7BAA6)),
+        titleLarge: TextStyle(color: Color(0xFFF7BAA6)),
+        titleMedium: TextStyle(color: Color(0xFFF7BAA6)),
+        titleSmall: TextStyle(color: Color(0xFFF7BAA6)),
+        labelLarge: TextStyle(color: Color(0xFFF7BAA6)),
+        labelMedium: TextStyle(color: Color(0xFFF7BAA6)),
+        labelSmall: TextStyle(color: Color(0xFFF7BAA6)),
+      ),
 
-  // Buttons (Schriftfarbe!)
-  elevatedButtonTheme: ElevatedButtonThemeData(
-    style: ElevatedButton.styleFrom(
-      foregroundColor: Color(0xFFF7BAA6), // Schriftfarbe ElevatedButton
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Color(0xFFF7BAA6),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: Color(0xFFF7BAA6),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Color(0xFFF7BAA6),
+        ),
+      ),
+
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: Colors.white,
+        contentTextStyle: TextStyle(color: Colors.black),
+      ),
     ),
-  ),
-  textButtonTheme: TextButtonThemeData(
-    style: TextButton.styleFrom(
-      foregroundColor: Color(0xFFF7BAA6), // Schriftfarbe TextButton
-    ),
-  ),
-  outlinedButtonTheme: OutlinedButtonThemeData(
-    style: OutlinedButton.styleFrom(
-      foregroundColor: Color(0xFFF7BAA6), // Schriftfarbe OutlinedButton
-    ),
-  ),
-
-  // Snackbar ✅ Hintergrund weiß, Text schwarz
-  snackBarTheme: const SnackBarThemeData(
-    backgroundColor: Colors.white,
-    contentTextStyle: TextStyle(color: Colors.black),
-  ),
-),
+    home: const BLEHomePage(),
+  );
+}
 
 
 
