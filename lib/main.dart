@@ -790,7 +790,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             Row(
   crossAxisAlignment: CrossAxisAlignment.start,
   children: [
-    Icon(Icons.info, color: Colors.white),
+    Icon(Icons.info, color: Color(0xFF7A9CA3)),
     const SizedBox(width: 8),
     const Expanded(
       child: Text(
