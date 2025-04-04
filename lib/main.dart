@@ -600,6 +600,8 @@ class DeviceOverviewPage extends StatefulWidget {
 
 class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   bool isConnecting = false;
+  BluetoothDevice? targetDevice;
+  late final StreamSubscription<List<ScanResult>> scanSubscription;
 
   String get wakeTimeText =>
       widget.lastWakeTime != null ? widget.lastWakeTime! : "Nicht aktiv";
@@ -614,31 +616,48 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 
-  void connectToDeviceById() async {
+  Future<void> connectToDeviceById() async {
     setState(() {
       isConnecting = true;
     });
 
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
-      BluetoothDevice? targetDevice;
 
-      final results = await FlutterBluePlus.scanResults.first;
-      for (var result in results) {
-        if (result.device.remoteId.str == widget.deviceId) {
-          targetDevice = result.device;
-          break;
+      scanSubscription = FlutterBluePlus.scanResults.listen((results) async {
+        for (var result in results) {
+          if (result.device.remoteId.str == widget.deviceId) {
+            targetDevice = result.device;
+            await FlutterBluePlus.stopScan();
+            await scanSubscription.cancel();
+            await establishConnection(targetDevice!);
+            return;
+          }
         }
-      }
+      });
 
-      await FlutterBluePlus.stopScan();
+      await Future.delayed(const Duration(seconds: 6));
 
       if (targetDevice == null) {
         throw Exception("Gerät nicht gefunden");
       }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Starte die SunMask neu.");
+    } finally {
+      if (mounted) {
+        setState(() {
+          isConnecting = false;
+        });
+      }
+    }
+  }
 
-      await targetDevice.connect(timeout: const Duration(seconds: 6));
-      List<BluetoothService> services = await targetDevice.discoverServices();
+  Future<void> establishConnection(BluetoothDevice device) async {
+    try {
+      await device.connect(timeout: const Duration(seconds: 6));
+      List<BluetoothService> services = await device.discoverServices();
 
       BluetoothCharacteristic? alarmCharacteristic;
       BluetoothCharacteristic? timerCharacteristic;
@@ -667,7 +686,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
         context,
         MaterialPageRoute(
           builder: (_) => DeviceControlPage(
-            device: targetDevice!,
+            device: device,
             alarmCharacteristic: alarmCharacteristic,
             timerCharacteristic: timerCharacteristic,
             batteryCharacteristic: batteryCharacteristic,
@@ -678,13 +697,13 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
       if (!mounted) return;
       Navigator.pop(context);
       showErrorSnackbar("❌ Verbindung fehlgeschlagen! Starte die SunMask neu.");
-    } finally {
-      if (mounted) {
-        setState(() {
-          isConnecting = false;
-        });
-      }
     }
+  }
+
+  @override
+  void dispose() {
+    scanSubscription.cancel();
+    super.dispose();
   }
 
   @override
