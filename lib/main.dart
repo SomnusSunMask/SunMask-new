@@ -19,30 +19,14 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-Widget build(BuildContext context) {
-  return MaterialApp(
-    title: 'SunMask',
-    theme: ThemeData(
-      primarySwatch: Colors.blue,
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Color(0xFF7BA3A6), // Nur Schriftfarbe der ElevatedButtons
-        ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: Color(0xFF7BA3A6), // Nur Schriftfarbe der TextButtons
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Color(0xFF7BA3A6), // Nur Schriftfarbe der OutlinedButtons
-        ),
-      ),
-    ),
-    home: const BLEHomePage(),
-  );
-}
+   Widget build(BuildContext context) {
+     return MaterialApp(
+       title: 'BLE Weckzeit & Timer',
+       theme: ThemeData(primarySwatch: Colors.blue),
+       home: const BLEHomePage(),
+     );
+   }
+ }
 
 
 class BLEHomePage extends StatefulWidget {
