@@ -718,9 +718,9 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 100), // Mehr Abstand nach Weckzeit-Block
+            const SizedBox(height: 130), // Mehr Abstand nach Weckzeit-Block
             const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
