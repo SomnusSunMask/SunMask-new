@@ -244,7 +244,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
     final currentTime = DateTime.now();
     if (isShowingConnectionError &&
-        currentTime.difference(lastConnectionErrorTime).inSeconds < 5) return;
+    currentTime.difference(lastConnectionErrorTime).inSeconds < 5) {
+  return;
+}
+
 
     isShowingConnectionError = true;
     lastConnectionErrorTime = currentTime;
@@ -453,17 +456,20 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       initialTime: selectedWakeTime ?? TimeOfDay.now(),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF7A9CA3),
-              onPrimary: Colors.white,
-              surface: Colors.black,
-              onSurface: Colors.white,
-            ),
-            dialogBackgroundColor: Colors.black,
-          ),
-          child: child!,
-        );
+  data: Theme.of(context).copyWith(
+    colorScheme: const ColorScheme.dark(
+      primary: Color(0xFF7A9CA3),
+      onPrimary: Colors.white,
+      surface: Colors.black,
+      onSurface: Colors.white,
+    ),
+    dialogTheme: const DialogTheme(
+      backgroundColor: Colors.black,
+    ),
+  ),
+  child: child!,
+);
+
       },
     );
     if (picked != null && picked != selectedWakeTime) {
