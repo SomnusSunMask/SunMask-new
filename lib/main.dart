@@ -281,7 +281,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
         child: Text(
           "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: Color(0xFFF7BAA6)), // Farbe für Namen + Status
+          style: const TextStyle(color: Color(0xFF7A9CA3)), // Farbe für Namen + Status
         ),
       ),
       if (loadingDevices.contains(device))
@@ -294,7 +294,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
         IconButton(
           icon: const Icon(
             Icons.delete,
-            color: Color(0xFFF7BAA6), // Farbe für Mülleimer
+            color: Color(0xFF7A9CA3), // Farbe für Mülleimer
           ),
           onPressed: () => removeStoredDevice(id),
         ),
@@ -302,7 +302,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
   ),
   subtitle: Text(
     id,
-    style: const TextStyle(color: Color(0xFFF7BAA6)), // Farbe für MAC-Adresse
+    style: const TextStyle(color: Color(0xFF7A9CA3)), // Farbe für MAC-Adresse
   ),
   onTap: () async {
     if (isAvailable && !loadingDevices.contains(device)) {
@@ -572,7 +572,7 @@ appBar: AppBar(
         child: Text(
   batteryLevel != null ? 'Akku: $batteryLevel%' : '',
   style: const TextStyle(
-    color: Color(0xFFF7BAA6), // Deine Wunschfarbe!
+    color: Color(0xFF7A9CA3), // Deine Wunschfarbe!
     fontSize: 16,
   ),
 ),
@@ -795,7 +795,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     const Expanded(
       child: Text(
         "Zum Ändern oder Löschen von Timer oder Weckzeit bitte die SunMask starten und verbinden.",
-        style: TextStyle(color: Color(0xFFF7BAA6)),
+        style: TextStyle(color: Color(0xFF7A9CA3)),
       ),
     ),
   ],
