@@ -19,14 +19,31 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'BLE Weckzeit & Timer',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const BLEHomePage(),
-    );
-  }
+Widget build(BuildContext context) {
+  return MaterialApp(
+    title: 'SunMask',
+    theme: ThemeData(
+      primarySwatch: Colors.blue,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Color(0xFF7BA3A6), // Nur Schriftfarbe der ElevatedButtons
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: Color(0xFF7BA3A6), // Nur Schriftfarbe der TextButtons
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Color(0xFF7BA3A6), // Nur Schriftfarbe der OutlinedButtons
+        ),
+      ),
+    ),
+    home: const BLEHomePage(),
+  );
 }
+
 
 class BLEHomePage extends StatefulWidget {
   const BLEHomePage({super.key});
@@ -718,9 +735,9 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 15),
+            const SizedBox(height: 12),
             Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 170), // Mehr Abstand nach Weckzeit-Block
+            const SizedBox(height: 180), // Mehr Abstand nach Weckzeit-Block
             const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
