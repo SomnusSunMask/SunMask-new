@@ -19,61 +19,59 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-Widget build(BuildContext context) {
-  return MaterialApp(
-    title: 'SunMask',
-    theme: ThemeData(
-      primarySwatch: Colors.blue,
-      scaffoldBackgroundColor: Colors.black, // Hintergrund überall schwarz
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'SunMask',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.black, // Hintergrund überall schwarz
 
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Color(0xFFF7BAA6)),
-        titleTextStyle: TextStyle(color: Color(0xFFF7BAA6), fontSize: 20),
-      ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          iconTheme: IconThemeData(color: Color(0xFFF7BAA6)),
+          titleTextStyle: TextStyle(color: Color(0xFFF7BAA6), fontSize: 20),
+        ),
 
-      iconTheme: const IconThemeData(
-        color: Color(0xFFF7BAA6),
-      ),
+        iconTheme: const IconThemeData(
+          color: Color(0xFFF7BAA6),
+        ),
 
-      textTheme: const TextTheme(
-        bodyLarge: TextStyle(color: Color(0xFFF7BAA6)),
-        bodyMedium: TextStyle(color: Color(0xFFF7BAA6)),
-        titleLarge: TextStyle(color: Color(0xFFF7BAA6)),
-        titleMedium: TextStyle(color: Color(0xFFF7BAA6)),
-        titleSmall: TextStyle(color: Color(0xFFF7BAA6)),
-        labelLarge: TextStyle(color: Color(0xFFF7BAA6)),
-        labelMedium: TextStyle(color: Color(0xFFF7BAA6)),
-        labelSmall: TextStyle(color: Color(0xFFF7BAA6)),
-      ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Color(0xFFF7BAA6)),
+          bodyMedium: TextStyle(color: Color(0xFFF7BAA6)),
+          titleLarge: TextStyle(color: Color(0xFFF7BAA6)),
+          titleMedium: TextStyle(color: Color(0xFFF7BAA6)),
+          titleSmall: TextStyle(color: Color(0xFFF7BAA6)),
+          labelLarge: TextStyle(color: Color(0xFFF7BAA6)),
+          labelMedium: TextStyle(color: Color(0xFFF7BAA6)),
+          labelSmall: TextStyle(color: Color(0xFFF7BAA6)),
+        ),
 
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Color(0xFFF7BAA6),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Color(0xFFF7BAA6),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: Color(0xFFF7BAA6),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Color(0xFFF7BAA6),
+          ),
+        ),
+
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: Colors.white,
+          contentTextStyle: TextStyle(color: Colors.black),
         ),
       ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: Color(0xFFF7BAA6),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Color(0xFFF7BAA6),
-        ),
-      ),
-
-      snackBarTheme: const SnackBarThemeData(
-        backgroundColor: Colors.white,
-        contentTextStyle: TextStyle(color: Colors.black),
-      ),
-    ),
-    home: const BLEHomePage(),
-  );
-
-
-
-
+      home: const BLEHomePage(),
+    );
+  }
+}
 
 class BLEHomePage extends StatefulWidget {
   const BLEHomePage({super.key});
