@@ -795,7 +795,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     const Expanded(
       child: Text(
         "Zum Ändern oder Löschen von Timer oder Weckzeit bitte die SunMask starten und verbinden.",
-        style: TextStyle(color: Colors(0xFFF7BAA6)),
+        style: TextStyle(color: Color(0xFFF7BAA6)),
       ),
     ),
   ],
