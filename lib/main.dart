@@ -479,20 +479,35 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lichtwecker einstellen', style: TextStyle(fontSize: 18)),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Text(
-                batteryLevel != null ? 'Akku: $batteryLevel%' : '...',
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-        ],
+appBar: AppBar(
+  title: const Text('Lichtwecker einstellen', style: TextStyle(fontSize: 18)),
+  leading: IconButton(
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () async {
+      try {
+        await widget.device.disconnect();
+      } catch (e) {
+        debugPrint('⚠️ Fehler beim Trennen der Verbindung: $e');
+      }
+
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+    },
+  ),
+  actions: [
+    Padding(
+      padding: const EdgeInsets.only(right: 16.0),
+      child: Center(
+        child: Text(
+          batteryLevel != null ? 'Akku: $batteryLevel%' : '...',
+          style: const TextStyle(fontSize: 16),
+        ),
       ),
+    ),
+  ],
+),
+
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
