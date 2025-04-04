@@ -563,9 +563,12 @@ appBar: AppBar(
       padding: const EdgeInsets.only(right: 16.0),
       child: Center(
         child: Text(
-          batteryLevel != null ? 'Akku: $batteryLevel%' : '...',
-          style: const TextStyle(fontSize: 16),
-        ),
+  batteryLevel != null ? 'Akku: $batteryLevel%' : '',
+  style: const TextStyle(
+    color: Color(0xFFF7BAA6), // Deine Wunschfarbe!
+    fontSize: 16,
+  ),
+),
       ),
     ),
   ],
@@ -785,7 +788,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     const Expanded(
       child: Text(
         "Zum Ändern oder Löschen von Timer oder Weckzeit bitte die SunMask starten und verbinden.",
-        style: TextStyle(color: Colors.white),
+        style: TextStyle(color: Colors(0xFFF7BAA6)),
       ),
     ),
   ],
