@@ -303,6 +303,17 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     readBatteryLevel();
     listenToBatteryNotifications();
   }
+  
+@override
+void dispose() {
+  try {
+    widget.device.disconnect();
+  } catch (e) {
+    debugPrint('⚠️ Fehler beim Trennen der Verbindung (dispose): $e');
+  }
+  super.dispose();
+}
+
 
   void readBatteryLevel() async {
     if (widget.batteryCharacteristic != null) {
