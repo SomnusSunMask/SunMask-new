@@ -701,27 +701,26 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 48),
-            const SizedBox(height: 48), // Zusätzlicher Abstand für Timer
+            const SizedBox(height: 100), // Mehr Abstand nach Weckzeit-Block
             const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 24),
+            const Spacer(),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Icon(Icons.info_outline, size: 20),
                 SizedBox(width: 8),
-                Flexible(
+                Expanded(
                   child: Text(
                     "Zum Ändern bzw. Löschen des Timers bzw. der Weckzeit, muss die SunMask gestartet und verbunden werden.",
-                    textAlign: TextAlign.center,
+                    textAlign: TextAlign.left,
                     style: TextStyle(fontSize: 14),
                   ),
                 ),
               ],
             ),
-            const Spacer(),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
