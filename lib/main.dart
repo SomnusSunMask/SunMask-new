@@ -1,16 +1,23 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]).then((_) {
+    // Systemleisten dunkel für Dark Mode
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.black,
+      systemNavigationBarColor: Colors.black,
+      systemNavigationBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.light,
+    ));
     runApp(const MyApp());
   });
 }
@@ -28,38 +35,38 @@ class MyApp extends StatelessWidget {
 
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.black,
-          iconTheme: IconThemeData(color: Color(0xFFF7BAA6)),
-          titleTextStyle: TextStyle(color: Color(0xFFF7BAA6), fontSize: 20),
+          iconTheme: IconThemeData(color: Color(0xFF7A9CA3)), // Iconfarbe AppBar
+          titleTextStyle: TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
         ),
 
         iconTheme: const IconThemeData(
-          color: Color(0xFFF7BAA6),
+          color: Color(0xFF7A9CA3), // Globale Icon-Farbe
         ),
 
         textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Color(0xFFF7BAA6)),
-          bodyMedium: TextStyle(color: Color(0xFFF7BAA6)),
-          titleLarge: TextStyle(color: Color(0xFFF7BAA6)),
-          titleMedium: TextStyle(color: Color(0xFFF7BAA6)),
-          titleSmall: TextStyle(color: Color(0xFFF7BAA6)),
-          labelLarge: TextStyle(color: Color(0xFFF7BAA6)),
-          labelMedium: TextStyle(color: Color(0xFFF7BAA6)),
-          labelSmall: TextStyle(color: Color(0xFFF7BAA6)),
+          bodyLarge: TextStyle(color: Color(0xFF7A9CA3)),
+          bodyMedium: TextStyle(color: Color(0xFF7A9CA3)),
+          titleLarge: TextStyle(color: Color(0xFF7A9CA3)),
+          titleMedium: TextStyle(color: Color(0xFF7A9CA3)),
+          titleSmall: TextStyle(color: Color(0xFF7A9CA3)),
+          labelLarge: TextStyle(color: Color(0xFF7A9CA3)),
+          labelMedium: TextStyle(color: Color(0xFF7A9CA3)),
+          labelSmall: TextStyle(color: Color(0xFF7A9CA3)),
         ),
 
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            foregroundColor: Color(0xFFF7BAA6),
+            foregroundColor: Color(0xFF7A9CA3), // Schriftfarbe Buttons
           ),
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: Color(0xFFF7BAA6),
+            foregroundColor: Color(0xFF7A9CA3),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: Color(0xFFF7BAA6),
+            foregroundColor: Color(0xFF7A9CA3),
           ),
         ),
 
