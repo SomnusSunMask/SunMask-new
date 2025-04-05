@@ -368,7 +368,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
 }
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
-class DeviceControlPage extends StatefulWidget {
+class DeviceControlPageState extends State<DeviceControlPage> {
   final TextEditingController timerHoursController = TextEditingController();
   final TextEditingController timerMinutesController = TextEditingController();
   final BluetoothDevice device;
@@ -376,7 +376,7 @@ class DeviceControlPage extends StatefulWidget {
   final BluetoothCharacteristic? timerCharacteristic;
   final BluetoothCharacteristic? batteryCharacteristic;
 
-  const DeviceControlPage({
+  DeviceControlPage({
     super.key,
     required this.device,
     this.alarmCharacteristic,
