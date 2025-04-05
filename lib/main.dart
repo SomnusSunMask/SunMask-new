@@ -1,5 +1,5 @@
 // Teil 1: main + BLEHomePage komplett
-
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -90,7 +90,11 @@ class MyApp extends StatelessWidget {
           dayPeriodTextColor: Colors.white,
         ),
       ),
-      home: const BLEHomePage(),
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+supportedLocales: const [
+  Locale('de', ''), // Deutsch
+],
+home: const BLEHomePage()
     );
   }
 }
@@ -516,18 +520,19 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
             children: [
               const Text("Dauer in Minuten:", style: TextStyle(fontSize: 18, color: Color(0xFF7A9CA3))),
               TextField(
-                keyboardType: TextInputType.number,
-                style: const TextStyle(color: Color(0xFF7A9CA3)),
-                decoration: const InputDecoration(
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                  ),
-                ),
-                onChanged: (value) {
-                  selectedTimerMinutes = int.tryParse(value) ?? 30;
+  keyboardType: TextInputType.number,
+  style: const TextStyle(color: Color(0xFF7A9CA3)),
+  cursorColor: Color(0xFF7A9CA3), // <--- HIER HINZUFÜGEN
+  decoration: const InputDecoration(
+    enabledBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+    ),
+    focusedBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+    ),
+  ),
+  onChanged: (value) {
+    selectedTimerMinutes = int.tryParse(value) ?? 30;
                 },
               ),
             ],
