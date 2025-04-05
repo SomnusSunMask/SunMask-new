@@ -511,24 +511,30 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     context: context,
     initialTime: selectedWakeTime ?? TimeOfDay.now(),
     builder: (context, child) {
-      return Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF7A9CA3),
-            onPrimary: Colors.white,
-            surface: Colors.black,
-            onSurface: Colors.white,
+      return MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF7A9CA3),
+              onPrimary: Colors.white,
+              surface: Colors.black,
+              onSurface: Colors.white,
+            ),
+            dialogTheme: const DialogTheme(
+              backgroundColor: Colors.black,
+            ),
+            textSelectionTheme: const TextSelectionThemeData(
+              cursorColor: Colors.white,
+              selectionColor: Color(0x80000000), // transparenter Schwarzton
+              selectionHandleColor: Colors.white,
+            ),
           ),
-          dialogTheme: const DialogTheme(
-            backgroundColor: Colors.black,
-          ),
-          textSelectionTheme: const TextSelectionThemeData(
-            cursorColor: Colors.white,
-            selectionColor: Color(0x80000000), // transparenter Schwarzton
-            selectionHandleColor: Colors.white,
+          child: Transform.translate(
+            offset: const Offset(0, 8), // <- hier veränderst du die vertikale Position des gesamten Eingabebereichs inkl. Doppelpunkt!
+            child: child!,
           ),
         ),
-        child: _CustomColonTimePicker(child: child!),
       );
     },
   );
@@ -539,6 +545,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 }
+
 
 Future<void> selectTimer(BuildContext context) async {
   timerHoursController.text = selectedTimerMinutes != null
@@ -853,34 +860,7 @@ Future<void> selectTimer(BuildContext context) async {
     );
   }
 }
-class _CustomColonTimePicker extends StatelessWidget {
-  final Widget child;
 
-  const _CustomColonTimePicker({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        child,
-        Positioned(
-          top: 32, // Feineinstellung für den Doppelpunkt
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Text(
-              ':',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 // -------------------------
 // DeviceOverviewPage
