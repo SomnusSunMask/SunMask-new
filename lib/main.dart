@@ -86,6 +86,7 @@ class MyApp extends StatelessWidget {
           entryModeIconColor: blaugrau,
           hourMinuteTextColor: Colors.white,
           hourMinuteColor: blaugrau,
+          hourMinuteTextStyle: TextStyle(color: blaugrau, fontSize: 18), // <<--- Das neue!
           dayPeriodColor: blaugrau,
           dayPeriodTextColor: Colors.white,
           ),
