@@ -507,7 +507,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       : "Timer wählen";
 
   Future<void> selectWakeTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    final TimeOfDay? picked = await showCustomTimePicker(
       context: context,
       initialTime: selectedWakeTime ?? TimeOfDay.now(),
       builder: (context, child) {
@@ -539,6 +539,66 @@ selectionHandleColor: Colors.white,
       });
     }
   }
+
+Future<TimeOfDay?> showCustomTimePicker({
+  required BuildContext context,
+  required TimeOfDay initialTime,
+}) {
+  return showTimePicker(
+    context: context,
+    initialTime: initialTime,
+    builder: (BuildContext context, Widget? child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFF7A9CA3),
+            onPrimary: Colors.white,
+            surface: Colors.black,
+            onSurface: Colors.white,
+          ),
+          dialogTheme: const DialogTheme(
+            backgroundColor: Colors.black,
+          ),
+          textSelectionTheme: const TextSelectionThemeData(
+            cursorColor: Colors.white,
+            selectionColor: Color(0x80000000), // transparenter Schwarzton
+            selectionHandleColor: Colors.white,
+          ),
+        ),
+        child: _CustomColonTimePicker(child: child!),
+      );
+    },
+  );
+}
+
+class _CustomColonTimePicker extends StatelessWidget {
+  final Widget child;
+
+  const _CustomColonTimePicker({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          top: 24, // <- Feineinstellung möglich
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Text(
+              ':',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
   Future<void> selectTimer(BuildContext context) async {
   timerHoursController.text = (selectedTimerMinutes != null ? (selectedTimerMinutes! ~/ 60).toString() : '');
@@ -642,7 +702,7 @@ Navigator.of(context).pop(totalMinutes);
 
   void sendWakeTimeToESP() async {
   if (!widget.device.isConnected) {
-    showErrorSnackbar("Senden fehlgeschlagen! Verbinde die SunMask neu.");
+    showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
     Navigator.pop(context);
     return;
   }
@@ -674,7 +734,7 @@ Navigator.of(context).pop(totalMinutes);
 
   void sendTimerToESP() async {
   if (!widget.device.isConnected) {
-    showErrorSnackbar("Senden fehlgeschlagen! Verbinde die SunMask neu.");
+    showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
     Navigator.pop(context);
     return;
   }
@@ -703,7 +763,7 @@ Navigator.of(context).pop(totalMinutes);
 
   void clearWakeTimeOrTimer() async {
     if (!widget.device.isConnected) {
-    showErrorSnackbar("Löschen fehlgeschlagen! Verbinde die SunMask neu.");
+    showErrorSnackbar("❌ Löschen fehlgeschlagen! Verbinde die SunMask neu.");
     Navigator.pop(context);
     return;
   }
