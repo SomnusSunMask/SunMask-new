@@ -538,6 +538,7 @@ selectionHandleColor: Colors.white,
         selectedWakeTime = picked;
       });
     }
+    }
 
 Future<TimeOfDay?> showCustomTimePicker({
   required BuildContext context,
