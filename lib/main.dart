@@ -543,8 +543,7 @@ selectionHandleColor: Colors.white,
   Future<void> selectTimer(BuildContext context) async {
   timerHoursController.text = (selectedTimerMinutes != null ? (selectedTimerMinutes! ~/ 60).toString() : '');
   timerMinutesController.text = (selectedTimerMinutes != null ? (selectedTimerMinutes! % 60).toString() : '');
-  int selectedHours = 0;
-  int selectedMinutes = 0;
+
 
   await showDialog(
     context: context,
@@ -572,9 +571,6 @@ selectionHandleColor: Colors.white,
                             borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                           ),
                         ),
-                        onChanged: (value) {
-                          selectedHours = int.tryParse(value) ?? 0;
-                        },
                       ),
                       const SizedBox(height: 4),
                       const Text(
@@ -601,9 +597,6 @@ selectionHandleColor: Colors.white,
                             borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                           ),
                         ),
-                        onChanged: (value) {
-                          selectedMinutes = int.tryParse(value) ?? 0;
-                        },
                       ),
                       const SizedBox(height: 4),
                       const Text(
