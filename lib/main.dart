@@ -1023,7 +1023,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: blaugrau,
                   foregroundColor: Colors.white,
-                  overlayColor: MaterialStateProperty.all(blaugrau), // <- Das ist die Verbesserung!
+                  overlayColor: WidgetStateProperty.all(blaugrau),
                 ),
                 onPressed: isConnecting ? null : connectToDeviceById,
                 child: Text(
