@@ -531,6 +531,7 @@ selectionHandleColor: Colors.white,
             labelStyle: TextStyle(
               color: Color(0xFF7A9CA3), // Deine Blaugraue Farbe!
               fontSize: 16,
+              )
     ),
   ),
   child: child!,
