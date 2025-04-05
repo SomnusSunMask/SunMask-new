@@ -502,9 +502,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       backgroundColor: Colors.black,
       ),
       textSelectionTheme: const TextSelectionThemeData(
-        cursorColor: Color(0xFF7A9CA3),
-        selectionColor: Color(0xFF7A9CA3),
-        selectionHandleColor: Color(0xFF7A9CA3),
+        cursorColor: Colors.white,
+selectionColor: Colors.white,
+selectionHandleColor: Colors.white,
     ),
   ),
   child: child!,
