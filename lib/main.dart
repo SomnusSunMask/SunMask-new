@@ -524,7 +524,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       ),
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: Colors.white,
-selectionColor: Colors.white,
+selectionColor: Color(0x80000000), // transparenter Schwarzton
 selectionHandleColor: Colors.white,
     ),
   ),
