@@ -96,6 +96,9 @@ class MyApp extends StatelessWidget {
         selectionColor: blaugrau,
         selectionHandleColor: blaugrau,
         ),
+  inputDecorationTheme: const InputDecorationTheme(
+    labelStyle: TextStyle(color: blaugrau),
+        ),
       ),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
 supportedLocales: const [
