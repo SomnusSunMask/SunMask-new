@@ -1018,13 +1018,18 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             ),
             const SizedBox(height: 24),
             SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: blaugrau,
-                  foregroundColor: Colors.white,
-                  overlayColor: WidgetStateProperty.all(blaugrau),
-                ),
+  width: double.infinity,
+  child: ElevatedButton(
+    style: ButtonStyle(
+      backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+        if (states.contains(MaterialState.pressed)) {
+          return blaugrau; // Auch beim Drücken bleibt blaugrau
+        }
+        return blaugrau; // Standardzustand auch blaugrau
+      }),
+      foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+      overlayColor: MaterialStateProperty.all<Color>(Colors.transparent),
+    ),
                 onPressed: isConnecting ? null : connectToDeviceById,
                 child: Text(
                   isConnecting ? "Verbinden..." : "SunMask verbinden",
