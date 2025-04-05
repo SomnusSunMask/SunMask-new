@@ -385,6 +385,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     super.initState();
     readBatteryLevel();
     listenToBatteryNotifications();
+    loadSavedData();
   }
 
   @override
@@ -433,6 +434,31 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       }
     }
   }
+
+  void loadSavedData() async {
+  final prefs = await SharedPreferences.getInstance();
+  final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
+  final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
+
+  if (!mounted) return;
+
+  setState(() {
+    if (wakeTime != null) {
+      final parts = wakeTime.split(':');
+      if (parts.length == 2) {
+        final hour = int.tryParse(parts[0]);
+        final minute = int.tryParse(parts[1]);
+        if (hour != null && minute != null) {
+          sentWakeTime = TimeOfDay(hour: hour, minute: minute);
+        }
+      }
+    }
+
+    if (timerMinutes != null) {
+      sentTimerMinutes = timerMinutes;
+    }
+  });
+}
 
   String get wakeTimeText => sentWakeTime != null
       ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
