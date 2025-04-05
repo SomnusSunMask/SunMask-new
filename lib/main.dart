@@ -636,7 +636,7 @@ selectionHandleColor: Colors.white,
 
   void sendWakeTimeToESP() async {
   if (!widget.device.isConnected) {
-    showErrorSnackbar("Senden fehlgeschlagen! Starte die SunMask neu.");
+    showErrorSnackbar("Senden fehlgeschlagen! Verbinde die SunMask neu.");
     Navigator.pop(context);
     return;
   }
@@ -668,7 +668,7 @@ selectionHandleColor: Colors.white,
 
   void sendTimerToESP() async {
   if (!widget.device.isConnected) {
-    showErrorSnackbar("Senden fehlgeschlagen! Starte die SunMask neu.");
+    showErrorSnackbar("Senden fehlgeschlagen! Verbinde die SunMask neu.");
     Navigator.pop(context);
     return;
   }
@@ -696,6 +696,11 @@ selectionHandleColor: Colors.white,
   }
 
   void clearWakeTimeOrTimer() async {
+    if (!widget.device.isConnected) {
+    showErrorSnackbar("Löschen fehlgeschlagen! Verbinde die SunMask neu.");
+    Navigator.pop(context);
+    return;
+  }
     try {
       await widget.alarmCharacteristic?.write(utf8.encode("CLEAR"));
       await widget.timerCharacteristic?.write(utf8.encode("CLEAR"));
