@@ -94,6 +94,11 @@ class MyApp extends StatelessWidget {
 supportedLocales: const [
   Locale('de', ''), // Deutsch
 ],
+textSelectionTheme: const TextSelectionThemeData(
+  cursorColor: Color(0xFF7A9CA3),
+  selectionColor: Color(0xFF7A9CA3),
+  selectionHandleColor: Color(0xFF7A9CA3),
+),
 home: const BLEHomePage()
     );
   }
