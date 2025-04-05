@@ -540,35 +540,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 }
 
-class _CustomColonTimePicker extends StatelessWidget {
-  final Widget child;
-
-  const _CustomColonTimePicker({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        child,
-        Positioned(
-          top: 32, // Feineinstellung für den Doppelpunkt
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Text(
-              ':',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 Future<void> selectTimer(BuildContext context) async {
   timerHoursController.text = selectedTimerMinutes != null
       ? (selectedTimerMinutes! ~/ 60).toString()
@@ -879,6 +850,34 @@ Future<void> selectTimer(BuildContext context) async {
           ),
         ],
       ),
+    );
+  }
+}
+class _CustomColonTimePicker extends StatelessWidget {
+  final Widget child;
+
+  const _CustomColonTimePicker({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          top: 32, // Feineinstellung für den Doppelpunkt
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Text(
+              ':',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
