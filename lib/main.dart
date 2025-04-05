@@ -507,26 +507,10 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       : "Timer wählen";
 
   Future<void> selectWakeTime(BuildContext context) async {
-  final TimeOfDay? picked = await showCustomTimePicker(
+  final TimeOfDay? picked = await showTimePicker(
     context: context,
     initialTime: selectedWakeTime ?? TimeOfDay.now(),
-  );
-
-  if (picked != null && picked != selectedWakeTime) {
-    setState(() {
-      selectedWakeTime = picked;
-    });
-  }
-}
-
-Future<TimeOfDay?> showCustomTimePicker({
-  required BuildContext context,
-  required TimeOfDay initialTime,
-}) {
-  return showTimePicker(
-    context: context,
-    initialTime: initialTime,
-    builder: (BuildContext context, Widget? child) {
+    builder: (context, child) {
       return Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.dark(
@@ -548,6 +532,12 @@ Future<TimeOfDay?> showCustomTimePicker({
       );
     },
   );
+
+  if (picked != null && picked != selectedWakeTime) {
+    setState(() {
+      selectedWakeTime = picked;
+    });
+  }
 }
 
 class _CustomColonTimePicker extends StatelessWidget {
@@ -561,13 +551,13 @@ class _CustomColonTimePicker extends StatelessWidget {
       children: [
         child,
         Positioned(
-          top: 24, // Feineinstellung für den Doppelpunkt
+          top: 32, // <- Hier feinjustierst du die Höhe vom Doppelpunkt
           left: 0,
           right: 0,
           child: Center(
             child: Text(
               ':',
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 24,
               ),
@@ -663,8 +653,7 @@ Future<void> selectTimer(BuildContext context) async {
             child: const Text("OK", style: TextStyle(fontSize: 18)),
             onPressed: () {
               final enteredHours = int.tryParse(timerHoursController.text) ?? 0;
-              final enteredMinutes =
-                  int.tryParse(timerMinutesController.text) ?? 0;
+              final enteredMinutes = int.tryParse(timerMinutesController.text) ?? 0;
               final totalMinutes = enteredHours * 60 + enteredMinutes;
               Navigator.of(context).pop(totalMinutes);
             },
@@ -680,6 +669,7 @@ Future<void> selectTimer(BuildContext context) async {
     }
   });
 }
+
 
 
 
