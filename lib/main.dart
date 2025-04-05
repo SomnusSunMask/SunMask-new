@@ -551,7 +551,7 @@ class _CustomColonTimePicker extends StatelessWidget {
       children: [
         child,
         Positioned(
-          top: 32, // <- Hier feinjustierst du die Höhe vom Doppelpunkt
+          top: 32, // Feineinstellung für den Doppelpunkt
           left: 0,
           right: 0,
           child: Center(
@@ -653,7 +653,8 @@ Future<void> selectTimer(BuildContext context) async {
             child: const Text("OK", style: TextStyle(fontSize: 18)),
             onPressed: () {
               final enteredHours = int.tryParse(timerHoursController.text) ?? 0;
-              final enteredMinutes = int.tryParse(timerMinutesController.text) ?? 0;
+              final enteredMinutes =
+                  int.tryParse(timerMinutesController.text) ?? 0;
               final totalMinutes = enteredHours * 60 + enteredMinutes;
               Navigator.of(context).pop(totalMinutes);
             },
@@ -669,6 +670,7 @@ Future<void> selectTimer(BuildContext context) async {
     }
   });
 }
+
 
 
 
