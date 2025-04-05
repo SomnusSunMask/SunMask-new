@@ -528,9 +528,13 @@ selectionColor: Color(0x80000000), // transparenter Schwarzton
 selectionHandleColor: Colors.white,
         ),
           inputDecorationTheme: const InputDecorationTheme(
-            labelStyle: TextStyle(
-              color: Color(0xFF7A9CA3), // Deine Blaugraue Farbe!
-              fontSize: 16,
+  labelStyle: TextStyle(
+    color: Color(0xFF7A9CA3),
+    fontSize: 16,
+  ),
+  floatingLabelStyle: TextStyle(
+    color: Color(0xFF7A9CA3),
+    fontSize: 16,
               )
     ),
   ),
