@@ -446,7 +446,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   );
 }
 
-  
+ 
   void listenToBatteryNotifications() async {
     if (widget.batteryCharacteristic != null) {
       try {
@@ -507,53 +507,48 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       : "Timer wählen";
 
   Future<void> selectWakeTime(BuildContext context) async {
-  final TimeOfDay? picked = await showTimePicker(
-    context: context,
-    initialTime: selectedWakeTime ?? TimeOfDay.now(),
-    builder: (context, child) {
-      return MediaQuery(
-        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF7A9CA3),
-              onPrimary: Colors.white,
-              surface: Colors.black,
-              onSurface: Colors.white,
-            ),
-            dialogTheme: const DialogTheme(
-              backgroundColor: Colors.black,
-            ),
-            textSelectionTheme: const TextSelectionThemeData(
-              cursorColor: Colors.white,
-              selectionColor: Color(0x80000000), // transparenter Schwarzton
-              selectionHandleColor: Colors.white,
-            ),
-          ),
-          child: Transform.translate(
-            offset: const Offset(0, 8), // <- hier veränderst du die vertikale Position des gesamten Eingabebereichs inkl. Doppelpunkt!
-            child: child!,
-          ),
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedWakeTime ?? TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+  data: Theme.of(context).copyWith(
+    colorScheme: const ColorScheme.dark(
+      primary: Color(0xFF7A9CA3),
+      onPrimary: Colors.white,
+      surface: Colors.black,
+      onSurface: Colors.white,
+    ),
+    dialogTheme: const DialogTheme(
+      backgroundColor: Colors.black,
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Colors.white,
+selectionColor: Color(0x80000000), // transparenter Schwarzton
+selectionHandleColor: Colors.white,
         ),
-      );
-    },
-  );
+          inputDecorationTheme: const InputDecorationTheme(
+            labelStyle: TextStyle(
+              color: Color(0xFF7A9CA3), // Deine Blaugraue Farbe!
+              fontSize: 16,
+    ),
+  ),
+  child: child!,
+);
 
-  if (picked != null && picked != selectedWakeTime) {
-    setState(() {
-      selectedWakeTime = picked;
-    });
+      },
+    );
+    if (picked != null && picked != selectedWakeTime) {
+      setState(() {
+        selectedWakeTime = picked;
+      });
+    }
   }
-}
 
+  Future<void> selectTimer(BuildContext context) async {
+  timerHoursController.text = (selectedTimerMinutes != null ? (selectedTimerMinutes! ~/ 60).toString() : '');
+  timerMinutesController.text = (selectedTimerMinutes != null ? (selectedTimerMinutes! % 60).toString() : '');
 
-Future<void> selectTimer(BuildContext context) async {
-  timerHoursController.text = selectedTimerMinutes != null
-      ? (selectedTimerMinutes! ~/ 60).toString()
-      : '';
-  timerMinutesController.text = selectedTimerMinutes != null
-      ? (selectedTimerMinutes! % 60).toString()
-      : '';
 
   await showDialog(
     context: context,
@@ -631,10 +626,10 @@ Future<void> selectTimer(BuildContext context) async {
             child: const Text("OK", style: TextStyle(fontSize: 18)),
             onPressed: () {
               final enteredHours = int.tryParse(timerHoursController.text) ?? 0;
-              final enteredMinutes =
-                  int.tryParse(timerMinutesController.text) ?? 0;
-              final totalMinutes = enteredHours * 60 + enteredMinutes;
-              Navigator.of(context).pop(totalMinutes);
+final enteredMinutes = int.tryParse(timerMinutesController.text) ?? 0;
+final totalMinutes = enteredHours * 60 + enteredMinutes;
+Navigator.of(context).pop(totalMinutes);
+
             },
           ),
         ],
@@ -648,9 +643,6 @@ Future<void> selectTimer(BuildContext context) async {
     }
   });
 }
-
-
-
 
 
   void sendWakeTimeToESP() async {
@@ -861,7 +853,6 @@ Future<void> selectTimer(BuildContext context) async {
   }
 }
 
-
 // -------------------------
 // DeviceOverviewPage
 // -------------------------
@@ -1045,4 +1036,3 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
-
