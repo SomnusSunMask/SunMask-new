@@ -918,12 +918,69 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   bool isConnecting = false;
   BluetoothDevice? targetDevice;
   late final StreamSubscription<List<ScanResult>> scanSubscription;
+  Timer? countdownTimer;
+  int? remainingTimerSeconds;
 
-  String get wakeTimeText =>
-      widget.lastWakeTime != null ? widget.lastWakeTime! : "Nicht aktiv";
+  @override
+  void initState() {
+    super.initState();
+    if (widget.lastTimerMinutes != null) {
+      remainingTimerSeconds = widget.lastTimerMinutes! * 60;
+      startCountdownTimer();
+    }
+  }
 
-  String get timerText =>
-      widget.lastTimerMinutes != null ? "${widget.lastTimerMinutes} Minuten" : "Nicht aktiv";
+  @override
+  void dispose() {
+    scanSubscription.cancel();
+    countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  String get wakeTimeText {
+    if (widget.lastWakeTime == null) {
+      return "Nicht aktiv";
+    } else {
+      final now = TimeOfDay.now();
+      final parts = widget.lastWakeTime!.split(":");
+      if (parts.length == 2) {
+        final hour = int.tryParse(parts[0]) ?? 0;
+        final minute = int.tryParse(parts[1]) ?? 0;
+        if (hour < now.hour || (hour == now.hour && minute <= now.minute)) {
+          return "Weckzeit abgelaufen (${widget.lastWakeTime})";
+        }
+      }
+      return widget.lastWakeTime!;
+    }
+  }
+
+  String get timerText {
+    if (remainingTimerSeconds == null) {
+      return widget.lastTimerMinutes != null
+          ? "${widget.lastTimerMinutes} Minuten"
+          : "Nicht aktiv";
+    } else if (remainingTimerSeconds! <= 0) {
+      return "Timer abgelaufen (${widget.lastTimerMinutes} Minuten)";
+    } else {
+      final minutes = remainingTimerSeconds! ~/ 60;
+      final seconds = remainingTimerSeconds! % 60;
+      return "$minutes:${seconds.toString().padLeft(2, '0')} Minuten";
+    }
+  }
+
+  void startCountdownTimer() {
+    countdownTimer?.cancel();
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {
+        if (remainingTimerSeconds != null && remainingTimerSeconds! > 0) {
+          remainingTimerSeconds = remainingTimerSeconds! - 1;
+        } else {
+          countdownTimer?.cancel();
+        }
+      });
+    });
+  }
 
   void showErrorSnackbar(String message) {
     if (!mounted) return;
@@ -1017,12 +1074,6 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   @override
-  void dispose() {
-    scanSubscription.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     const blaugrau = Color(0xFF7A9CA3);
 
@@ -1058,15 +1109,13 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             ),
             const SizedBox(height: 24),
             SizedBox(
-  width: double.infinity,
-  child: ElevatedButton(
-    style: ButtonStyle(
-      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-        return blaugrau;
-      }),
-      foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
-      overlayColor: WidgetStateProperty.all<Color>(Colors.transparent),
-    ),
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) => blaugrau),
+                  foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
+                  overlayColor: WidgetStateProperty.all<Color>(Colors.transparent),
+                ),
                 onPressed: isConnecting ? null : connectToDeviceById,
                 child: Text(
                   isConnecting ? "Verbinden..." : "SunMask verbinden",
