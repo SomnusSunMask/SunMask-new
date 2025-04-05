@@ -625,7 +625,13 @@ selectionHandleColor: Colors.white,
 
 
   void sendWakeTimeToESP() async {
-    if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
+  if (widget.device == null || !widget.device!.isConnected) {
+    showErrorSnackbar("Senden fehlgeschlagen! Starte die SunMask neu.");
+    Navigator.pop(context);
+    return;
+  }
+
+  if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
       try {
         String currentTime = DateFormat("HH:mm").format(DateTime.now());
         String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
@@ -651,7 +657,13 @@ selectionHandleColor: Colors.white,
   }
 
   void sendTimerToESP() async {
-    if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
+  if (widget.device == null || !widget.device!.isConnected) {
+    showErrorSnackbar("Senden fehlgeschlagen! Starte die SunMask neu.");
+    Navigator.pop(context);
+    return;
+  }
+
+  if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
       try {
         String timerValue = selectedTimerMinutes.toString();
         await widget.timerCharacteristic!.write(utf8.encode(timerValue));
