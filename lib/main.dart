@@ -93,7 +93,7 @@ class MyApp extends StatelessWidget {
           ),
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: blaugrau,
-        selectionColor: blaugrau,
+        selectionColor: Color(0x807A9CA3), // 50% transparent
         selectionHandleColor: blaugrau,
         ),
   inputDecorationTheme: const InputDecorationTheme(
@@ -431,6 +431,16 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
+ void showErrorSnackbar(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 5),
+    ),
+  );
+}
+
+  
   void listenToBatteryNotifications() async {
     if (widget.batteryCharacteristic != null) {
       try {
@@ -625,7 +635,7 @@ selectionHandleColor: Colors.white,
 
 
   void sendWakeTimeToESP() async {
-  if (widget.device == null || !widget.device!.isConnected) {
+  if (!widget.device.isConnected) {
     showErrorSnackbar("Senden fehlgeschlagen! Starte die SunMask neu.");
     Navigator.pop(context);
     return;
@@ -657,7 +667,7 @@ selectionHandleColor: Colors.white,
   }
 
   void sendTimerToESP() async {
-  if (widget.device == null || !widget.device!.isConnected) {
+  if (!widget.device.isConnected) {
     showErrorSnackbar("Senden fehlgeschlagen! Starte die SunMask neu.");
     Navigator.pop(context);
     return;
