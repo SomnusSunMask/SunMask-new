@@ -585,7 +585,7 @@ selectionHandleColor: Colors.white,
                   child: Column(
                     children: [
                       TextField(
-                        controller: timerHoursController,
+                        controller: timerMinutesController,
                         keyboardType: TextInputType.number,
                         style: const TextStyle(color: Color(0xFF7A9CA3)),
                         cursorColor: Colors.white,
