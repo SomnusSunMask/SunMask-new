@@ -1021,14 +1021,11 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   width: double.infinity,
   child: ElevatedButton(
     style: ButtonStyle(
-      backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-        if (states.contains(MaterialState.pressed)) {
-          return blaugrau; // Auch beim Drücken bleibt blaugrau
-        }
-        return blaugrau; // Standardzustand auch blaugrau
+      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        return blaugrau;
       }),
-      foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-      overlayColor: MaterialStateProperty.all<Color>(Colors.transparent),
+      foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
+      overlayColor: WidgetStateProperty.all<Color>(Colors.transparent),
     ),
                 onPressed: isConnecting ? null : connectToDeviceById,
                 child: Text(
