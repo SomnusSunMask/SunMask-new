@@ -369,6 +369,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
 class DeviceControlPage extends StatefulWidget {
+  TextEditingController timerHoursController = TextEditingController();
+  TextEditingController timerMinutesController = TextEditingController();
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
   final BluetoothCharacteristic? timerCharacteristic;
@@ -535,6 +537,8 @@ selectionHandleColor: Colors.white,
   }
 
   Future<void> selectTimer(BuildContext context) async {
+  timerHoursController.text = (selectedTimerMinutes != null ? (selectedTimerMinutes! ~/ 60).toString() : '');
+  timerMinutesController.text = (selectedTimerMinutes != null ? (selectedTimerMinutes! % 60).toString() : '');
   int selectedHours = 0;
   int selectedMinutes = 0;
 
@@ -552,6 +556,7 @@ selectionHandleColor: Colors.white,
                   child: Column(
                     children: [
                       TextField(
+                        controller: timerHoursController,
                         keyboardType: TextInputType.number,
                         style: const TextStyle(color: Color(0xFF7A9CA3)),
                         cursorColor: Colors.white,
@@ -580,6 +585,7 @@ selectionHandleColor: Colors.white,
                   child: Column(
                     children: [
                       TextField(
+                        controller: timerHoursController,
                         keyboardType: TextInputType.number,
                         style: const TextStyle(color: Color(0xFF7A9CA3)),
                         cursorColor: Colors.white,
@@ -617,8 +623,11 @@ selectionHandleColor: Colors.white,
           TextButton(
             child: const Text("OK", style: TextStyle(fontSize: 18)),
             onPressed: () {
-              final totalMinutes = selectedHours * 60 + selectedMinutes;
-              Navigator.of(context).pop(totalMinutes);
+              final enteredHours = int.tryParse(timerHoursController.text) ?? 0;
+final enteredMinutes = int.tryParse(timerMinutesController.text) ?? 0;
+final totalMinutes = enteredHours * 60 + enteredMinutes;
+Navigator.of(context).pop(totalMinutes);
+
             },
           ),
         ],
