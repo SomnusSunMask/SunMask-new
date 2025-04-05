@@ -521,51 +521,104 @@ selectionHandleColor: Colors.white,
   }
 
   Future<void> selectTimer(BuildContext context) async {
-    int? minutes = await showDialog<int>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Timer wählen"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("Dauer in Minuten:", style: TextStyle(fontSize: 18, color: Color(0xFF7A9CA3))),
-              TextField(
-  keyboardType: TextInputType.number,
-  style: const TextStyle(color: Color(0xFF7A9CA3)),
-  cursorColor: Color(0xFF7A9CA3), // <--- HIER HINZUFÜGEN
-  decoration: const InputDecoration(
-    enabledBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-    ),
-    focusedBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-    ),
-  ),
-  onChanged: (value) {
-    selectedTimerMinutes = int.tryParse(value) ?? 30;
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text("OK", style: TextStyle(fontSize: 18)),
-              onPressed: () {
-                Navigator.of(context).pop(selectedTimerMinutes);
-              },
+  int selectedHours = 0;
+  int selectedMinutes = 0;
+
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text("Timer wählen"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(color: Color(0xFF7A9CA3)),
+                        cursorColor: Colors.white,
+                        decoration: const InputDecoration(
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          selectedHours = int.tryParse(value) ?? 0;
+                        },
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        "Stunden",
+                        style: TextStyle(color: Color(0xFF7A9CA3)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    children: [
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(color: Color(0xFF7A9CA3)),
+                        cursorColor: Colors.white,
+                        decoration: const InputDecoration(
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          selectedMinutes = int.tryParse(value) ?? 0;
+                        },
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        "Minuten",
+                        style: TextStyle(color: Color(0xFF7A9CA3)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
-        );
-      },
-    );
-
+        ),
+        actions: [
+          TextButton(
+            child: const Text("Abbrechen", style: TextStyle(fontSize: 18)),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: const Text("OK", style: TextStyle(fontSize: 18)),
+            onPressed: () {
+              final totalMinutes = selectedHours * 60 + selectedMinutes;
+              Navigator.of(context).pop(totalMinutes);
+            },
+          ),
+        ],
+      );
+    },
+  ).then((minutes) {
     if (minutes != null) {
       setState(() {
         selectedTimerMinutes = minutes;
       });
     }
-  }
+  });
+}
+
 
   void sendWakeTimeToESP() async {
     if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
