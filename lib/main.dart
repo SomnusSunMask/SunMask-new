@@ -368,15 +368,13 @@ class _BLEHomePageState extends State<BLEHomePage> {
 }
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
-class DeviceControlPageState extends State<DeviceControlPage> {
-  final TextEditingController timerHoursController = TextEditingController();
-  final TextEditingController timerMinutesController = TextEditingController();
+class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
   final BluetoothCharacteristic? timerCharacteristic;
   final BluetoothCharacteristic? batteryCharacteristic;
 
-  DeviceControlPage({
+  const DeviceControlPage({
     super.key,
     required this.device,
     this.alarmCharacteristic,
@@ -389,12 +387,18 @@ class DeviceControlPageState extends State<DeviceControlPage> {
 }
 
 class _DeviceControlPageState extends State<DeviceControlPage> {
+  final TextEditingController timerHoursController = TextEditingController();
+  final TextEditingController timerMinutesController = TextEditingController();
+
   TimeOfDay? selectedWakeTime;
   int? selectedTimerMinutes;
   TimeOfDay? sentWakeTime;
   int? sentTimerMinutes;
   int? batteryLevel;
   double buttonWidth = double.infinity;
+
+  // --- Ab hier bleibt dein Code exakt so wie du ihn schon hast! ---
+
 
   @override
   void initState() {
