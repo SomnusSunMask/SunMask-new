@@ -88,17 +88,17 @@ class MyApp extends StatelessWidget {
           hourMinuteColor: blaugrau,
           dayPeriodColor: blaugrau,
           dayPeriodTextColor: Colors.white,
+          ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: blaugrau,
+        selectionColor: blaugrau,
+        selectionHandleColor: blaugrau,
         ),
       ),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
 supportedLocales: const [
   Locale('de', ''), // Deutsch
 ],
-textSelectionTheme: const TextSelectionThemeData(
-  cursorColor: Color(0xFF7A9CA3),
-  selectionColor: Color(0xFF7A9CA3),
-  selectionHandleColor: Color(0xFF7A9CA3),
-),
 home: const BLEHomePage()
     );
   }
@@ -500,6 +500,11 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     ),
     dialogTheme: const DialogTheme(
       backgroundColor: Colors.black,
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Color(0xFF7A9CA3),
+        selectionColor: Color(0xFF7A9CA3),
+        selectionHandleColor: Color(0xFF7A9CA3),
     ),
   ),
   child: child!,
