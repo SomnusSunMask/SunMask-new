@@ -1172,37 +1172,35 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   String get wakeTimeText {
-  if (widget.lastWakeTime != null) {
-    final now = DateTime.now();
-    final parts = widget.lastWakeTime!.split(':');
-    if (parts.length == 2) {
-      final hour = int.tryParse(parts[0]) ?? 0;
-      final minute = int.tryParse(parts[1]) ?? 0;
+    if (widget.lastWakeTime != null) {
+      final now = DateTime.now();
+      final parts = widget.lastWakeTime!.split(':');
+      if (parts.length == 2) {
+        final hour = int.tryParse(parts[0]) ?? 0;
+        final minute = int.tryParse(parts[1]) ?? 0;
 
-      DateTime wakeDateTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        hour,
-        minute,
-      );
+        DateTime wakeDateTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          hour,
+          minute,
+        );
 
-      // Wenn die Weckzeit heute schon vorbei ist → auf morgen verschieben
-      if (wakeDateTime.isBefore(now)) {
-        wakeDateTime = wakeDateTime.add(const Duration(days: 1));
-      }
+        if (wakeDateTime.isBefore(now)) {
+          wakeDateTime = wakeDateTime.add(const Duration(days: 1));
+        }
 
-      if (now.isAfter(wakeDateTime)) {
-        return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
-      } else {
-        return widget.lastWakeTime!;
+        if (now.isAfter(wakeDateTime)) {
+          return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+        } else {
+          return widget.lastWakeTime!;
+        }
       }
     }
+
+    return "Nicht aktiv";
   }
-
-  return "Nicht aktiv";
-}
-
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
@@ -1334,16 +1332,24 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 181),
-            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-            const Spacer(),
+            Column(
+              children: [
+                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Column(
+              children: [
+                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+              ],
+            ),
+            const SizedBox(height: 20),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1361,10 +1367,9 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all<Color>(blaugrau),
-                  foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
-                  overlayColor: WidgetStateProperty.all<Color>(Colors.transparent),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: blaugrau,
+                  foregroundColor: Colors.white,
                 ),
                 onPressed: isConnecting ? null : connectToDeviceById,
                 child: Text(
@@ -1379,4 +1384,5 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
+
 
