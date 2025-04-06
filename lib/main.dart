@@ -622,102 +622,6 @@ Future<void> selectWakeTime(BuildContext context) async {
   TimeOfDay tempTime = selectedWakeTime ?? TimeOfDay.now();
   bool useKeyboardInput = true;
 
-  void showWheelPicker() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        int selectedHour = tempTime.hour;
-        int selectedMinute = tempTime.minute;
-
-        return AlertDialog(
-          backgroundColor: Colors.black,
-          title: const Text("Weckzeit wählen", style: TextStyle(color: blaugrau)),
-          content: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  const Text("Stunde", style: TextStyle(color: blaugrau)),
-                  SizedBox(
-                    width: 80,
-                    height: 100,
-                    child: ListWheelScrollView.useDelegate(
-                      itemExtent: 30,
-                      onSelectedItemChanged: (index) {
-                        selectedHour = index;
-                        tempTime = TimeOfDay(hour: selectedHour, minute: selectedMinute);
-                      },
-                      childDelegate: ListWheelChildBuilderDelegate(
-                        builder: (context, index) => Center(
-                          child: Text(
-                            index.toString().padLeft(2, '0'),
-                            style: const TextStyle(color: blaugrau),
-                          ),
-                        ),
-                        childCount: 24,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 8),
-              const Text(":", style: TextStyle(color: blaugrau, fontSize: 20)),
-              const SizedBox(width: 8),
-              Column(
-                children: [
-                  const Text("Minute", style: TextStyle(color: blaugrau)),
-                  SizedBox(
-                    width: 80,
-                    height: 100,
-                    child: ListWheelScrollView.useDelegate(
-                      itemExtent: 30,
-                      onSelectedItemChanged: (index) {
-                        selectedMinute = index;
-                        tempTime = TimeOfDay(hour: selectedHour, minute: selectedMinute);
-                      },
-                      childDelegate: ListWheelChildBuilderDelegate(
-                        builder: (context, index) => Center(
-                          child: Text(
-                            index.toString().padLeft(2, '0'),
-                            style: const TextStyle(color: blaugrau),
-                          ),
-                        ),
-                        childCount: 60,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.keyboard, color: blaugrau),
-              onPressed: () {
-                Navigator.pop(context);
-                useKeyboardInput = true;
-                showDialogPicker();
-              },
-            ),
-            TextButton(
-              child: const Text("Abbrechen", style: TextStyle(fontSize: 18)),
-              onPressed: () => Navigator.pop(context),
-            ),
-            TextButton(
-              child: const Text("OK", style: TextStyle(fontSize: 18)),
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() {
-                  selectedWakeTime = tempTime;
-                });
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void showDialogPicker() {
     final hourController = TextEditingController(text: tempTime.hour.toString());
     final minuteController = TextEditingController(text: tempTime.minute.toString());
@@ -833,12 +737,109 @@ Future<void> selectWakeTime(BuildContext context) async {
     );
   }
 
+  void showWheelPicker() {
+    int selectedHour = tempTime.hour;
+    int selectedMinute = tempTime.minute;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.black,
+          title: const Text("Weckzeit wählen", style: TextStyle(color: blaugrau)),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Column(
+                children: [
+                  const Text("Stunde", style: TextStyle(color: blaugrau)),
+                  SizedBox(
+                    width: 80,
+                    height: 100,
+                    child: ListWheelScrollView.useDelegate(
+                      itemExtent: 30,
+                      onSelectedItemChanged: (index) {
+                        selectedHour = index;
+                        tempTime = TimeOfDay(hour: selectedHour, minute: selectedMinute);
+                      },
+                      childDelegate: ListWheelChildBuilderDelegate(
+                        builder: (context, index) => Center(
+                          child: Text(
+                            index.toString().padLeft(2, '0'),
+                            style: const TextStyle(color: blaugrau),
+                          ),
+                        ),
+                        childCount: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 8),
+              const Text(":", style: TextStyle(color: blaugrau, fontSize: 20)),
+              const SizedBox(width: 8),
+              Column(
+                children: [
+                  const Text("Minute", style: TextStyle(color: blaugrau)),
+                  SizedBox(
+                    width: 80,
+                    height: 100,
+                    child: ListWheelScrollView.useDelegate(
+                      itemExtent: 30,
+                      onSelectedItemChanged: (index) {
+                        selectedMinute = index;
+                        tempTime = TimeOfDay(hour: selectedHour, minute: selectedMinute);
+                      },
+                      childDelegate: ListWheelChildBuilderDelegate(
+                        builder: (context, index) => Center(
+                          child: Text(
+                            index.toString().padLeft(2, '0'),
+                            style: const TextStyle(color: blaugrau),
+                          ),
+                        ),
+                        childCount: 60,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.keyboard, color: blaugrau),
+              onPressed: () {
+                Navigator.pop(context);
+                useKeyboardInput = true;
+                showDialogPicker();
+              },
+            ),
+            TextButton(
+              child: const Text("Abbrechen", style: TextStyle(fontSize: 18)),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: const Text("OK", style: TextStyle(fontSize: 18)),
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  selectedWakeTime = tempTime;
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   if (useKeyboardInput) {
     showDialogPicker();
   } else {
     showWheelPicker();
   }
 }
+
 
 
 
