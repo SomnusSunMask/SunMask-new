@@ -96,7 +96,9 @@ class MyApp extends StatelessWidget {
           selectionHandleColor: blaugrau,
         ),
         inputDecorationTheme: const InputDecorationTheme(
-          labelStyle: TextStyle(color: blaugrau),
+    labelStyle: TextStyle(color: blaugrau),
+    floatingLabelStyle: TextStyle(color: blaugrau),
+    hintStyle: TextStyle(color: blaugrau), // << HIER die Lösung!
         ),
       ),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
