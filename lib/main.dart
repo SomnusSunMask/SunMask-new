@@ -617,63 +617,108 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   // Die anderen Methoden wie selectWakeTime, selectTimer, sendWakeTimeToESP, sendTimerToESP, clearWakeTimeOrTimer und build folgen jetzt...
 // DeviceControlPage - Kompletter Code Teil 2
 Future<void> selectWakeTime(BuildContext context) async {
-  final TimeOfDay? picked = await showTimePicker(
+  int selectedHour = selectedWakeTime?.hour ?? TimeOfDay.now().hour;
+  int selectedMinute = selectedWakeTime?.minute ?? TimeOfDay.now().minute;
+
+  const blaugrau = Color(0xFF7A9CA3);
+
+  await showDialog(
     context: context,
-    initialTime: selectedWakeTime ?? TimeOfDay.now(),
-    builder: (context, child) {
-      return Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF7A9CA3),
-            onPrimary: Colors.white,
-            surface: Colors.black,
-            onSurface: Colors.white,
-          ),
-          dialogTheme: const DialogTheme(
-            backgroundColor: Colors.black,
-          ),
-          textSelectionTheme: const TextSelectionThemeData(
-            cursorColor: Colors.white,
-            selectionColor: Color(0x80000000),
-            selectionHandleColor: Colors.white,
-          ),
-          inputDecorationTheme: const InputDecorationTheme(
-            labelStyle: TextStyle(
-              color: Color(0xFF7A9CA3),
-              fontSize: 16,
-            ),
-            floatingLabelStyle: TextStyle(
-              color: Color(0xFF7A9CA3),
-              fontSize: 16,
-            ),
-          ),
-          timePickerTheme: const TimePickerThemeData(
-            backgroundColor: Colors.black,
-            dialHandColor: Color(0xFF7A9CA3),
-            dialTextColor: Colors.white,
-            entryModeIconColor: Color(0xFF7A9CA3),
-            hourMinuteTextColor: Colors.white,
-            hourMinuteColor: Color(0xFF7A9CA3),
-            hourMinuteTextStyle: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-            ),
-            helpTextStyle: TextStyle(color: Color(0xFF7A9CA3)),
-            dayPeriodColor: Color(0xFF7A9CA3),
-            dayPeriodTextColor: Colors.white,
-          ),
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.black,
+        title: const Text(
+          "Weckzeit wählen",
+          style: TextStyle(color: blaugrau),
         ),
-        child: child!,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        "Stunde",
+                        style: TextStyle(color: blaugrau),
+                      ),
+                      DropdownButton<int>(
+                        value: selectedHour,
+                        dropdownColor: Colors.black,
+                        style: const TextStyle(color: blaugrau),
+                        iconEnabledColor: blaugrau,
+                        items: List.generate(24, (index) {
+                          return DropdownMenuItem(
+                            value: index,
+                            child: Text(index.toString().padLeft(2, '0')),
+                          );
+                        }),
+                        onChanged: (value) {
+                          if (value != null) {
+                            selectedHour = value;
+                            (context as Element).markNeedsBuild();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        "Minute",
+                        style: TextStyle(color: blaugrau),
+                      ),
+                      DropdownButton<int>(
+                        value: selectedMinute,
+                        dropdownColor: Colors.black,
+                        style: const TextStyle(color: blaugrau),
+                        iconEnabledColor: blaugrau,
+                        items: List.generate(60, (index) {
+                          return DropdownMenuItem(
+                            value: index,
+                            child: Text(index.toString().padLeft(2, '0')),
+                          );
+                        }),
+                        onChanged: (value) {
+                          if (value != null) {
+                            selectedMinute = value;
+                            (context as Element).markNeedsBuild();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: const Text("Abbrechen", style: TextStyle(fontSize: 18, color: blaugrau)),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: const Text("OK", style: TextStyle(fontSize: 18, color: blaugrau)),
+            onPressed: () {
+              setState(() {
+                selectedWakeTime = TimeOfDay(hour: selectedHour, minute: selectedMinute);
+              });
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
       );
     },
   );
-
-  if (picked != null && picked != selectedWakeTime) {
-    setState(() {
-      selectedWakeTime = picked;
-    });
-  }
 }
+
 
 
   Future<void> selectTimer(BuildContext context) async {
