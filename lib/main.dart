@@ -880,25 +880,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           SizedBox(
             width: buttonWidth,
             child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: blaugrau,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: clearWakeTimeOrTimer,
-              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// -------------------------
-// DeviceOverviewPage
-// -------------------------
-
-class DeviceOverviewPage extends StatefulWidget {
+              style: Elevaclass DeviceOverviewPage extends StatefulWidget {
   final String deviceId;
   final String? lastWakeTime;
   final int? lastTimerMinutes;
@@ -918,68 +900,67 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   bool isConnecting = false;
   BluetoothDevice? targetDevice;
   late final StreamSubscription<List<ScanResult>> scanSubscription;
-  Timer? countdownTimer;
-  int? remainingTimerSeconds;
+
+  late Timer countdownTimer;
+  int? remainingTimerMinutes;
+  late String originalTimerDisplay;
 
   @override
   void initState() {
     super.initState();
+    initializeTimerCountdown();
+  }
+
+  void initializeTimerCountdown() {
     if (widget.lastTimerMinutes != null) {
-      remainingTimerSeconds = widget.lastTimerMinutes! * 60;
-      startCountdownTimer();
+      remainingTimerMinutes = widget.lastTimerMinutes!;
+      originalTimerDisplay = _formatTimerText(widget.lastTimerMinutes!);
+
+      countdownTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+        if (!mounted) return;
+        setState(() {
+          if (remainingTimerMinutes! > 0) {
+            remainingTimerMinutes = remainingTimerMinutes! - 1;
+          } else {
+            countdownTimer.cancel();
+          }
+        });
+      });
     }
   }
 
   @override
   void dispose() {
     scanSubscription.cancel();
-    countdownTimer?.cancel();
+    countdownTimer.cancel();
     super.dispose();
   }
 
-  String get wakeTimeText {
-    if (widget.lastWakeTime == null) {
-      return "Nicht aktiv";
+  String _formatTimerText(int totalMinutes) {
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    if (hours > 0 && minutes > 0) {
+      return "$hours Stunden $minutes Minuten";
+    } else if (hours > 0) {
+      return "$hours Stunden";
     } else {
-      final now = TimeOfDay.now();
-      final parts = widget.lastWakeTime!.split(":");
-      if (parts.length == 2) {
-        final hour = int.tryParse(parts[0]) ?? 0;
-        final minute = int.tryParse(parts[1]) ?? 0;
-        if (hour < now.hour || (hour == now.hour && minute <= now.minute)) {
-          return "Weckzeit abgelaufen (${widget.lastWakeTime})";
-        }
-      }
-      return widget.lastWakeTime!;
+      return "$minutes Minuten";
     }
   }
+
+  String get wakeTimeText =>
+      widget.lastWakeTime != null ? widget.lastWakeTime! : "Nicht aktiv";
 
   String get timerText {
-    if (remainingTimerSeconds == null) {
-      return widget.lastTimerMinutes != null
-          ? "${widget.lastTimerMinutes} Minuten"
-          : "Nicht aktiv";
-    } else if (remainingTimerSeconds! <= 0) {
-      return "Timer abgelaufen (${widget.lastTimerMinutes} Minuten)";
+    if (widget.lastTimerMinutes == null) {
+      return "Nicht aktiv";
+    } else if (remainingTimerMinutes == null) {
+      return originalTimerDisplay;
+    } else if (remainingTimerMinutes! > 0) {
+      return _formatTimerText(remainingTimerMinutes!);
     } else {
-      final minutes = remainingTimerSeconds! ~/ 60;
-      final seconds = remainingTimerSeconds! % 60;
-      return "$minutes:${seconds.toString().padLeft(2, '0')} Minuten";
+      return "Timer abgelaufen ($originalTimerDisplay)";
     }
-  }
-
-  void startCountdownTimer() {
-    countdownTimer?.cancel();
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() {
-        if (remainingTimerSeconds != null && remainingTimerSeconds! > 0) {
-          remainingTimerSeconds = remainingTimerSeconds! - 1;
-        } else {
-          countdownTimer?.cancel();
-        }
-      });
-    });
   }
 
   void showErrorSnackbar(String message) {
@@ -1017,7 +998,8 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
+      showErrorSnackbar(
+          "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
     } finally {
       if (mounted) {
         setState(() {
@@ -1069,7 +1051,8 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
+      showErrorSnackbar(
+          "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
     }
   }
 
@@ -1079,20 +1062,25 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Eingestellter Lichtwecker', style: TextStyle(fontSize: 18)),
+        title:
+            const Text('Eingestellter Lichtwecker', style: TextStyle(fontSize: 18)),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const Text("Weckzeit",
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+            Text("Aktuelle Weckzeit: $wakeTimeText",
+                style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 181),
-            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const Text("Timer",
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+            Text("Aktueller Timer: $timerText",
+                style: const TextStyle(fontSize: 20)),
             const Spacer(),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1112,9 +1100,12 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) => blaugrau),
-                  foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
-                  overlayColor: WidgetStateProperty.all<Color>(Colors.transparent),
+                  backgroundColor:
+                      WidgetStateProperty.all<Color>(blaugrau),
+                  foregroundColor:
+                      WidgetStateProperty.all<Color>(Colors.white),
+                  overlayColor:
+                      WidgetStateProperty.all<Color>(Colors.transparent),
                 ),
                 onPressed: isConnecting ? null : connectToDeviceById,
                 child: Text(
@@ -1129,3 +1120,22 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
+tedButton.styleFrom(
+                backgroundColor: blaugrau,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: clearWakeTimeOrTimer,
+              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------------
+// DeviceOverviewPage
+// -------------------------
+
+
