@@ -396,11 +396,15 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   int? selectedTimerMinutes;
   TimeOfDay? sentWakeTime;
   int? sentTimerMinutes;
-  DateTime? timerStartTime; // Zeitpunkt, wann der Timer gestartet wurde
+  DateTime? timerStartTime;
   int? batteryLevel;
   double buttonWidth = double.infinity;
 
   Timer? countdownTimer;
+  Timer? timerCountdown;
+
+  bool wakeTimeExpired = false;
+  bool timerExpired = false;
 
   @override
   void initState() {
@@ -414,6 +418,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   @override
   void dispose() {
     countdownTimer?.cancel();
+    timerCountdown?.cancel();
     try {
       widget.device.disconnect();
     } catch (e) {
@@ -465,6 +470,15 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 
+  void startTimerCountdown() {
+    timerCountdown?.cancel();
+    timerCountdown = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
   void loadSavedData() async {
     final prefs = await SharedPreferences.getInstance();
     final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
@@ -495,7 +509,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 
-
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
@@ -505,8 +518,51 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     return parts.join(", ");
   }
 
-  // (Ich mache hier gleich direkt mit dem nächsten Teil weiter!)
-// DeviceControlPage – Teil 2
+  String wakeTimeButtonText() {
+    if (selectedWakeTime != null) {
+      return "Weckzeit wählen – ${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
+    }
+    return "Weckzeit wählen";
+  }
+
+  String timerButtonText() {
+    if (selectedTimerMinutes != null) {
+      final hours = selectedTimerMinutes! ~/ 60;
+      final minutes = selectedTimerMinutes! % 60;
+      return "Timer wählen – ${hours}h ${minutes}min";
+    }
+    return "Timer wählen";
+  }
+
+  String get wakeTimeText {
+    if (wakeTimeExpired && sentWakeTime != null) {
+      final time = "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
+      return "Weckzeit abgelaufen ($time)";
+    }
+    return sentWakeTime != null
+        ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
+        : "Nicht aktiv";
+  }
+
+  String get timerText {
+    if (timerExpired && sentTimerMinutes != null) {
+      final originalHours = (sentTimerMinutes! ~/ 60);
+      final originalMinutes = (sentTimerMinutes! % 60);
+      return "Timer abgelaufen (${originalHours}h ${originalMinutes}min)";
+    } else if (sentTimerMinutes != null && timerStartTime != null) {
+      final elapsed = DateTime.now().difference(timerStartTime!);
+      final remaining = Duration(minutes: sentTimerMinutes!) - elapsed;
+      if (remaining.isNegative) {
+        timerExpired = true;
+        return "Timer abgelaufen (${sentTimerMinutes! ~/ 60}h ${sentTimerMinutes! % 60}min)";
+      } else {
+        return formatDuration(remaining);
+      }
+    }
+    return sentTimerMinutes != null
+        ? "${sentTimerMinutes! ~/ 60} Stunden ${sentTimerMinutes! % 60} Minuten"
+        : "Nicht aktiv";
+  }
 
   void showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -662,9 +718,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 
-  // Weiter geht's – nächster Teil kommt jetzt!
-// DeviceControlPage – Teil 3
-
+  // Ich stoppe hier den Block, weil sonst überläuft — willst du den unteren Build-Teil direkt auch noch?
   void sendWakeTimeToESP() async {
     if (!widget.device.isConnected) {
       showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
@@ -681,15 +735,17 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
         await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(
-            'lastWakeTime_${widget.device.remoteId.str}', wakeTime);
+        await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
         await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
+        await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
 
         if (mounted) {
           setState(() {
             sentWakeTime = selectedWakeTime;
             sentTimerMinutes = null;
             wakeTimeExpired = false;
+            timerExpired = false;
+            timerStartTime = null;
           });
         }
 
@@ -712,8 +768,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         String timerValue = selectedTimerMinutes.toString();
         await widget.timerCharacteristic!.write(utf8.encode(timerValue));
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('lastTimerMinutes_${widget.device.remoteId.str}',
-            selectedTimerMinutes!);
+        await prefs.setInt('lastTimerMinutes_${widget.device.remoteId.str}', selectedTimerMinutes!);
+        await prefs.setInt('timerStartTime_${widget.device.remoteId.str}', DateTime.now().millisecondsSinceEpoch);
         await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
 
         if (mounted) {
@@ -721,6 +777,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
             sentTimerMinutes = selectedTimerMinutes;
             sentWakeTime = null;
             timerExpired = false;
+            wakeTimeExpired = false;
             timerStartTime = DateTime.now();
           });
           startTimerCountdown();
@@ -735,8 +792,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   void clearWakeTimeOrTimer() async {
     if (!widget.device.isConnected) {
-      showErrorSnackbar(
-          "❌ Löschen fehlgeschlagen! Verbinde die SunMask neu.");
+      showErrorSnackbar("❌ Löschen fehlgeschlagen! Verbinde die SunMask neu.");
       Navigator.pop(context);
       return;
     }
@@ -747,6 +803,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
       await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
+      await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
 
       if (mounted) {
         setState(() {
@@ -754,6 +811,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           sentTimerMinutes = null;
           timerExpired = false;
           wakeTimeExpired = false;
+          timerStartTime = null;
         });
       }
 
@@ -762,59 +820,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       debugPrint("⚠️ Löschen fehlgeschlagen: $e");
     }
   }
-
-    DateTime? wakeTimeExpired;
-  DateTime? timerExpired;
-  Timer? timerCountdown;
-
-  String get wakeTimeText {
-    if (wakeTimeExpired != null && DateTime.now().isAfter(wakeTimeExpired!)) {
-      final time = "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
-      return "Weckzeit abgelaufen ($time)";
-    }
-    return sentWakeTime != null
-        ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
-        : "Nicht aktiv";
-  }
-
-  String timerButtonText() {
-    if (selectedTimerMinutes != null) {
-      final hours = selectedTimerMinutes! ~/ 60;
-      final minutes = selectedTimerMinutes! % 60;
-      return "Timer wählen – ${hours}h ${minutes}min";
-    }
-    return "Timer wählen";
-  }
-
-  String get timerText {
-    if (timerExpired != null) {
-      final now = DateTime.now();
-      if (now.isAfter(timerExpired!)) {
-        final originalHours = (sentTimerMinutes! ~/ 60);
-        final originalMinutes = (sentTimerMinutes! % 60);
-        return "Timer abgelaufen (${originalHours}h ${originalMinutes}min)";
-      } else {
-        final remaining = timerExpired!.difference(now);
-        final hours = remaining.inHours;
-        final minutes = remaining.inMinutes % 60;
-        return "$hours Stunden $minutes Minuten";
-      }
-    }
-    return sentTimerMinutes != null ? "${sentTimerMinutes! ~/ 60} Stunden ${sentTimerMinutes! % 60} Minuten" : "Nicht aktiv";
-  }
-
-  void startTimerCountdown() {
-    timerCountdown?.cancel();
-    timerCountdown = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
-
-  // Der nächste und letzte Teil für DeviceControlPage kommt jetzt!
-// DeviceControlPage – Teil 4 (letzter Teil)
 
   @override
   Widget build(BuildContext context) {
@@ -869,7 +874,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () => selectWakeTime(context),
-                  child: Text(wakeTimeButtonText, style: const TextStyle(fontSize: 18)),
+                  child: Text(wakeTimeButtonText(), style: const TextStyle(fontSize: 18)),
                 ),
               ),
               const SizedBox(height: 4),
@@ -901,7 +906,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () => selectTimer(context),
-                  child: Text(timerButtonText, style: const TextStyle(fontSize: 18)),
+                  child: Text(timerButtonText(), style: const TextStyle(fontSize: 18)),
                 ),
               ),
               const SizedBox(height: 4),
@@ -935,6 +940,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     );
   }
 }
+
 
 
 // -------------------------
