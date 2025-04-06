@@ -787,6 +787,56 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
+    DateTime? wakeTimeExpired;
+  DateTime? timerExpired;
+  Timer? timerCountdown;
+
+  String get wakeTimeText {
+    if (wakeTimeExpired != null && DateTime.now().isAfter(wakeTimeExpired!)) {
+      final time = "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
+      return "Weckzeit abgelaufen ($time)";
+    }
+    return sentWakeTime != null
+        ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
+        : "Nicht aktiv";
+  }
+
+  String timerButtonText() {
+    if (selectedTimerMinutes != null) {
+      final hours = selectedTimerMinutes! ~/ 60;
+      final minutes = selectedTimerMinutes! % 60;
+      return "Timer wählen – ${hours}h ${minutes}min";
+    }
+    return "Timer wählen";
+  }
+
+  String get timerText {
+    if (timerExpired != null) {
+      final now = DateTime.now();
+      if (now.isAfter(timerExpired!)) {
+        final originalHours = (sentTimerMinutes! ~/ 60);
+        final originalMinutes = (sentTimerMinutes! % 60);
+        return "Timer abgelaufen (${originalHours}h ${originalMinutes}min)";
+      } else {
+        final remaining = timerExpired!.difference(now);
+        final hours = remaining.inHours;
+        final minutes = remaining.inMinutes % 60;
+        return "$hours Stunden $minutes Minuten";
+      }
+    }
+    return sentTimerMinutes != null ? "${sentTimerMinutes! ~/ 60} Stunden ${sentTimerMinutes! % 60} Minuten" : "Nicht aktiv";
+  }
+
+  void startTimerCountdown() {
+    timerCountdown?.cancel();
+    timerCountdown = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+
   // Der nächste und letzte Teil für DeviceControlPage kommt jetzt!
 // DeviceControlPage – Teil 4 (letzter Teil)
 
