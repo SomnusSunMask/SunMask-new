@@ -619,225 +619,165 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 Future<void> selectWakeTime(BuildContext context) async {
   const blaugrau = Color(0xFF7A9CA3);
 
-  TimeOfDay tempTime = selectedWakeTime ?? TimeOfDay.now();
-  bool useKeyboardInput = true;
-
-  void showDialogPicker() {
-    final hourController = TextEditingController(text: tempTime.hour.toString());
-    final minuteController = TextEditingController(text: tempTime.minute.toString());
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.black,
-          title: const Text("Weckzeit wählen", style: TextStyle(color: blaugrau)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Column(
-                    children: [
-                      const Text("Stunde", style: TextStyle(color: blaugrau)),
-                      SizedBox(
-                        width: 50,
-                        child: TextField(
-                          controller: hourController,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: blaugrau),
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 8),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: blaugrau),
-                            ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: blaugrau),
-                            ),
-                          ),
-                          onChanged: (value) {
-                            int hour = int.tryParse(value) ?? 0;
-                            if (hour > 23) {
-                              hourController.text = '23';
-                              hour = 23;
-                            }
-                            tempTime = TimeOfDay(hour: hour, minute: tempTime.minute);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(":", style: TextStyle(color: blaugrau, fontSize: 20)),
-                  const SizedBox(width: 8),
-                  Column(
-                    children: [
-                      const Text("Minute", style: TextStyle(color: blaugrau)),
-                      SizedBox(
-                        width: 50,
-                        child: TextField(
-                          controller: minuteController,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: blaugrau),
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 8),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: blaugrau),
-                            ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: blaugrau),
-                            ),
-                          ),
-                          onChanged: (value) {
-                            int minute = int.tryParse(value) ?? 0;
-                            if (minute > 59) {
-                              minuteController.text = '59';
-                              minute = 59;
-                            }
-                            tempTime = TimeOfDay(hour: tempTime.hour, minute: minute);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.access_time, color: blaugrau),
-              onPressed: () {
-                Navigator.pop(context);
-                useKeyboardInput = false;
-                showWheelPicker();
-              },
-            ),
-            TextButton(
-              child: const Text("Abbrechen", style: TextStyle(fontSize: 18)),
-              onPressed: () => Navigator.pop(context),
-            ),
-            TextButton(
-              child: const Text("OK", style: TextStyle(fontSize: 18)),
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() {
-                  selectedWakeTime = tempTime;
-                });
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void showWheelPicker() {
-    int selectedHour = tempTime.hour;
-    int selectedMinute = tempTime.minute;
-
-    showDialog(
+    Navigator.of(context).pop(); // Dialog schließen
+    showTimePicker(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.black,
-          title: const Text("Weckzeit wählen", style: TextStyle(color: blaugrau)),
-          content: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  const Text("Stunde", style: TextStyle(color: blaugrau)),
-                  SizedBox(
-                    width: 80,
-                    height: 100,
-                    child: ListWheelScrollView.useDelegate(
-                      itemExtent: 30,
-                      onSelectedItemChanged: (index) {
-                        selectedHour = index;
-                        tempTime = TimeOfDay(hour: selectedHour, minute: selectedMinute);
-                      },
-                      childDelegate: ListWheelChildBuilderDelegate(
-                        builder: (context, index) => Center(
-                          child: Text(
-                            index.toString().padLeft(2, '0'),
-                            style: const TextStyle(color: blaugrau),
-                          ),
-                        ),
-                        childCount: 24,
-                      ),
-                    ),
-                  ),
-                ],
+      initialTime: selectedWakeTime ?? TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: blaugrau,
+              onPrimary: Colors.white,
+              surface: Colors.black,
+              onSurface: Colors.white,
+            ),
+            dialogTheme: const DialogTheme(
+              backgroundColor: Colors.black,
+            ),
+            textSelectionTheme: const TextSelectionThemeData(
+              cursorColor: Colors.white,
+              selectionColor: Color(0x80000000),
+              selectionHandleColor: Colors.white,
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              labelStyle: TextStyle(
+                color: blaugrau,
+                fontSize: 16,
               ),
-              const SizedBox(width: 8),
-              const Text(":", style: TextStyle(color: blaugrau, fontSize: 20)),
-              const SizedBox(width: 8),
-              Column(
-                children: [
-                  const Text("Minute", style: TextStyle(color: blaugrau)),
-                  SizedBox(
-                    width: 80,
-                    height: 100,
-                    child: ListWheelScrollView.useDelegate(
-                      itemExtent: 30,
-                      onSelectedItemChanged: (index) {
-                        selectedMinute = index;
-                        tempTime = TimeOfDay(hour: selectedHour, minute: selectedMinute);
-                      },
-                      childDelegate: ListWheelChildBuilderDelegate(
-                        builder: (context, index) => Center(
-                          child: Text(
-                            index.toString().padLeft(2, '0'),
-                            style: const TextStyle(color: blaugrau),
-                          ),
-                        ),
-                        childCount: 60,
-                      ),
-                    ),
-                  ),
-                ],
+              floatingLabelStyle: TextStyle(
+                color: blaugrau,
+                fontSize: 16,
               ),
-            ],
+            ),
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.keyboard, color: blaugrau),
-              onPressed: () {
-                Navigator.pop(context);
-                useKeyboardInput = true;
-                showDialogPicker();
-              },
-            ),
-            TextButton(
-              child: const Text("Abbrechen", style: TextStyle(fontSize: 18)),
-              onPressed: () => Navigator.pop(context),
-            ),
-            TextButton(
-              child: const Text("OK", style: TextStyle(fontSize: 18)),
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() {
-                  selectedWakeTime = tempTime;
-                });
-              },
-            ),
-          ],
+          child: child!,
         );
       },
-    );
+    ).then((picked) {
+      if (picked != null && picked != selectedWakeTime) {
+        setState(() {
+          selectedWakeTime = picked;
+        });
+      }
+    });
   }
 
-  if (useKeyboardInput) {
-    showDialogPicker();
-  } else {
-    showWheelPicker();
-  }
+  TextEditingController hourController = TextEditingController(
+    text: selectedWakeTime?.hour.toString().padLeft(2, '0') ?? '',
+  );
+  TextEditingController minuteController = TextEditingController(
+    text: selectedWakeTime?.minute.toString().padLeft(2, '0') ?? '',
+  );
+
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.black,
+        title: const Text(
+          "Weckzeit wählen",
+          style: TextStyle(color: blaugrau),
+        ),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("Stunde", style: TextStyle(color: blaugrau)),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: 50,
+                  child: TextField(
+                    controller: hourController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 2,
+                    style: const TextStyle(color: blaugrau),
+                    decoration: const InputDecoration(
+                      counterText: '',
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: blaugrau),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: blaugrau),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                ":",
+                style: TextStyle(color: blaugrau, fontSize: 24),
+              ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("Minute", style: TextStyle(color: blaugrau)),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: 50,
+                  child: TextField(
+                    controller: minuteController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 2,
+                    style: const TextStyle(color: blaugrau),
+                    decoration: const InputDecoration(
+                      counterText: '',
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: blaugrau),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: blaugrau),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.access_time, color: blaugrau),
+            onPressed: showWheelPicker,
+          ),
+          TextButton(
+            child: const Text("Abbrechen"),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: const Text("OK"),
+            onPressed: () {
+              final hour = int.tryParse(hourController.text);
+              final minute = int.tryParse(minuteController.text);
+
+              if (hour != null && hour >= 0 && hour <= 23 &&
+                  minute != null && minute >= 0 && minute <= 59) {
+                setState(() {
+                  selectedWakeTime = TimeOfDay(hour: hour, minute: minute);
+                });
+                Navigator.of(context).pop();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Bitte gültige Werte eingeben.")),
+                );
+              }
+            },
+          ),
+        ],
+      );
+    },
+  );
 }
 
 
