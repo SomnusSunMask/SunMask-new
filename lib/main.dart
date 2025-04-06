@@ -968,22 +968,21 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   BluetoothDevice? targetDevice;
   late final StreamSubscription<List<ScanResult>> scanSubscription;
 
-  DateTime? timerEndTime;
+  int? lastTimerMinutes;
+  int? timerStartTimestamp;
   Timer? countdownTimer;
 
   @override
   void initState() {
     super.initState();
-    if (widget.lastTimerMinutes != null) {
-      timerEndTime = DateTime.now().add(Duration(minutes: widget.lastTimerMinutes!));
-      startCountdownTimer();
-    }
+    loadTimerStartTime();
+    startCountdownTimer();
   }
 
   @override
   void dispose() {
-    scanSubscription.cancel();
     countdownTimer?.cancel();
+    scanSubscription.cancel();
     super.dispose();
   }
 
@@ -993,39 +992,54 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     });
   }
 
+  Future<void> loadTimerStartTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      lastTimerMinutes = widget.lastTimerMinutes;
+      timerStartTimestamp = prefs.getInt('timerStartTime_${widget.deviceId}');
+    });
+  }
+
   String get wakeTimeText {
     if (widget.lastWakeTime != null) {
       final now = TimeOfDay.now();
       final parts = widget.lastWakeTime!.split(':');
       if (parts.length == 2) {
-        final int hour = int.tryParse(parts[0]) ?? 0;
-        final int minute = int.tryParse(parts[1]) ?? 0;
-        final wakeTime = TimeOfDay(hour: hour, minute: minute);
-
-        final nowMinutes = now.hour * 60 + now.minute;
-        final wakeMinutes = wakeTime.hour * 60 + wakeTime.minute;
-
-        if (nowMinutes >= wakeMinutes) {
+        final hour = int.tryParse(parts[0]) ?? 0;
+        final minute = int.tryParse(parts[1]) ?? 0;
+        if (now.hour > hour || (now.hour == hour && now.minute >= minute)) {
           return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+        } else {
+          return widget.lastWakeTime!;
         }
       }
-      return widget.lastWakeTime!;
     }
     return "Nicht aktiv";
   }
 
+  String formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final parts = <String>[];
+    if (hours > 0) parts.add("$hours Stunden");
+    if (minutes > 0 || hours == 0) parts.add("$minutes Minuten");
+    return parts.join(", ");
+  }
+
   String get timerText {
-    if (widget.lastTimerMinutes != null && timerEndTime != null) {
+    if (lastTimerMinutes != null && timerStartTimestamp != null) {
+      final startTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp!);
       final now = DateTime.now();
-      if (now.isAfter(timerEndTime!)) {
-        final originalHours = widget.lastTimerMinutes! ~/ 60;
-        final originalMinutes = widget.lastTimerMinutes! % 60;
+      final totalDuration = Duration(minutes: lastTimerMinutes!);
+      final elapsed = now.difference(startTime);
+      final remaining = totalDuration - elapsed;
+
+      if (remaining.isNegative) {
+        final originalHours = (lastTimerMinutes! ~/ 60);
+        final originalMinutes = (lastTimerMinutes! % 60);
         return "Timer abgelaufen (${originalHours}h ${originalMinutes}min)";
       } else {
-        final remaining = timerEndTime!.difference(now);
-        final hours = remaining.inHours;
-        final minutes = remaining.inMinutes % 60;
-        return "$hours Stunden $minutes Minuten";
+        return formatDuration(remaining);
       }
     }
     return "Nicht aktiv";
@@ -1161,9 +1175,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                    return blaugrau;
-                  }),
+                  backgroundColor: WidgetStateProperty.all<Color>(blaugrau),
                   foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
                   overlayColor: WidgetStateProperty.all<Color>(Colors.transparent),
                 ),
@@ -1180,3 +1192,4 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
+
