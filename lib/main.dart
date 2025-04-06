@@ -495,30 +495,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 
-  String get wakeTimeText {
-    if (sentWakeTime != null) {
-      final now = TimeOfDay.now();
-      if (now.hour > sentWakeTime!.hour || (now.hour == sentWakeTime!.hour && now.minute >= sentWakeTime!.minute)) {
-        return "Weckzeit abgelaufen (${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')})";
-      }
-      return "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
-    }
-    return "Nicht aktiv";
-  }
-
-  String get timerText {
-    if (sentTimerMinutes != null && timerStartTime != null) {
-      final elapsed = DateTime.now().difference(timerStartTime!);
-      final remaining = Duration(minutes: sentTimerMinutes!) - elapsed;
-
-      if (remaining.isNegative) {
-        return "Timer abgelaufen (${formatDuration(Duration(minutes: sentTimerMinutes!))})";
-      } else {
-        return formatDuration(remaining);
-      }
-    }
-    return "Nicht aktiv";
-  }
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
