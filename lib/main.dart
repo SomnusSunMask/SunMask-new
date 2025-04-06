@@ -437,7 +437,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     listenToBatteryNotifications();
     loadSavedData();
     startCountdownTimer();
-    startWakeTimeMonitor();
   }
 
   @override
@@ -498,26 +497,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 
-  void startWakeTimeMonitor() {
-  Timer.periodic(const Duration(seconds: 1), (_) async {
-    if (!mounted || sentWakeTime == null) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final wakeTimestamp = prefs.getInt('wakeDateTimeTimestamp_${widget.device.remoteId.str}');
-    if (wakeTimestamp == null) return;
-
-    final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-    final now = DateTime.now();
-
-    if (now.isAfter(wakeDateTime) && !wakeTimeExpired) {
-      setState(() {
-        wakeTimeExpired = true;
-      });
-    }
-  });
-}
-
-  
   void startTimerCountdown() {
     timerCountdown?.cancel();
     timerCountdown = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -528,29 +507,34 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   void loadSavedData() async {
-  final prefs = await SharedPreferences.getInstance();
-  final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
-  final timerStartTimestamp = prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
-  final wakeTimestamp = prefs.getInt('wakeDateTimeTimestamp_${widget.device.remoteId.str}');
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
+    final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
+    final timerStartTimestamp = prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
 
-  if (!mounted) return;
+    if (!mounted) return;
 
-  setState(() {
-    if (wakeTimestamp != null) {
-      final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-      sentWakeTime = TimeOfDay(hour: wakeDateTime.hour, minute: wakeDateTime.minute);
-    }
+    setState(() {
+      if (wakeTime != null) {
+        final parts = wakeTime.split(':');
+        if (parts.length == 2) {
+          final hour = int.tryParse(parts[0]);
+          final minute = int.tryParse(parts[1]);
+          if (hour != null && minute != null) {
+            sentWakeTime = TimeOfDay(hour: hour, minute: minute);
+          }
+        }
+      }
 
-    if (timerMinutes != null) {
-      sentTimerMinutes = timerMinutes;
-    }
+      if (timerMinutes != null) {
+        sentTimerMinutes = timerMinutes;
+      }
 
-    if (timerStartTimestamp != null) {
-      timerStartTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp);
-    }
-  });
-}
-
+      if (timerStartTimestamp != null) {
+        timerStartTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp);
+      }
+    });
+  }
 
   void checkWakeTimeExpired() {
     if (sentWakeTime != null) {
@@ -592,38 +576,14 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   String get wakeTimeText {
-  if (sentWakeTime != null) {
-    final prefs = SharedPreferences.getInstance();
-    return FutureBuilder<SharedPreferences>(
-      future: prefs,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return "Lade Weckzeit...";
-        }
-
-        final wakeTimestamp = snapshot.data!.getInt('wakeDateTimeTimestamp_${widget.device.remoteId.str}');
-        if (wakeTimestamp == null) {
-          return "Nicht aktiv";
-        }
-
-        final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-        final now = DateTime.now();
-
-        if (now.isAfter(wakeDateTime)) {
-          final formattedTime = "${wakeDateTime.hour.toString().padLeft(2, '0')}:${wakeDateTime.minute.toString().padLeft(2, '0')}";
-          return "Weckzeit abgelaufen ($formattedTime)";
-        } else {
-          final formattedTime = "${wakeDateTime.hour.toString().padLeft(2, '0')}:${wakeDateTime.minute.toString().padLeft(2, '0')}";
-          return formattedTime;
-        }
-      },
-    ).toString();
+    if (wakeTimeExpired && sentWakeTime != null) {
+      final time = "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
+      return "Weckzeit abgelaufen ($time)";
+    }
+    return sentWakeTime != null
+        ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
+        : "Nicht aktiv";
   }
-
-  return "Nicht aktiv";
-}
-
-
 
   String get timerText {
     if (timerExpired && sentTimerMinutes != null) {
@@ -657,114 +617,92 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   // Die anderen Methoden wie selectWakeTime, selectTimer, sendWakeTimeToESP, sendTimerToESP, clearWakeTimeOrTimer und build folgen jetzt...
 // DeviceControlPage - Kompletter Code Teil 2
 Future<void> selectWakeTime(BuildContext context) async {
-  const blaugrau = Color(0xFF7A9CA3);
-  final TextEditingController hourController = TextEditingController(
-      text: selectedWakeTime?.hour.toString().padLeft(2, '0') ?? '');
-  final TextEditingController minuteController = TextEditingController(
-      text: selectedWakeTime?.minute.toString().padLeft(2, '0') ?? '');
+  
 
-  final FocusNode hourFocusNode = FocusNode();
-  final FocusNode minuteFocusNode = FocusNode();
+  bool useWheelPicker = false; // Standardmäßig Tastatureingabe
+  final hourController = TextEditingController(
+      text: selectedWakeTime?.hour.toString().padLeft(2, '0') ?? '');
+  final minuteController = TextEditingController(
+      text: selectedWakeTime?.minute.toString().padLeft(2, '0') ?? '');
+  int selectedHour = int.tryParse(hourController.text) ?? 0;
+  int selectedMinute = int.tryParse(minuteController.text) ?? 0;
 
   await showDialog(
     context: context,
     builder: (BuildContext context) {
-      // Beim Öffnen direkt Fokus auf Stunde legen
-      Future.delayed(Duration(milliseconds: 100), () {
-        hourFocusNode.requestFocus();
-      });
+      void updateSelectedTime() {
+        selectedHour = int.tryParse(hourController.text) ?? 0;
+        selectedMinute = int.tryParse(minuteController.text) ?? 0;
+      }
 
-      return AlertDialog(
-        backgroundColor: Colors.black,
-        title: const Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            "Weckzeit wählen",
-            style: TextStyle(color: blaugrau),
-          ),
-        ),
-        content: Column(
+      Widget buildCustomPicker() {
+        return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const Text(
+              "Weckzeit wählen",
+              style: TextStyle(fontSize: 20, color: Color(0xFF7A9CA3)),
+            ),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Stunden-Spalte
                 Column(
                   children: [
-                    const Text("Stunde", style: TextStyle(color: blaugrau)),
+                    const Text("Stunde", style: TextStyle(color: Color(0xFF7A9CA3))),
+                    const SizedBox(height: 4),
                     SizedBox(
-                      width: 50,
+                      width: 60,
                       child: TextField(
-                        focusNode: hourFocusNode,
                         controller: hourController,
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: blaugrau),
+                        style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
                         decoration: const InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 8),
                           border: UnderlineInputBorder(
-                            borderSide: BorderSide(color: blaugrau),
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+                          ),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                           ),
                           focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: blaugrau),
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                           ),
                         ),
-                        onChanged: (value) {
-                          if (value.isNotEmpty) {
-                            int number = int.tryParse(value) ?? 0;
-                            if (number > 23) {
-                              hourController.text = '23';
-                              hourController.selection = TextSelection.fromPosition(
-                                const TextPosition(offset: 2),
-                              );
-                            }
-                          }
-                        },
-                        onSubmitted: (_) {
-                          minuteFocusNode.requestFocus();
-                        },
+                        onChanged: (_) => updateSelectedTime(),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(width: 8),
-                const Text(":", style: TextStyle(color: blaugrau, fontSize: 20)),
-                const SizedBox(width: 8),
-                // Minuten-Spalte
+                const SizedBox(width: 16),
+                const Text(
+                  ":",
+                  style: TextStyle(color: Color(0xFF7A9CA3), fontSize: 24),
+                ),
+                const SizedBox(width: 16),
                 Column(
                   children: [
-                    const Text("Minute", style: TextStyle(color: blaugrau)),
+                    const Text("Minute", style: TextStyle(color: Color(0xFF7A9CA3))),
+                    const SizedBox(height: 4),
                     SizedBox(
-                      width: 50,
+                      width: 60,
                       child: TextField(
-                        focusNode: minuteFocusNode,
                         controller: minuteController,
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: blaugrau),
+                        style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
                         decoration: const InputDecoration(
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 8),
                           border: UnderlineInputBorder(
-                            borderSide: BorderSide(color: blaugrau),
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
+                          ),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                           ),
                           focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: blaugrau),
+                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                           ),
                         ),
-                        onChanged: (value) {
-                          if (value.isNotEmpty) {
-                            int number = int.tryParse(value) ?? 0;
-                            if (number > 59) {
-                              minuteController.text = '59';
-                              minuteController.selection = TextSelection.fromPosition(
-                                const TextPosition(offset: 2),
-                              );
-                            }
-                          }
-                        },
+                        onChanged: (_) => updateSelectedTime(),
                       ),
                     ),
                   ],
@@ -772,9 +710,106 @@ Future<void> selectWakeTime(BuildContext context) async {
               ],
             ),
           ],
-        ),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
+        );
+      }
+
+      Widget buildWheelPicker() {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Weckzeit wählen",
+              style: TextStyle(fontSize: 20, color: Color(0xFF7A9CA3)),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  children: [
+                    const Text("Stunde", style: TextStyle(color: Color(0xFF7A9CA3))),
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      height: 100,
+                      width: 60,
+                      child: ListWheelScrollView.useDelegate(
+                        itemExtent: 40,
+                        onSelectedItemChanged: (index) {
+                          selectedHour = index;
+                        },
+                        physics: const FixedExtentScrollPhysics(),
+                        childDelegate: ListWheelChildBuilderDelegate(
+                          builder: (context, index) {
+                            if (index >= 0 && index <= 23) {
+                              return Center(
+                                child: Text(
+                                  index.toString().padLeft(2, '0'),
+                                  style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
+                                ),
+                              );
+                            }
+                            return null;
+                          },
+                          childCount: 24,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+                const Text(
+                  ":",
+                  style: TextStyle(color: Color(0xFF7A9CA3), fontSize: 24),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  children: [
+                    const Text("Minute", style: TextStyle(color: Color(0xFF7A9CA3))),
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      height: 100,
+                      width: 60,
+                      child: ListWheelScrollView.useDelegate(
+                        itemExtent: 40,
+                        onSelectedItemChanged: (index) {
+                          selectedMinute = index;
+                        },
+                        physics: const FixedExtentScrollPhysics(),
+                        childDelegate: ListWheelChildBuilderDelegate(
+                          builder: (context, index) {
+                            if (index >= 0 && index <= 59) {
+                              return Center(
+                                child: Text(
+                                  index.toString().padLeft(2, '0'),
+                                  style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
+                                ),
+                              );
+                            }
+                            return null;
+                          },
+                          childCount: 60,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+      }
+
+      return AlertDialog(
+        backgroundColor: Colors.black,
+        content: useWheelPicker ? buildWheelPicker() : buildCustomPicker(),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.access_time, color: Color(0xFF7A9CA3)),
+            onPressed: () {
+              useWheelPicker = !useWheelPicker;
+              (context as Element).markNeedsBuild();
+            },
+          ),
           TextButton(
             child: const Text("Abbrechen", style: TextStyle(fontSize: 18)),
             onPressed: () {
@@ -784,15 +819,12 @@ Future<void> selectWakeTime(BuildContext context) async {
           TextButton(
             child: const Text("OK", style: TextStyle(fontSize: 18)),
             onPressed: () {
-              final int? enteredHour = int.tryParse(hourController.text);
-              final int? enteredMinute = int.tryParse(minuteController.text);
-              if (enteredHour != null &&
-                  enteredMinute != null &&
-                  enteredHour >= 0 &&
-                  enteredHour <= 23 &&
-                  enteredMinute >= 0 &&
-                  enteredMinute <= 59) {
-                Navigator.of(context).pop(TimeOfDay(hour: enteredHour, minute: enteredMinute));
+              if (selectedHour >= 0 && selectedHour <= 23 && selectedMinute >= 0 && selectedMinute <= 59) {
+                Navigator.of(context).pop(TimeOfDay(hour: selectedHour, minute: selectedMinute));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Bitte gültige Werte eingeben")),
+                );
               }
             },
           ),
@@ -800,14 +832,13 @@ Future<void> selectWakeTime(BuildContext context) async {
       );
     },
   ).then((picked) {
-    if (picked != null && picked != selectedWakeTime) {
+    if (picked != null) {
       setState(() {
         selectedWakeTime = picked;
       });
     }
   });
 }
-
 
   
   Future<void> selectTimer(BuildContext context) async {
@@ -912,55 +943,41 @@ Future<void> selectWakeTime(BuildContext context) async {
   }
 
   void sendWakeTimeToESP() async {
-  if (!widget.device.isConnected) {
-    showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
-    Navigator.pop(context);
-    return;
-  }
+    if (!widget.device.isConnected) {
+      showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
+      Navigator.pop(context);
+      return;
+    }
 
-  if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
-    try {
-      DateTime now = DateTime.now();
-      DateTime targetDateTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        selectedWakeTime!.hour,
-        selectedWakeTime!.minute,
-      );
+    if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
+      try {
+        String currentTime = DateFormat("HH:mm").format(DateTime.now());
+        String wakeTime =
+            "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
+        String combinedData = "$currentTime|$wakeTime";
 
-      // Prüfen ob Weckzeit heute schon vorbei ist → dann auf morgen setzen
-      if (targetDateTime.isBefore(now)) {
-        targetDateTime = targetDateTime.add(const Duration(days: 1));
+        await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
+        await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
+        await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
+
+        if (mounted) {
+          setState(() {
+            sentWakeTime = selectedWakeTime;
+            sentTimerMinutes = null;
+            wakeTimeExpired = false;
+            timerExpired = false;
+            timerStartTime = null;
+          });
+        }
+
+        debugPrint("✅ Weckzeit gesendet: $combinedData");
+      } catch (e) {
+        debugPrint("⚠️ Senden fehlgeschlagen: $e");
       }
-
-      String wakeTime = DateFormat("HH:mm").format(targetDateTime);
-
-      String combinedData = "${DateFormat("HH:mm").format(now)}|$wakeTime";
-      await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('wakeDateTimeTimestamp_${widget.device.remoteId.str}', targetDateTime.millisecondsSinceEpoch);
-      await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
-      await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
-
-      if (mounted) {
-        setState(() {
-          sentWakeTime = TimeOfDay(hour: selectedWakeTime!.hour, minute: selectedWakeTime!.minute);
-          sentTimerMinutes = null;
-          wakeTimeExpired = false;
-          timerExpired = false;
-          timerStartTime = null;
-        });
-      }
-
-      debugPrint("✅ Weckzeit gesendet: $combinedData");
-    } catch (e) {
-      debugPrint("⚠️ Senden fehlgeschlagen: $e");
     }
   }
-}
-
 
   void sendTimerToESP() async {
     if (!widget.device.isConnected) {
@@ -1185,7 +1202,6 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     super.initState();
     loadTimerStartTime();
     startCountdownTimer();
-    startWakeTimeMonitor();
   }
 
   @override
@@ -1201,27 +1217,6 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     });
   }
 
-  void startWakeTimeMonitor() {
-  Timer.periodic(const Duration(seconds: 1), (_) async {
-    if (!mounted || widget.lastWakeTime == null) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final wakeTimestamp = prefs.getInt('wakeDateTimeTimestamp_${widget.deviceId}');
-    if (wakeTimestamp == null) return;
-
-    final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-    final now = DateTime.now();
-
-    if (now.isAfter(wakeDateTime)) {
-      setState(() {
-        // Keine eigene Variable wie wakeTimeExpired, da wir direkt im Text prüfen
-        // Das genügt hier, um rebuild zu erzwingen
-      });
-    }
-  });
-}
-
-
   Future<void> loadTimerStartTime() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -1232,32 +1227,18 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
   String get wakeTimeText {
     if (widget.lastWakeTime != null) {
-      final now = DateTime.now();
+      final now = TimeOfDay.now();
       final parts = widget.lastWakeTime!.split(':');
       if (parts.length == 2) {
         final hour = int.tryParse(parts[0]) ?? 0;
         final minute = int.tryParse(parts[1]) ?? 0;
-
-        DateTime wakeDateTime = DateTime(
-          now.year,
-          now.month,
-          now.day,
-          hour,
-          minute,
-        );
-
-        if (wakeDateTime.isBefore(now)) {
-          wakeDateTime = wakeDateTime.add(const Duration(days: 1));
-        }
-
-        if (now.isAfter(wakeDateTime)) {
+        if (now.hour > hour || (now.hour == hour && now.minute >= minute)) {
           return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
         } else {
           return widget.lastWakeTime!;
         }
       }
     }
-
     return "Nicht aktiv";
   }
 
@@ -1391,24 +1372,16 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Column(
-              children: [
-                const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Column(
-              children: [
-                const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-              ],
-            ),
-            const SizedBox(height: 20),
+            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 181),
+            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
+            const Spacer(),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1426,9 +1399,10 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: blaugrau,
-                  foregroundColor: Colors.white,
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all<Color>(blaugrau),
+                  foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
+                  overlayColor: WidgetStateProperty.all<Color>(Colors.transparent),
                 ),
                 onPressed: isConnecting ? null : connectToDeviceById,
                 child: Text(
@@ -1443,5 +1417,3 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
-
-
