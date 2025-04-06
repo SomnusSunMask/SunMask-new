@@ -368,7 +368,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
 }
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
-// DeviceControlPage (vollständig überarbeitet mit live Timer-Anzeige)
 
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
@@ -413,6 +412,85 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     listenToBatteryNotifications();
     loadSavedData();
     startCountdownTimer();
+    startTimerCountdown();
+  }
+
+  @override
+  void dispose() {
+    countdownTimer?.cancel();
+    timerCountdown?.cancel();
+    try {
+      widget.device.disconnect();
+    } catch (e) {
+      debugPrint('⚠️ Fehler beim Trennen der Verbindung (dispose): $e');
+    }
+    super.dispose();
+  }
+
+  void readBatteryLevel() async {
+    if (widget.batteryCharacteristic != null) {
+      try {
+        await widget.batteryCharacteristic!.read();
+        final value = widget.batteryCharacteristic!.lastValue;
+        if (value.isNotEmpty) {
+          final percent = int.tryParse(utf8.decode(value));
+          if (percent != null && mounted) {
+            setState(() {
+              batteryLevel = percent;
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint("⚠️ Akku lesen fehlgeschlagen: $e");
+      }
+    }
+  }
+
+  void listenToBatteryNotifications() async {
+    if (widget.batteryCharacteristic != null) {
+      try {
+        await widget.batteryCharacteristic!.setNotifyValue(true);
+        widget.batteryCharacteristic!.onValueReceived.listen((value) {
+          final percent = int.tryParse(utf8.decode(value));
+          if (percent != null && mounted) {
+            setState(() {
+              batteryLevel = percent;
+            });
+          }
+        });
+      } catch (e) {
+        debugPrint("⚠️ Akku-Benachrichtigungen fehlgeschlagen: $e");
+      }
+    }
+  }
+
+  void startCountdownTimer() {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {
+          checkWakeTimeExpired();
+        });
+      }
+    });
+  }
+
+  void startTimerCountdown() {
+    timerCountdown?.cancel();
+    timerCountdown = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  void checkWakeTimeExpired() {
+    if (sentWakeTime != null) {
+      final now = TimeOfDay.now();
+      if (now.hour > sentWakeTime!.hour ||
+          (now.hour == sentWakeTime!.hour && now.minute >= sentWakeTime!.minute)) {
+        wakeTimeExpired = true;
+      }
+    }
   }
 
   void loadSavedData() async {
@@ -445,45 +523,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 
-  void startCountdownTimer() {
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      checkWakeTimeExpiration();
-      if (mounted) setState(() {});
-    });
-  }
-
-  void checkWakeTimeExpiration() {
-    if (sentWakeTime != null) {
-      final now = DateTime.now();
-      final wakeDateTime = DateTime(now.year, now.month, now.day, sentWakeTime!.hour, sentWakeTime!.minute);
-      if (now.isAfter(wakeDateTime)) {
-        if (!wakeTimeExpired) {
-          setState(() {
-            wakeTimeExpired = true;
-          });
-        }
-      } else {
-        if (wakeTimeExpired) {
-          setState(() {
-            wakeTimeExpired = false;
-          });
-        }
-      }
-    }
-  }
-
-  String get wakeTimeText {
-    if (sentWakeTime != null) {
-      final timeFormatted = "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
-      if (wakeTimeExpired) {
-        return "Weckzeit abgelaufen ($timeFormatted)";
-      } else {
-        return timeFormatted;
-      }
-    }
-    return "Nicht aktiv";
-  }
-
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
@@ -492,9 +531,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     if (minutes > 0 || hours == 0) parts.add("$minutes Minuten");
     return parts.join(", ");
   }
-
-  // Hier geht dein Code dann ganz normal weiter...
-
 
   String wakeTimeButtonText() {
     if (selectedWakeTime != null) {
@@ -696,7 +732,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 
-  // Ich stoppe hier den Block, weil sonst überläuft — willst du den unteren Build-Teil direkt auch noch?
   void sendWakeTimeToESP() async {
     if (!widget.device.isConnected) {
       showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
@@ -733,191 +768,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       }
     }
   }
-
-  void sendTimerToESP() async {
-    if (!widget.device.isConnected) {
-      showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
-      Navigator.pop(context);
-      return;
-    }
-
-    if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
-      try {
-        String timerValue = selectedTimerMinutes.toString();
-        await widget.timerCharacteristic!.write(utf8.encode(timerValue));
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('lastTimerMinutes_${widget.device.remoteId.str}', selectedTimerMinutes!);
-        await prefs.setInt('timerStartTime_${widget.device.remoteId.str}', DateTime.now().millisecondsSinceEpoch);
-        await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
-
-        if (mounted) {
-          setState(() {
-            sentTimerMinutes = selectedTimerMinutes;
-            sentWakeTime = null;
-            timerExpired = false;
-            wakeTimeExpired = false;
-            timerStartTime = DateTime.now();
-          });
-          startTimerCountdown();
-        }
-
-        debugPrint("✅ Timer gesendet: $timerValue Minuten");
-      } catch (e) {
-        debugPrint("⚠️ Senden fehlgeschlagen: $e");
-      }
-    }
-  }
-
-  void clearWakeTimeOrTimer() async {
-    if (!widget.device.isConnected) {
-      showErrorSnackbar("❌ Löschen fehlgeschlagen! Verbinde die SunMask neu.");
-      Navigator.pop(context);
-      return;
-    }
-    try {
-      await widget.alarmCharacteristic?.write(utf8.encode("CLEAR"));
-      await widget.timerCharacteristic?.write(utf8.encode("CLEAR"));
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
-      await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
-      await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
-
-      if (mounted) {
-        setState(() {
-          sentWakeTime = null;
-          sentTimerMinutes = null;
-          timerExpired = false;
-          wakeTimeExpired = false;
-          timerStartTime = null;
-        });
-      }
-
-      debugPrint("✅ Weckzeit/Timer gelöscht");
-    } catch (e) {
-      debugPrint("⚠️ Löschen fehlgeschlagen: $e");
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const blaugrau = Color(0xFF7A9CA3);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lichtwecker einstellen', style: TextStyle(fontSize: 18)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () async {
-            try {
-              await widget.device.disconnect();
-            } catch (e) {
-              debugPrint('⚠️ Fehler beim Trennen der Verbindung: $e');
-            }
-
-            if (context.mounted) {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Text(
-                batteryLevel != null ? 'Akku: $batteryLevel%' : '',
-                style: const TextStyle(
-                  color: blaugrau,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Column(
-            children: [
-              const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: blaugrau,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () => selectWakeTime(context),
-                  child: Text(wakeTimeButtonText(), style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: blaugrau,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: sendWakeTimeToESP,
-                  child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Column(
-            children: [
-              const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: blaugrau,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () => selectTimer(context),
-                  child: Text(timerButtonText(), style: const TextStyle(fontSize: 18)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: buttonWidth,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: blaugrau,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: sendTimerToESP,
-                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: buttonWidth,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: blaugrau,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: clearWakeTimeOrTimer,
-              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 
 
