@@ -1,4 +1,3 @@
-// Teil 1: main + BLEHomePage komplett
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -86,25 +85,25 @@ class MyApp extends StatelessWidget {
           entryModeIconColor: blaugrau,
           hourMinuteTextColor: Colors.white,
           hourMinuteColor: blaugrau,
-          hourMinuteTextStyle: TextStyle(color: blaugrau, fontSize: 18), // <<--- Das neue!
+          hourMinuteTextStyle: TextStyle(color: blaugrau, fontSize: 18),
           helpTextStyle: TextStyle(color: blaugrau),
           dayPeriodColor: blaugrau,
           dayPeriodTextColor: Colors.white,
-          ),
-      textSelectionTheme: const TextSelectionThemeData(
-        cursorColor: blaugrau,
-        selectionColor: Color(0x807A9CA3), // 50% transparent
-        selectionHandleColor: blaugrau,
         ),
-  inputDecorationTheme: const InputDecorationTheme(
-    labelStyle: TextStyle(color: blaugrau),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: blaugrau,
+          selectionColor: Color(0x807A9CA3),
+          selectionHandleColor: blaugrau,
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          labelStyle: TextStyle(color: blaugrau),
         ),
       ),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-supportedLocales: const [
-  Locale('de', ''), // Deutsch
-],
-home: const BLEHomePage()
+      supportedLocales: const [
+        Locale('de', ''),
+      ],
+      home: const BLEHomePage(),
     );
   }
 }
@@ -258,10 +257,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
     final currentTime = DateTime.now();
     if (isShowingConnectionError &&
-    currentTime.difference(lastConnectionErrorTime).inSeconds < 5) {
-  return;
-}
-
+        currentTime.difference(lastConnectionErrorTime).inSeconds < 5) {
+      return;
+    }
 
     isShowingConnectionError = true;
     lastConnectionErrorTime = currentTime;
@@ -313,75 +311,81 @@ class _BLEHomePageState extends State<BLEHomePage> {
               : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
 
           return ListTile(
-  title: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Expanded(
-        child: Text(
-          "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: blaugrau),
-        ),
-      ),
-      if (loadingDevices.contains(device))
-        const SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      if (storedDevices.contains(id)) ...[
-        if (isAvailable)
-          IconButton(
-            icon: const Icon(Icons.info_outline, color: blaugrau),
-            onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              final wakeTime = prefs.getString('lastWakeTime_$id');
-              final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-              if (!context.mounted) return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DeviceOverviewPage(
-                    deviceId: id,
-                    lastWakeTime: wakeTime,
-                    lastTimerMinutes: timerMinutes,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: blaugrau),
                   ),
                 ),
-              );
+                if (loadingDevices.contains(device))
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                if (storedDevices.contains(id)) ...[
+                  if (isAvailable)
+                    IconButton(
+                      icon: const Icon(Icons.info_outline, color: blaugrau),
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        final wakeTime = prefs.getString('lastWakeTime_$id');
+                        final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+                        if (!context.mounted) return;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DeviceOverviewPage(
+                              deviceId: id,
+                              lastWakeTime: wakeTime,
+                              lastTimerMinutes: timerMinutes,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: blaugrau),
+                    onPressed: () => removeStoredDevice(id),
+                  ),
+                ],
+              ],
+            ),
+            subtitle: Text(
+              id,
+              style: const TextStyle(color: blaugrau),
+            ),
+            onTap: () async {
+              if (isAvailable && !loadingDevices.contains(device)) {
+                connectToDevice(device);
+              } else if (storedDevices.contains(id)) {
+                final prefs = await SharedPreferences.getInstance();
+                final wakeTime = prefs.getString('lastWakeTime_$id');
+                final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+                if (!context.mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DeviceOverviewPage(
+                      deviceId: id,
+                      lastWakeTime: wakeTime,
+                      lastTimerMinutes: timerMinutes,
+                    ),
+                  ),
+                );
+              }
             },
-          ),
-        IconButton(
-          icon: const Icon(Icons.delete, color: blaugrau),
-          onPressed: () => removeStoredDevice(id),
-        ),
-      ],
-    ],
-  ),
-  subtitle: Text(
-    id,
-    style: const TextStyle(color: blaugrau),
-  ),
-  onTap: () async {
-    if (isAvailable && !loadingDevices.contains(device)) {
-      connectToDevice(device);
-    } else if (storedDevices.contains(id)) {
-      final prefs = await SharedPreferences.getInstance();
-      final wakeTime = prefs.getString('lastWakeTime_$id');
-      final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-      if (!context.mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceOverviewPage(
-            deviceId: id,
-            lastWakeTime: wakeTime,
-            lastTimerMinutes: timerMinutes,
-          ),
-        ),
-      );
-    }
-  },
-),
+          );
+        },
+      ),
+    );
+  }
+}
+
 
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
