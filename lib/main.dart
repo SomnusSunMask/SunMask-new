@@ -437,6 +437,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     listenToBatteryNotifications();
     loadSavedData();
     startCountdownTimer();
+    startWakeTimeMonitor();
   }
 
   @override
@@ -497,6 +498,26 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 
+  void startWakeTimeMonitor() {
+  Timer.periodic(const Duration(seconds: 1), (_) async {
+    if (!mounted || sentWakeTime == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTimestamp = prefs.getInt('wakeDateTimeTimestamp_${widget.device.remoteId.str}');
+    if (wakeTimestamp == null) return;
+
+    final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+    final now = DateTime.now();
+
+    if (now.isAfter(wakeDateTime) && !wakeTimeExpired) {
+      setState(() {
+        wakeTimeExpired = true;
+      });
+    }
+  });
+}
+
+  
   void startTimerCountdown() {
     timerCountdown?.cancel();
     timerCountdown = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -507,34 +528,29 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   void loadSavedData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
-    final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
-    final timerStartTimestamp = prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
+  final prefs = await SharedPreferences.getInstance();
+  final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
+  final timerStartTimestamp = prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
+  final wakeTimestamp = prefs.getInt('wakeDateTimeTimestamp_${widget.device.remoteId.str}');
 
-    if (!mounted) return;
+  if (!mounted) return;
 
-    setState(() {
-      if (wakeTime != null) {
-        final parts = wakeTime.split(':');
-        if (parts.length == 2) {
-          final hour = int.tryParse(parts[0]);
-          final minute = int.tryParse(parts[1]);
-          if (hour != null && minute != null) {
-            sentWakeTime = TimeOfDay(hour: hour, minute: minute);
-          }
-        }
-      }
+  setState(() {
+    if (wakeTimestamp != null) {
+      final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+      sentWakeTime = TimeOfDay(hour: wakeDateTime.hour, minute: wakeDateTime.minute);
+    }
 
-      if (timerMinutes != null) {
-        sentTimerMinutes = timerMinutes;
-      }
+    if (timerMinutes != null) {
+      sentTimerMinutes = timerMinutes;
+    }
 
-      if (timerStartTimestamp != null) {
-        timerStartTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp);
-      }
-    });
-  }
+    if (timerStartTimestamp != null) {
+      timerStartTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp);
+    }
+  });
+}
+
 
   void checkWakeTimeExpired() {
     if (sentWakeTime != null) {
@@ -577,29 +593,36 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   String get wakeTimeText {
   if (sentWakeTime != null) {
-    final now = DateTime.now();
-    DateTime wakeDateTime = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      sentWakeTime!.hour,
-      sentWakeTime!.minute,
-    );
+    final prefs = SharedPreferences.getInstance();
+    return FutureBuilder<SharedPreferences>(
+      future: prefs,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return "Lade Weckzeit...";
+        }
 
-    // Wenn die Weckzeit heute schon vorbei ist → auf morgen verschieben
-    if (wakeDateTime.isBefore(now)) {
-      wakeDateTime = wakeDateTime.add(const Duration(days: 1));
-    }
+        final wakeTimestamp = snapshot.data!.getInt('wakeDateTimeTimestamp_${widget.device.remoteId.str}');
+        if (wakeTimestamp == null) {
+          return "Nicht aktiv";
+        }
 
-    if (now.isAfter(wakeDateTime)) {
-      final time = "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
-      return "Weckzeit abgelaufen ($time)";
-    } else {
-      return "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
-    }
+        final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+        final now = DateTime.now();
+
+        if (now.isAfter(wakeDateTime)) {
+          final formattedTime = "${wakeDateTime.hour.toString().padLeft(2, '0')}:${wakeDateTime.minute.toString().padLeft(2, '0')}";
+          return "Weckzeit abgelaufen ($formattedTime)";
+        } else {
+          final formattedTime = "${wakeDateTime.hour.toString().padLeft(2, '0')}:${wakeDateTime.minute.toString().padLeft(2, '0')}";
+          return formattedTime;
+        }
+      },
+    ).toString();
   }
+
   return "Nicht aktiv";
 }
+
 
 
   String get timerText {
@@ -889,41 +912,55 @@ Future<void> selectWakeTime(BuildContext context) async {
   }
 
   void sendWakeTimeToESP() async {
-    if (!widget.device.isConnected) {
-      showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
-      Navigator.pop(context);
-      return;
-    }
+  if (!widget.device.isConnected) {
+    showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
+    Navigator.pop(context);
+    return;
+  }
 
-    if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
-      try {
-        String currentTime = DateFormat("HH:mm").format(DateTime.now());
-        String wakeTime =
-            "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
-        String combinedData = "$currentTime|$wakeTime";
+  if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
+    try {
+      DateTime now = DateTime.now();
+      DateTime targetDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        selectedWakeTime!.hour,
+        selectedWakeTime!.minute,
+      );
 
-        await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
-        await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
-        await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
-
-        if (mounted) {
-          setState(() {
-            sentWakeTime = selectedWakeTime;
-            sentTimerMinutes = null;
-            wakeTimeExpired = false;
-            timerExpired = false;
-            timerStartTime = null;
-          });
-        }
-
-        debugPrint("✅ Weckzeit gesendet: $combinedData");
-      } catch (e) {
-        debugPrint("⚠️ Senden fehlgeschlagen: $e");
+      // Prüfen ob Weckzeit heute schon vorbei ist → dann auf morgen setzen
+      if (targetDateTime.isBefore(now)) {
+        targetDateTime = targetDateTime.add(const Duration(days: 1));
       }
+
+      String wakeTime = DateFormat("HH:mm").format(targetDateTime);
+
+      String combinedData = "${DateFormat("HH:mm").format(now)}|$wakeTime";
+      await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('wakeDateTimeTimestamp_${widget.device.remoteId.str}', targetDateTime.millisecondsSinceEpoch);
+      await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
+      await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
+
+      if (mounted) {
+        setState(() {
+          sentWakeTime = TimeOfDay(hour: selectedWakeTime!.hour, minute: selectedWakeTime!.minute);
+          sentTimerMinutes = null;
+          wakeTimeExpired = false;
+          timerExpired = false;
+          timerStartTime = null;
+        });
+      }
+
+      debugPrint("✅ Weckzeit gesendet: $combinedData");
+    } catch (e) {
+      debugPrint("⚠️ Senden fehlgeschlagen: $e");
     }
   }
+}
+
 
   void sendTimerToESP() async {
     if (!widget.device.isConnected) {
@@ -1148,6 +1185,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     super.initState();
     loadTimerStartTime();
     startCountdownTimer();
+    startWakeTimeMonitor();
   }
 
   @override
@@ -1162,6 +1200,27 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
       if (mounted) setState(() {});
     });
   }
+
+  void startWakeTimeMonitor() {
+  Timer.periodic(const Duration(seconds: 1), (_) async {
+    if (!mounted || widget.lastWakeTime == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTimestamp = prefs.getInt('wakeDateTimeTimestamp_${widget.deviceId}');
+    if (wakeTimestamp == null) return;
+
+    final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+    final now = DateTime.now();
+
+    if (now.isAfter(wakeDateTime)) {
+      setState(() {
+        // Keine eigene Variable wie wakeTimeExpired, da wir direkt im Text prüfen
+        // Das genügt hier, um rebuild zu erzwingen
+      });
+    }
+  });
+}
+
 
   Future<void> loadTimerStartTime() async {
     final prefs = await SharedPreferences.getInstance();
