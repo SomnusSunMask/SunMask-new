@@ -356,9 +356,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
               ],
             ),
             subtitle: Text(
-              id,
-              style: const TextStyle(color: blaugrau),
-            ),
+  "Gerätenummer: $id",
+  style: const TextStyle(color: blaugrau),
+),
             onTap: () async {
               if (isAvailable && !loadingDevices.contains(device)) {
                 connectToDevice(device);
