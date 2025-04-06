@@ -242,7 +242,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       });
 
       showErrorSnackbar(
-        "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.",
+        "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.",
       );
     }
   }
@@ -576,14 +576,31 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   String get wakeTimeText {
-    if (wakeTimeExpired && sentWakeTime != null) {
+  if (sentWakeTime != null) {
+    final now = DateTime.now();
+    DateTime wakeDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      sentWakeTime!.hour,
+      sentWakeTime!.minute,
+    );
+
+    // Wenn die Weckzeit heute schon vorbei ist → auf morgen verschieben
+    if (wakeDateTime.isBefore(now)) {
+      wakeDateTime = wakeDateTime.add(const Duration(days: 1));
+    }
+
+    if (now.isAfter(wakeDateTime)) {
       final time = "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
       return "Weckzeit abgelaufen ($time)";
+    } else {
+      return "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
     }
-    return sentWakeTime != null
-        ? "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}"
-        : "Nicht aktiv";
   }
+  return "Nicht aktiv";
+}
+
 
   String get timerText {
     if (timerExpired && sentTimerMinutes != null) {
@@ -1155,21 +1172,37 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   String get wakeTimeText {
-    if (widget.lastWakeTime != null) {
-      final now = TimeOfDay.now();
-      final parts = widget.lastWakeTime!.split(':');
-      if (parts.length == 2) {
-        final hour = int.tryParse(parts[0]) ?? 0;
-        final minute = int.tryParse(parts[1]) ?? 0;
-        if (now.hour > hour || (now.hour == hour && now.minute >= minute)) {
-          return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
-        } else {
-          return widget.lastWakeTime!;
-        }
+  if (widget.lastWakeTime != null) {
+    final now = DateTime.now();
+    final parts = widget.lastWakeTime!.split(':');
+    if (parts.length == 2) {
+      final hour = int.tryParse(parts[0]) ?? 0;
+      final minute = int.tryParse(parts[1]) ?? 0;
+
+      DateTime wakeDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        hour,
+        minute,
+      );
+
+      // Wenn die Weckzeit heute schon vorbei ist → auf morgen verschieben
+      if (wakeDateTime.isBefore(now)) {
+        wakeDateTime = wakeDateTime.add(const Duration(days: 1));
+      }
+
+      if (now.isAfter(wakeDateTime)) {
+        return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+      } else {
+        return widget.lastWakeTime!;
       }
     }
-    return "Nicht aktiv";
   }
+
+  return "Nicht aktiv";
+}
+
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
@@ -1234,7 +1267,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.");
     } finally {
       if (mounted) {
         setState(() {
@@ -1286,7 +1319,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.");
     }
   }
 
