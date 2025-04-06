@@ -919,65 +919,75 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   BluetoothDevice? targetDevice;
   late final StreamSubscription<List<ScanResult>> scanSubscription;
 
-  late Timer countdownTimer;
-  int? remainingTimerMinutes;
-  late String originalTimerDisplay;
+  late Timer updateTimer;
+  Duration? remainingTimer;
+  DateTime? targetWakeDateTime;
 
   @override
   void initState() {
     super.initState();
-    initializeTimerCountdown();
-  }
 
-  void initializeTimerCountdown() {
+    // Timer initialisieren
     if (widget.lastTimerMinutes != null) {
-      remainingTimerMinutes = widget.lastTimerMinutes!;
-      originalTimerDisplay = _formatTimerText(widget.lastTimerMinutes!);
-
-      countdownTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
-        if (!mounted) return;
-        setState(() {
-          if (remainingTimerMinutes! > 0) {
-            remainingTimerMinutes = remainingTimerMinutes! - 1;
-          } else {
-            countdownTimer.cancel();
-          }
-        });
-      });
+      remainingTimer = Duration(minutes: widget.lastTimerMinutes!);
     }
+
+    // Weckzeit initialisieren
+    if (widget.lastWakeTime != null) {
+      final now = DateTime.now();
+      final parts = widget.lastWakeTime!.split(':');
+      if (parts.length == 2) {
+        final hour = int.tryParse(parts[0]);
+        final minute = int.tryParse(parts[1]);
+        if (hour != null && minute != null) {
+          targetWakeDateTime = DateTime(now.year, now.month, now.day, hour, minute);
+          if (targetWakeDateTime!.isBefore(now)) {
+            targetWakeDateTime = targetWakeDateTime!.add(const Duration(days: 1));
+          }
+        }
+      }
+    }
+
+    updateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {
+        if (remainingTimer != null && remainingTimer!.inSeconds > 0) {
+          remainingTimer = remainingTimer! - const Duration(seconds: 1);
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
+    updateTimer.cancel();
     scanSubscription.cancel();
-    countdownTimer.cancel();
     super.dispose();
   }
 
-  String _formatTimerText(int totalMinutes) {
-    final hours = totalMinutes ~/ 60;
-    final minutes = totalMinutes % 60;
-    if (hours > 0 && minutes > 0) {
-      return "$hours Stunden $minutes Minuten";
-    } else if (hours > 0) {
-      return "$hours Stunden";
-    } else {
-      return "$minutes Minuten";
+  String get wakeTimeText {
+    if (targetWakeDateTime != null) {
+      final now = DateTime.now();
+      if (now.isAfter(targetWakeDateTime!)) {
+        return "Weckzeit abgelaufen (${widget.lastWakeTime})";
+      } else {
+        return widget.lastWakeTime!;
+      }
     }
+    return "Nicht aktiv";
   }
 
-  String get wakeTimeText =>
-      widget.lastWakeTime != null ? widget.lastWakeTime! : "Nicht aktiv";
-
   String get timerText {
-    if (widget.lastTimerMinutes == null) {
-      return "Nicht aktiv";
-    } else if (remainingTimerMinutes == null) {
-      return originalTimerDisplay;
-    } else if (remainingTimerMinutes! > 0) {
-      return _formatTimerText(remainingTimerMinutes!);
+    if (remainingTimer != null && remainingTimer!.inSeconds > 0) {
+      final hours = remainingTimer!.inHours;
+      final minutes = remainingTimer!.inMinutes.remainder(60);
+      String result = '';
+      if (hours > 0) result += '$hours Stunden ';
+      result += '$minutes Minuten';
+      return result.trim();
+    } else if (widget.lastTimerMinutes != null) {
+      return "Timer abgelaufen (${widget.lastTimerMinutes} Minuten)";
     } else {
-      return "Timer abgelaufen ($originalTimerDisplay)";
+      return "Nicht aktiv";
     }
   }
 
@@ -1016,8 +1026,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar(
-          "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
     } finally {
       if (mounted) {
         setState(() {
@@ -1069,8 +1078,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar(
-          "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
     }
   }
 
@@ -1080,25 +1088,20 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
-            const Text('Eingestellter Lichtwecker', style: TextStyle(fontSize: 18)),
+        title: const Text('Eingestellter Lichtwecker', style: TextStyle(fontSize: 18)),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text("Weckzeit",
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            Text("Aktuelle Weckzeit: $wakeTimeText",
-                style: const TextStyle(fontSize: 20)),
+            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 181),
-            const Text("Timer",
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text("Aktueller Timer: $timerText",
-                style: const TextStyle(fontSize: 20)),
+            Text("Aktueller Timer: $timerText", style: const TextStyle(fontSize: 20)),
             const Spacer(),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1118,12 +1121,9 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor:
-                      WidgetStateProperty.all<Color>(blaugrau),
-                  foregroundColor:
-                      WidgetStateProperty.all<Color>(Colors.white),
-                  overlayColor:
-                      WidgetStateProperty.all<Color>(Colors.transparent),
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) => blaugrau),
+                  foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
+                  overlayColor: WidgetStateProperty.all<Color>(Colors.transparent),
                 ),
                 onPressed: isConnecting ? null : connectToDeviceById,
                 child: Text(
@@ -1138,3 +1138,4 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
+
