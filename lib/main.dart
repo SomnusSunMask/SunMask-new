@@ -616,50 +616,65 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   // Die anderen Methoden wie selectWakeTime, selectTimer, sendWakeTimeToESP, sendTimerToESP, clearWakeTimeOrTimer und build folgen jetzt...
 // DeviceControlPage - Kompletter Code Teil 2
-
-  Future<void> selectWakeTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: selectedWakeTime ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF7A9CA3),
-              onPrimary: Colors.white,
-              surface: Colors.black,
-              onSurface: Colors.white,
+Future<void> selectWakeTime(BuildContext context) async {
+  final TimeOfDay? picked = await showTimePicker(
+    context: context,
+    initialTime: selectedWakeTime ?? TimeOfDay.now(),
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFF7A9CA3),
+            onPrimary: Colors.white,
+            surface: Colors.black,
+            onSurface: Colors.white,
+          ),
+          dialogTheme: const DialogTheme(
+            backgroundColor: Colors.black,
+          ),
+          textSelectionTheme: const TextSelectionThemeData(
+            cursorColor: Colors.white,
+            selectionColor: Color(0x80000000),
+            selectionHandleColor: Colors.white,
+          ),
+          inputDecorationTheme: const InputDecorationTheme(
+            labelStyle: TextStyle(
+              color: Color(0xFF7A9CA3),
+              fontSize: 16,
             ),
-            dialogTheme: const DialogTheme(
-              backgroundColor: Colors.black,
-            ),
-            textSelectionTheme: const TextSelectionThemeData(
-              cursorColor: Colors.white,
-              selectionColor: Color(0x80000000),
-              selectionHandleColor: Colors.white,
-            ),
-            inputDecorationTheme: const InputDecorationTheme(
-              labelStyle: TextStyle(
-                color: Color(0xFF7A9CA3),
-                fontSize: 16,
-              ),
-              floatingLabelStyle: TextStyle(
-                color: Color(0xFF7A9CA3),
-                fontSize: 16,
-              ),
+            floatingLabelStyle: TextStyle(
+              color: Color(0xFF7A9CA3),
+              fontSize: 16,
             ),
           ),
-          child: child!,
-        );
-      },
-    );
+          timePickerTheme: const TimePickerThemeData(
+            backgroundColor: Colors.black,
+            dialHandColor: Color(0xFF7A9CA3),
+            dialTextColor: Colors.white,
+            entryModeIconColor: Color(0xFF7A9CA3),
+            hourMinuteTextColor: Colors.white,
+            hourMinuteColor: Color(0xFF7A9CA3),
+            hourMinuteTextStyle: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+            ),
+            helpTextStyle: TextStyle(color: Color(0xFF7A9CA3)),
+            dayPeriodColor: Color(0xFF7A9CA3),
+            dayPeriodTextColor: Colors.white,
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
 
-    if (picked != null && picked != selectedWakeTime) {
-      setState(() {
-        selectedWakeTime = picked;
-      });
-    }
+  if (picked != null && picked != selectedWakeTime) {
+    setState(() {
+      selectedWakeTime = picked;
+    });
   }
+}
+
 
   Future<void> selectTimer(BuildContext context) async {
     timerHoursController.text = selectedTimerMinutes != null
