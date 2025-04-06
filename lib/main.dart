@@ -617,7 +617,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   // Die anderen Methoden wie selectWakeTime, selectTimer, sendWakeTimeToESP, sendTimerToESP, clearWakeTimeOrTimer und build folgen jetzt...
 // DeviceControlPage - Kompletter Code Teil 2
 Future<void> selectWakeTime(BuildContext context) async {
-  final blaugrau = const Color(0xFF7A9CA3);
+  
 
   bool useWheelPicker = false; // Standardmäßig Tastatureingabe
   final hourController = TextEditingController(
