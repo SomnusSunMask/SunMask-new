@@ -880,7 +880,25 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
           SizedBox(
             width: buttonWidth,
             child: ElevatedButton(
-              style: Elevaclass DeviceOverviewPage extends StatefulWidget {
+              style: ElevatedButton.styleFrom(
+                backgroundColor: blaugrau,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: clearWakeTimeOrTimer,
+              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------------
+// DeviceOverviewPage
+// -------------------------
+
+class DeviceOverviewPage extends StatefulWidget {
   final String deviceId;
   final String? lastWakeTime;
   final int? lastTimerMinutes;
@@ -1120,22 +1138,3 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
-tedButton.styleFrom(
-                backgroundColor: blaugrau,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: clearWakeTimeOrTimer,
-              child: const Text("Weckzeit/Timer löschen", style: TextStyle(fontSize: 18)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// -------------------------
-// DeviceOverviewPage
-// -------------------------
-
-
