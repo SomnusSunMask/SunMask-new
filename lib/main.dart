@@ -415,70 +415,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     startCountdownTimer();
   }
 
-  @override
-  void dispose() {
-    countdownTimer?.cancel();
-    timerCountdown?.cancel();
-    try {
-      widget.device.disconnect();
-    } catch (e) {
-      debugPrint('⚠️ Fehler beim Trennen der Verbindung (dispose): $e');
-    }
-    super.dispose();
-  }
-
-  void readBatteryLevel() async {
-    if (widget.batteryCharacteristic != null) {
-      try {
-        await widget.batteryCharacteristic!.read();
-        final value = widget.batteryCharacteristic!.lastValue;
-        if (value.isNotEmpty) {
-          final percent = int.tryParse(utf8.decode(value));
-          if (percent != null && mounted) {
-            setState(() {
-              batteryLevel = percent;
-            });
-          }
-        }
-      } catch (e) {
-        debugPrint("⚠️ Akku lesen fehlgeschlagen: $e");
-      }
-    }
-  }
-
-  void listenToBatteryNotifications() async {
-    if (widget.batteryCharacteristic != null) {
-      try {
-        await widget.batteryCharacteristic!.setNotifyValue(true);
-        widget.batteryCharacteristic!.onValueReceived.listen((value) {
-          final percent = int.tryParse(utf8.decode(value));
-          if (percent != null && mounted) {
-            setState(() {
-              batteryLevel = percent;
-            });
-          }
-        });
-      } catch (e) {
-        debugPrint("⚠️ Akku-Benachrichtigungen fehlgeschlagen: $e");
-      }
-    }
-  }
-
-  void startCountdownTimer() {
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  void startTimerCountdown() {
-    timerCountdown?.cancel();
-    timerCountdown = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {});
-      }
-    });
-  }
-
   void loadSavedData() async {
     final prefs = await SharedPreferences.getInstance();
     final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
@@ -509,6 +445,45 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     });
   }
 
+  void startCountdownTimer() {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      checkWakeTimeExpiration();
+      if (mounted) setState(() {});
+    });
+  }
+
+  void checkWakeTimeExpiration() {
+    if (sentWakeTime != null) {
+      final now = DateTime.now();
+      final wakeDateTime = DateTime(now.year, now.month, now.day, sentWakeTime!.hour, sentWakeTime!.minute);
+      if (now.isAfter(wakeDateTime)) {
+        if (!wakeTimeExpired) {
+          setState(() {
+            wakeTimeExpired = true;
+          });
+        }
+      } else {
+        if (wakeTimeExpired) {
+          setState(() {
+            wakeTimeExpired = false;
+          });
+        }
+      }
+    }
+  }
+
+  String get wakeTimeText {
+    if (sentWakeTime != null) {
+      final timeFormatted = "${sentWakeTime!.hour.toString().padLeft(2, '0')}:${sentWakeTime!.minute.toString().padLeft(2, '0')}";
+      if (wakeTimeExpired) {
+        return "Weckzeit abgelaufen ($timeFormatted)";
+      } else {
+        return timeFormatted;
+      }
+    }
+    return "Nicht aktiv";
+  }
+
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
@@ -517,6 +492,9 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     if (minutes > 0 || hours == 0) parts.add("$minutes Minuten");
     return parts.join(", ");
   }
+
+  // Hier geht dein Code dann ganz normal weiter...
+
 
   String wakeTimeButtonText() {
     if (selectedWakeTime != null) {
