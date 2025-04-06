@@ -313,59 +313,76 @@ class _BLEHomePageState extends State<BLEHomePage> {
               : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
 
           return ListTile(
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: blaugrau),
+  title: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Expanded(
+        child: Text(
+          "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: blaugrau),
+        ),
+      ),
+      if (loadingDevices.contains(device))
+        const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      if (storedDevices.contains(id)) ...[
+        if (isAvailable)
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: blaugrau),
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              final wakeTime = prefs.getString('lastWakeTime_$id');
+              final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+              if (!context.mounted) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DeviceOverviewPage(
+                    deviceId: id,
+                    lastWakeTime: wakeTime,
+                    lastTimerMinutes: timerMinutes,
                   ),
                 ),
-                if (loadingDevices.contains(device))
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                if (storedDevices.contains(id))
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: blaugrau),
-                    onPressed: () => removeStoredDevice(id),
-                  ),
-              ],
-            ),
-            subtitle: Text(
-              id,
-              style: const TextStyle(color: blaugrau),
-            ),
-            onTap: () async {
-              if (isAvailable && !loadingDevices.contains(device)) {
-                connectToDevice(device);
-              } else if (storedDevices.contains(id)) {
-                final prefs = await SharedPreferences.getInstance();
-                final wakeTime = prefs.getString('lastWakeTime_$id');
-                final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-                if (!context.mounted) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DeviceOverviewPage(
-                      deviceId: id,
-                      lastWakeTime: wakeTime,
-                      lastTimerMinutes: timerMinutes,
-                    ),
-                  ),
-                );
-              }
+              );
             },
-          );
-        },
-      ),
-    );
-  }
-}
+          ),
+        IconButton(
+          icon: const Icon(Icons.delete, color: blaugrau),
+          onPressed: () => removeStoredDevice(id),
+        ),
+      ],
+    ],
+  ),
+  subtitle: Text(
+    id,
+    style: const TextStyle(color: blaugrau),
+  ),
+  onTap: () async {
+    if (isAvailable && !loadingDevices.contains(device)) {
+      connectToDevice(device);
+    } else if (storedDevices.contains(id)) {
+      final prefs = await SharedPreferences.getInstance();
+      final wakeTime = prefs.getString('lastWakeTime_$id');
+      final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+      if (!context.mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DeviceOverviewPage(
+            deviceId: id,
+            lastWakeTime: wakeTime,
+            lastTimerMinutes: timerMinutes,
+          ),
+        ),
+      );
+    }
+  },
+),
+
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
 
