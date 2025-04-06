@@ -968,76 +968,67 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   BluetoothDevice? targetDevice;
   late final StreamSubscription<List<ScanResult>> scanSubscription;
 
-  late Timer updateTimer;
-  Duration? remainingTimer;
-  DateTime? targetWakeDateTime;
+  DateTime? timerEndTime;
+  Timer? countdownTimer;
 
   @override
   void initState() {
     super.initState();
-
-    // Timer initialisieren
     if (widget.lastTimerMinutes != null) {
-      remainingTimer = Duration(minutes: widget.lastTimerMinutes!);
+      timerEndTime = DateTime.now().add(Duration(minutes: widget.lastTimerMinutes!));
+      startCountdownTimer();
     }
-
-    // Weckzeit initialisieren
-    if (widget.lastWakeTime != null) {
-      final now = DateTime.now();
-      final parts = widget.lastWakeTime!.split(':');
-      if (parts.length == 2) {
-        final hour = int.tryParse(parts[0]);
-        final minute = int.tryParse(parts[1]);
-        if (hour != null && minute != null) {
-          targetWakeDateTime = DateTime(now.year, now.month, now.day, hour, minute);
-          if (targetWakeDateTime!.isBefore(now)) {
-            targetWakeDateTime = targetWakeDateTime!.add(const Duration(days: 1));
-          }
-        }
-      }
-    }
-
-    updateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() {
-        if (remainingTimer != null && remainingTimer!.inSeconds > 0) {
-          remainingTimer = remainingTimer! - const Duration(seconds: 1);
-        }
-      });
-    });
   }
 
   @override
   void dispose() {
-    updateTimer.cancel();
     scanSubscription.cancel();
+    countdownTimer?.cancel();
     super.dispose();
   }
 
+  void startCountdownTimer() {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   String get wakeTimeText {
-    if (targetWakeDateTime != null) {
-      final now = DateTime.now();
-      if (now.isAfter(targetWakeDateTime!)) {
-        return "Weckzeit abgelaufen (${widget.lastWakeTime})";
-      } else {
-        return widget.lastWakeTime!;
+    if (widget.lastWakeTime != null) {
+      final now = TimeOfDay.now();
+      final parts = widget.lastWakeTime!.split(':');
+      if (parts.length == 2) {
+        final int hour = int.tryParse(parts[0]) ?? 0;
+        final int minute = int.tryParse(parts[1]) ?? 0;
+        final wakeTime = TimeOfDay(hour: hour, minute: minute);
+
+        final nowMinutes = now.hour * 60 + now.minute;
+        final wakeMinutes = wakeTime.hour * 60 + wakeTime.minute;
+
+        if (nowMinutes >= wakeMinutes) {
+          return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+        }
       }
+      return widget.lastWakeTime!;
     }
     return "Nicht aktiv";
   }
 
   String get timerText {
-    if (remainingTimer != null && remainingTimer!.inSeconds > 0) {
-      final hours = remainingTimer!.inHours;
-      final minutes = remainingTimer!.inMinutes.remainder(60);
-      String result = '';
-      if (hours > 0) result += '$hours Stunden ';
-      result += '$minutes Minuten';
-      return result.trim();
-    } else if (widget.lastTimerMinutes != null) {
-      return "Timer abgelaufen (${widget.lastTimerMinutes} Minuten)";
-    } else {
-      return "Nicht aktiv";
+    if (widget.lastTimerMinutes != null && timerEndTime != null) {
+      final now = DateTime.now();
+      if (now.isAfter(timerEndTime!)) {
+        final originalHours = widget.lastTimerMinutes! ~/ 60;
+        final originalMinutes = widget.lastTimerMinutes! % 60;
+        return "Timer abgelaufen (${originalHours}h ${originalMinutes}min)";
+      } else {
+        final remaining = timerEndTime!.difference(now);
+        final hours = remaining.inHours;
+        final minutes = remaining.inMinutes % 60;
+        return "$hours Stunden $minutes Minuten";
+      }
     }
+    return "Nicht aktiv";
   }
 
   void showErrorSnackbar(String message) {
@@ -1170,7 +1161,9 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) => blaugrau),
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                    return blaugrau;
+                  }),
                   foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
                   overlayColor: WidgetStateProperty.all<Color>(Colors.transparent),
                 ),
@@ -1187,4 +1180,3 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
-
