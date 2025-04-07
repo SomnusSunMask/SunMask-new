@@ -959,6 +959,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
 // DeviceOverviewPage – Kompletter Code, fertig angepasst
 
+// DeviceOverviewPage – Neuer, sauberer Aufbau
+
 class DeviceOverviewPage extends StatefulWidget {
   final String deviceId;
   final String? lastWakeTime;
@@ -978,38 +980,27 @@ class DeviceOverviewPage extends StatefulWidget {
 class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   bool isConnecting = false;
   BluetoothDevice? targetDevice;
-  late final StreamSubscription<List<ScanResult>> scanSubscription;
+  StreamSubscription<List<ScanResult>>? scanSubscription;
 
   Timer? countdownTimer;
-  DateTime? wakeTimerEndTime;
+  DateTime? wakeTimerTarget;
   bool wakeTimeExpired = false;
 
   @override
   void initState() {
     super.initState();
-    calculateWakeTimeTimer();
+    calculateWakeTimer();
     startCountdownTimer();
   }
 
   @override
   void dispose() {
     countdownTimer?.cancel();
-    scanSubscription.cancel();
+    scanSubscription?.cancel();
     super.dispose();
   }
 
-  void startCountdownTimer() {
-  countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-    if (mounted) {
-      checkWakeTimeExpired();
-      checkTimerExpired();
-      setState(() {});
-    }
-  });
-}
-
-
-  void calculateWakeTimeTimer() {
+  void calculateWakeTimer() {
     if (widget.lastWakeTime != null) {
       final parts = widget.lastWakeTime!.split(':');
       if (parts.length == 2) {
@@ -1017,24 +1008,27 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
         final minute = int.tryParse(parts[1]) ?? 0;
         final now = DateTime.now();
 
-        DateTime targetTime = DateTime(now.year, now.month, now.day, hour, minute);
-        if (targetTime.isBefore(now)) {
-          targetTime = targetTime.add(const Duration(days: 1));
+        DateTime target = DateTime(now.year, now.month, now.day, hour, minute);
+        if (target.isBefore(now)) {
+          target = target.add(const Duration(days: 1));
         }
 
-        wakeTimerEndTime = targetTime;
+        wakeTimerTarget = target;
       }
     }
   }
 
-  void checkWakeTimeExpired() {
-    if (wakeTimerEndTime != null && DateTime.now().isAfter(wakeTimerEndTime!)) {
-      if (!wakeTimeExpired) {
-        setState(() {
-          wakeTimeExpired = true;
-        });
+  void startCountdownTimer() {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (wakeTimerTarget != null && DateTime.now().isAfter(wakeTimerTarget!)) {
+        if (!wakeTimeExpired) {
+          setState(() {
+            wakeTimeExpired = true;
+          });
+        }
       }
-    }
+      setState(() {});
+    });
   }
 
   String get wakeTimeText {
@@ -1050,9 +1044,9 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
   String get timerText {
     if (widget.lastTimerMinutes != null) {
-      final originalHours = (widget.lastTimerMinutes! ~/ 60);
-      final originalMinutes = (widget.lastTimerMinutes! % 60);
-      return "$originalHours Stunden $originalMinutes Minuten";
+      final h = widget.lastTimerMinutes! ~/ 60;
+      final m = widget.lastTimerMinutes! % 60;
+      return "$h Stunden $m Minuten";
     }
     return "Nicht aktiv";
   }
@@ -1065,9 +1059,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   Future<void> connectToDeviceById() async {
-    setState(() {
-      isConnecting = true;
-    });
+    setState(() => isConnecting = true);
 
     try {
       await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
@@ -1077,7 +1069,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
           if (result.device.remoteId.str == widget.deviceId) {
             targetDevice = result.device;
             await FlutterBluePlus.stopScan();
-            await scanSubscription.cancel();
+            await scanSubscription?.cancel();
             await establishConnection(targetDevice!);
             return;
           }
@@ -1086,47 +1078,39 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
       await Future.delayed(const Duration(seconds: 6));
 
-      if (targetDevice == null) {
-        throw Exception("Gerät nicht gefunden");
-      }
+      if (targetDevice == null) throw Exception("Gerät nicht gefunden");
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Starte die SunMask neu.");
     } finally {
-      if (mounted) {
-        setState(() {
-          isConnecting = false;
-        });
-      }
+      if (mounted) setState(() => isConnecting = false);
     }
   }
 
   Future<void> establishConnection(BluetoothDevice device) async {
     try {
       await device.connect(timeout: const Duration(seconds: 6));
-      List<BluetoothService> services = await device.discoverServices();
+      final services = await device.discoverServices();
 
-      BluetoothCharacteristic? alarmCharacteristic;
-      BluetoothCharacteristic? timerCharacteristic;
-      BluetoothCharacteristic? batteryCharacteristic;
+      BluetoothCharacteristic? alarmChar;
+      BluetoothCharacteristic? timerChar;
+      BluetoothCharacteristic? batteryChar;
 
       for (var service in services) {
-        for (var characteristic in service.characteristics) {
-          final uuid = characteristic.uuid.toString();
+        for (var char in service.characteristics) {
+          final uuid = char.uuid.toString();
           if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
-            alarmCharacteristic = characteristic;
+            alarmChar = char;
           } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
-            timerCharacteristic = characteristic;
+            timerChar = char;
           } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
-            batteryCharacteristic = characteristic;
+            batteryChar = char;
           }
         }
       }
 
-      if (alarmCharacteristic == null || timerCharacteristic == null) {
-        throw Exception("Charakteristiken nicht gefunden");
-      }
+      if (alarmChar == null || timerChar == null) throw Exception("Charakteristiken nicht gefunden");
 
       if (!mounted) return;
 
@@ -1135,16 +1119,16 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
         MaterialPageRoute(
           builder: (_) => DeviceControlPage(
             device: device,
-            alarmCharacteristic: alarmCharacteristic,
-            timerCharacteristic: timerCharacteristic,
-            batteryCharacteristic: batteryCharacteristic,
+            alarmCharacteristic: alarmChar,
+            timerCharacteristic: timerChar,
+            batteryCharacteristic: batteryChar,
           ),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Starte die SunMask neu.");
     }
   }
 
@@ -1204,3 +1188,4 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     );
   }
 }
+
