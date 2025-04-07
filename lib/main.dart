@@ -537,18 +537,16 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   void checkWakeTimeExpired() {
-    if (sentWakeTime != null) {
-      final now = TimeOfDay.now();
-      if (now.hour > sentWakeTime!.hour ||
-          (now.hour == sentWakeTime!.hour && now.minute >= sentWakeTime!.minute)) {
-        if (!wakeTimeExpired) {
-          setState(() {
-            wakeTimeExpired = true;
-          });
-        }
-      }
+  if (sentWakeTime != null && !wakeTimeExpired) {
+    final now = TimeOfDay.now();
+    if (now.hour == sentWakeTime!.hour && now.minute == sentWakeTime!.minute) {
+      setState(() {
+        wakeTimeExpired = true;
+      });
     }
   }
+}
+
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
