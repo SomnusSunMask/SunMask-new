@@ -423,6 +423,10 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   DateTime? timerStartTime;
   int? batteryLevel;
   double buttonWidth = double.infinity;
+  Duration? wakeTimeDuration;
+  Timer? wakeTimeCountdown;
+  DateTime? wakeTimeStartTime;
+
 
   Timer? countdownTimer;
   Timer? timerCountdown;
@@ -443,6 +447,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   void dispose() {
     countdownTimer?.cancel();
     timerCountdown?.cancel();
+    wakeTimeCountdown?.cancel();
     try {
       widget.device.disconnect();
     } catch (e) {
@@ -963,21 +968,43 @@ Future<void> selectWakeTime(BuildContext context) async {
         await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
 
         if (mounted) {
-          setState(() {
-            sentWakeTime = selectedWakeTime;
-            sentTimerMinutes = null;
-            wakeTimeExpired = false;
-            timerExpired = false;
-            timerStartTime = null;
-          });
-        }
+  setState(() {
+    sentWakeTime = selectedWakeTime;
+    sentTimerMinutes = null;
+    wakeTimeExpired = false;
+    timerExpired = false;
+    timerStartTime = null;
 
-        debugPrint("✅ Weckzeit gesendet: $combinedData");
-      } catch (e) {
-        debugPrint("⚠️ Senden fehlgeschlagen: $e");
-      }
+    // Berechne die Differenz zur eingestellten WakeTime
+    final now = DateTime.now();
+    DateTime targetTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      selectedWakeTime!.hour,
+      selectedWakeTime!.minute,
+    );
+
+    if (targetTime.isBefore(now)) {
+      // Wenn die WakeTime in der Vergangenheit liegt: auf nächsten Tag setzen
+      targetTime = targetTime.add(const Duration(days: 1));
     }
-  }
+
+    wakeTimeStartTime = now;
+    wakeTimeDuration = targetTime.difference(now);
+
+    // Timer starten
+    wakeTimeCountdown?.cancel();
+    wakeTimeCountdown = Timer(wakeTimeDuration!, () {
+      if (mounted) {
+        setState(() {
+          wakeTimeExpired = true;
+        });
+      }
+    });
+  });
+}
+
 
   void sendTimerToESP() async {
     if (!widget.device.isConnected) {
