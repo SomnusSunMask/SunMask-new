@@ -489,15 +489,19 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-  void startCountdownTimer() {
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        checkWakeTimeExpired();
-        checkTimerExpired();
-        setState(() {});
-      }
-    });
+  void checkWakeTimeExpired() {
+  if (sentWakeTime != null && wakeTimeStartTime != null && wakeTimeDurationMinutes != null) {
+    final elapsed = DateTime.now().difference(wakeTimeStartTime!);
+    final remaining = Duration(minutes: wakeTimeDurationMinutes!) - elapsed;
+
+    if (remaining.isNegative && !wakeTimeExpired) {
+      setState(() {
+        wakeTimeExpired = true;
+      });
+    }
   }
+}
+
 
   void loadSavedData() async {
     final prefs = await SharedPreferences.getInstance();
