@@ -750,10 +750,12 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   now.day,
   selectedWakeTime!.hour,
   selectedWakeTime!.minute,
-).add(const Duration(seconds: 1));
-        if (target.isBefore(now)) {
-          target = target.add(const Duration(days: 1));
-        }
+).add(const Duration(seconds: 1)); // Option 2
+
+if (target.isBefore(now) || target.isAtSameMomentAs(now)) { // Option 1
+  target = target.add(const Duration(days: 1));
+}
+
 
         if (mounted) {
           setState(() {
