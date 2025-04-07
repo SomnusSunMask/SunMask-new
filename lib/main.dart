@@ -431,6 +431,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   bool wakeTimeExpired = false;
   bool timerExpired = false;
+  double buttonWidth = double.infinity;
+
 
   @override
   void initState() {
