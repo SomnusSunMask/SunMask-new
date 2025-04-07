@@ -426,6 +426,10 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   DateTime? timerStartTime;
   int? batteryLevel;
   double buttonWidth = double.infinity;
+  DateTime? wakeTimeStartTime;
+int? wakeTimeDurationMinutes;
+bool wakeTimeExpired = false;
+
 
   Timer? countdownTimer;
 
