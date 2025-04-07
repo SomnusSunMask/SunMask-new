@@ -1153,21 +1153,22 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   String get wakeTimeText {
-    if (widget.lastWakeTime != null) {
-      final now = TimeOfDay.now();
-      final parts = widget.lastWakeTime!.split(':');
-      if (parts.length == 2) {
-        final hour = int.tryParse(parts[0]) ?? 0;
-        final minute = int.tryParse(parts[1]) ?? 0;
-        if (now.hour > hour || (now.hour == hour && now.minute >= minute)) {
-          return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
-        } else {
-          return widget.lastWakeTime!;
-        }
+  if (widget.lastWakeTime != null) {
+    final now = TimeOfDay.now();
+    final parts = widget.lastWakeTime!.split(':');
+    if (parts.length == 2) {
+      final hour = int.tryParse(parts[0]) ?? 0;
+      final minute = int.tryParse(parts[1]) ?? 0;
+      if (now.hour == hour && now.minute == minute) {
+        return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+      } else {
+        return widget.lastWakeTime!;
       }
     }
-    return "Nicht aktiv";
   }
+  return "Nicht aktiv";
+}
+
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
