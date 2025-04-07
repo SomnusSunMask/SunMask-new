@@ -536,15 +536,16 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 // DeviceControlPage – Neuer, sauberer Aufbau – Teil 2
 
   void checkWakeTimeExpired() {
-    if (wakeTimeTarget != null && !wakeTimeExpired) {
-      final now = DateTime.now();
-      if (now.isAfter(wakeTimeTarget!)) {
-        setState(() {
-          wakeTimeExpired = true;
-        });
-      }
+  if (wakeTimeTarget != null && !wakeTimeExpired) {
+    final now = DateTime.now();
+    if (now.isAfter(wakeTimeTarget!) || now.isAtSameMomentAs(wakeTimeTarget!)) {
+      setState(() {
+        wakeTimeExpired = true;
+      });
     }
   }
+}
+
 
   void checkTimerExpired() {
     if (sentTimerMinutes != null && timerStartTime != null && !timerExpired) {
