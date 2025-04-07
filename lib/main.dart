@@ -392,9 +392,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
 
-// DeviceControlPage - Kompletter Code
-
-// DeviceControlPage - Kompletter, geprüfter Code
+// DeviceControlPage – Neuer, sauberer Aufbau – Teil 1
 
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
@@ -420,16 +418,14 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   TimeOfDay? selectedWakeTime;
   int? selectedTimerMinutes;
+
   TimeOfDay? sentWakeTime;
   int? sentTimerMinutes;
-  DateTime? wakeTimeTimerTarget;
-  DateTime? timerStartTime;
-  int? batteryLevel;
-  double buttonWidth = double.infinity;
-  DateTime? wakeTimeStartTime;
-int? wakeTimeDurationMinutes;
-bool wakeTimeExpired = false;
 
+  DateTime? wakeTimeTarget;
+  DateTime? timerStartTime;
+
+  int? batteryLevel;
 
   Timer? countdownTimer;
 
@@ -454,6 +450,16 @@ bool wakeTimeExpired = false;
       debugPrint('⚠️ Fehler beim Trennen der Verbindung (dispose): $e');
     }
     super.dispose();
+  }
+
+  void startCountdownTimer() {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        checkWakeTimeExpired();
+        checkTimerExpired();
+        setState(() {});
+      }
+    });
   }
 
   void readBatteryLevel() async {
@@ -493,20 +499,6 @@ bool wakeTimeExpired = false;
     }
   }
 
-  void checkWakeTimeExpired() {
-  if (sentWakeTime != null && wakeTimeStartTime != null && wakeTimeDurationMinutes != null) {
-    final elapsed = DateTime.now().difference(wakeTimeStartTime!);
-    final remaining = Duration(minutes: wakeTimeDurationMinutes!) - elapsed;
-
-    if (remaining.isNegative && !wakeTimeExpired) {
-      setState(() {
-        wakeTimeExpired = true;
-      });
-    }
-  }
-}
-
-
   void loadSavedData() async {
     final prefs = await SharedPreferences.getInstance();
     final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
@@ -528,7 +520,7 @@ bool wakeTimeExpired = false;
             if (target.isBefore(now)) {
               target = target.add(const Duration(days: 1));
             }
-            wakeTimeTimerTarget = target;
+            wakeTimeTarget = target;
           }
         }
       }
@@ -539,7 +531,18 @@ bool wakeTimeExpired = false;
       }
     });
   }
+// DeviceControlPage – Neuer, sauberer Aufbau – Teil 2
 
+  void checkWakeTimeExpired() {
+    if (wakeTimeTarget != null && !wakeTimeExpired) {
+      final now = DateTime.now();
+      if (now.isAfter(wakeTimeTarget!)) {
+        setState(() {
+          wakeTimeExpired = true;
+        });
+      }
+    }
+  }
 
   void checkTimerExpired() {
     if (sentTimerMinutes != null && timerStartTime != null && !timerExpired) {
@@ -615,7 +618,6 @@ bool wakeTimeExpired = false;
       ),
     );
   }
-// DeviceControlPage - Kompletter Code Teil 2 (Fortsetzung)
 
   Future<void> selectWakeTime(BuildContext context) async {
     final picked = await showTimePicker(
@@ -714,6 +716,7 @@ bool wakeTimeExpired = false;
       }
     });
   }
+// DeviceControlPage – Neuer, sauberer Aufbau – Teil 3
 
   void sendWakeTimeToESP() async {
     if (!widget.device.isConnected) {
@@ -737,7 +740,7 @@ bool wakeTimeExpired = false;
         await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
         await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
 
-        // Interne Timer-Berechnung (App-intern!)
+        // Interner Timer nur App-intern!
         DateTime target = DateTime(now.year, now.month, now.day, selectedWakeTime!.hour, selectedWakeTime!.minute);
         if (target.isBefore(now)) {
           target = target.add(const Duration(days: 1));
@@ -746,7 +749,7 @@ bool wakeTimeExpired = false;
         if (mounted) {
           setState(() {
             sentWakeTime = selectedWakeTime;
-            wakeTimeTimerTarget = target;
+            wakeTimeTarget = target;
             wakeTimeExpired = false;
             sentTimerMinutes = null;
             timerStartTime = null;
@@ -784,7 +787,7 @@ bool wakeTimeExpired = false;
             timerExpired = false;
             timerStartTime = DateTime.now();
             sentWakeTime = null;
-            wakeTimeTimerTarget = null;
+            wakeTimeTarget = null;
             wakeTimeExpired = false;
           });
         }
@@ -815,7 +818,7 @@ bool wakeTimeExpired = false;
       if (mounted) {
         setState(() {
           sentWakeTime = null;
-          wakeTimeTimerTarget = null;
+          wakeTimeTarget = null;
           wakeTimeExpired = false;
           sentTimerMinutes = null;
           timerExpired = false;
@@ -828,7 +831,6 @@ bool wakeTimeExpired = false;
       debugPrint("⚠️ Löschen fehlgeschlagen: $e");
     }
   }
-// DeviceControlPage - Kompletter Code Teil 3 (Finale)
 
   @override
   Widget build(BuildContext context) {
@@ -900,6 +902,8 @@ bool wakeTimeExpired = false;
               ),
             ],
           ),
+// DeviceControlPage – Neuer, sauberer Aufbau – Teil 4
+
           const SizedBox(height: 20),
           Column(
             children: [
@@ -949,6 +953,7 @@ bool wakeTimeExpired = false;
     );
   }
 }
+
 
 
 
