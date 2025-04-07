@@ -744,7 +744,13 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
 
         // Interner Timer nur App-intern!
-        DateTime target = DateTime(now.year, now.month, now.day, selectedWakeTime!.hour, selectedWakeTime!.minute);
+        DateTime target = DateTime(
+  now.year,
+  now.month,
+  now.day,
+  selectedWakeTime!.hour,
+  selectedWakeTime!.minute,
+).add(const Duration(seconds: 1));
         if (target.isBefore(now)) {
           target = target.add(const Duration(days: 1));
         }
