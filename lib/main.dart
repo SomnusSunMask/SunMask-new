@@ -512,48 +512,61 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   }
 
   void loadSavedData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
-    final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
-    final timerStartTimestamp = prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
+  final prefs = await SharedPreferences.getInstance();
+  final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
+  final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
+  final timerStartTimestamp = prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
 
-    if (!mounted) return;
+  if (!mounted) return;
 
-    setState(() {
-      if (wakeTime != null) {
-        final parts = wakeTime.split(':');
-        if (parts.length == 2) {
-          final hour = int.tryParse(parts[0]);
-          final minute = int.tryParse(parts[1]);
-          if (hour != null && minute != null) {
-            sentWakeTime = TimeOfDay(hour: hour, minute: minute);
+  setState(() {
+    if (wakeTime != null) {
+      final parts = wakeTime.split(':');
+      if (parts.length == 2) {
+        final hour = int.tryParse(parts[0]);
+        final minute = int.tryParse(parts[1]);
+        if (hour != null && minute != null) {
+          sentWakeTime = TimeOfDay(hour: hour, minute: minute);
+
+          // >>> NEU: Berechnung für internen WakeTime-Timer
+          final now = DateTime.now();
+          DateTime targetTime = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            hour,
+            minute,
+          );
+
+          if (targetTime.isBefore(now)) {
+            targetTime = targetTime.add(const Duration(days: 1));
           }
-        }
-      }
 
-      if (timerMinutes != null) {
-        sentTimerMinutes = timerMinutes;
-      }
+          wakeTimeStartTime = now;
+          wakeTimeDuration = targetTime.difference(now);
 
-      if (timerStartTimestamp != null) {
-        timerStartTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp);
-      }
-    });
-  }
-
-  void checkWakeTimeExpired() {
-    if (sentWakeTime != null) {
-      final now = TimeOfDay.now();
-      if (now.hour > sentWakeTime!.hour ||
-          (now.hour == sentWakeTime!.hour && now.minute >= sentWakeTime!.minute)) {
-        if (!wakeTimeExpired) {
-          setState(() {
-            wakeTimeExpired = true;
+          wakeTimeCountdown?.cancel();
+          wakeTimeCountdown = Timer(wakeTimeDuration!, () {
+            if (mounted) {
+              setState(() {
+                wakeTimeExpired = true;
+              });
+            }
           });
         }
       }
     }
-  }
+
+    if (timerMinutes != null) {
+      sentTimerMinutes = timerMinutes;
+    }
+
+    if (timerStartTimestamp != null) {
+      timerStartTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp);
+    }
+  });
+}
+
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
