@@ -1211,6 +1211,7 @@ Future<void> selectWakeTime(BuildContext context) async {
 // -------------------------
 // DeviceOverviewPage
 // -------------------------
+// DeviceOverviewPage – Kompletter Code, fertig angepasst
 
 class DeviceOverviewPage extends StatefulWidget {
   final String deviceId;
@@ -1233,14 +1234,14 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   BluetoothDevice? targetDevice;
   late final StreamSubscription<List<ScanResult>> scanSubscription;
 
-  int? lastTimerMinutes;
-  int? timerStartTimestamp;
   Timer? countdownTimer;
+  DateTime? wakeTimerEndTime;
+  bool wakeTimeExpired = false;
 
   @override
   void initState() {
     super.initState();
-    loadTimerStartTime();
+    calculateWakeTimeTimer();
     startCountdownTimer();
   }
 
@@ -1253,59 +1254,57 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
   void startCountdownTimer() {
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
+      if (mounted) {
+        checkWakeTimeExpired();
+        setState(() {});
+      }
     });
   }
 
-  Future<void> loadTimerStartTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      lastTimerMinutes = widget.lastTimerMinutes;
-      timerStartTimestamp = prefs.getInt('timerStartTime_${widget.deviceId}');
-    });
-  }
-
-  String get wakeTimeText {
+  void calculateWakeTimeTimer() {
     if (widget.lastWakeTime != null) {
-      final now = TimeOfDay.now();
       final parts = widget.lastWakeTime!.split(':');
       if (parts.length == 2) {
         final hour = int.tryParse(parts[0]) ?? 0;
         final minute = int.tryParse(parts[1]) ?? 0;
-        if (now.hour > hour || (now.hour == hour && now.minute >= minute)) {
-          return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
-        } else {
-          return widget.lastWakeTime!;
+        final now = DateTime.now();
+
+        DateTime targetTime = DateTime(now.year, now.month, now.day, hour, minute);
+        if (targetTime.isBefore(now)) {
+          targetTime = targetTime.add(const Duration(days: 1));
         }
+
+        wakeTimerEndTime = targetTime;
+      }
+    }
+  }
+
+  void checkWakeTimeExpired() {
+    if (wakeTimerEndTime != null && DateTime.now().isAfter(wakeTimerEndTime!)) {
+      if (!wakeTimeExpired) {
+        setState(() {
+          wakeTimeExpired = true;
+        });
+      }
+    }
+  }
+
+  String get wakeTimeText {
+    if (widget.lastWakeTime != null) {
+      if (wakeTimeExpired) {
+        return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+      } else {
+        return widget.lastWakeTime!;
       }
     }
     return "Nicht aktiv";
   }
 
-  String formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final parts = <String>[];
-    if (hours > 0) parts.add("$hours Stunden");
-    if (minutes > 0 || hours == 0) parts.add("$minutes Minuten");
-    return parts.join(", ");
-  }
-
   String get timerText {
-    if (lastTimerMinutes != null && timerStartTimestamp != null) {
-      final startTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp!);
-      final now = DateTime.now();
-      final totalDuration = Duration(minutes: lastTimerMinutes!);
-      final elapsed = now.difference(startTime);
-      final remaining = totalDuration - elapsed;
-
-      if (remaining.isNegative) {
-        final originalHours = (lastTimerMinutes! ~/ 60);
-        final originalMinutes = (lastTimerMinutes! % 60);
-        return "Timer abgelaufen (${originalHours}h ${originalMinutes}min)";
-      } else {
-        return formatDuration(remaining);
-      }
+    if (widget.lastTimerMinutes != null) {
+      final originalHours = (widget.lastTimerMinutes! ~/ 60);
+      final originalMinutes = (widget.lastTimerMinutes! % 60);
+      return "$originalHours Stunden $originalMinutes Minuten";
     }
     return "Nicht aktiv";
   }
