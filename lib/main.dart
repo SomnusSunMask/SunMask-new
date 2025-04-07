@@ -540,16 +540,6 @@ bool wakeTimeExpired = false;
     });
   }
 
-  void checkWakeTimeExpired() {
-    if (wakeTimeTimerTarget != null && !wakeTimeExpired) {
-      final now = DateTime.now();
-      if (now.isAfter(wakeTimeTimerTarget!)) {
-        setState(() {
-          wakeTimeExpired = true;
-        });
-      }
-    }
-  }
 
   void checkTimerExpired() {
     if (sentTimerMinutes != null && timerStartTime != null && !timerExpired) {
@@ -1004,13 +994,15 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   void startCountdownTimer() {
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        checkWakeTimeExpired();
-        setState(() {});
-      }
-    });
-  }
+  countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    if (mounted) {
+      checkWakeTimeExpired();
+      checkTimerExpired();
+      setState(() {});
+    }
+  });
+}
+
 
   void calculateWakeTimeTimer() {
     if (widget.lastWakeTime != null) {
