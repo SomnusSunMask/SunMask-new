@@ -394,6 +394,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
 // DeviceControlPage - Kompletter Code
 
+// DeviceControlPage - Kompletter, geprüfter Code
+
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
   final BluetoothCharacteristic? alarmCharacteristic;
@@ -420,16 +422,12 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   int? selectedTimerMinutes;
   TimeOfDay? sentWakeTime;
   int? sentTimerMinutes;
+  DateTime? wakeTimeTimerTarget;
   DateTime? timerStartTime;
   int? batteryLevel;
   double buttonWidth = double.infinity;
-  Duration? wakeTimeDuration;
-  Timer? wakeTimeCountdown;
-  DateTime? wakeTimeStartTime;
-
 
   Timer? countdownTimer;
-  Timer? timerCountdown;
 
   bool wakeTimeExpired = false;
   bool timerExpired = false;
@@ -446,8 +444,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   @override
   void dispose() {
     countdownTimer?.cancel();
-    timerCountdown?.cancel();
-    wakeTimeCountdown?.cancel();
     try {
       widget.device.disconnect();
     } catch (e) {
@@ -497,76 +493,67 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
         checkWakeTimeExpired();
-        setState(() {});
-      }
-    });
-  }
-
-  void startTimerCountdown() {
-    timerCountdown?.cancel();
-    timerCountdown = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
+        checkTimerExpired();
         setState(() {});
       }
     });
   }
 
   void loadSavedData() async {
-  final prefs = await SharedPreferences.getInstance();
-  final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
-  final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
-  final timerStartTimestamp = prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
+    final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
+    final timerStartTimestamp = prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
 
-  if (!mounted) return;
+    if (!mounted) return;
 
-  setState(() {
-    if (wakeTime != null) {
-      final parts = wakeTime.split(':');
-      if (parts.length == 2) {
-        final hour = int.tryParse(parts[0]);
-        final minute = int.tryParse(parts[1]);
-        if (hour != null && minute != null) {
-          sentWakeTime = TimeOfDay(hour: hour, minute: minute);
-
-          // >>> NEU: Berechnung für internen WakeTime-Timer
-          final now = DateTime.now();
-          DateTime targetTime = DateTime(
-            now.year,
-            now.month,
-            now.day,
-            hour,
-            minute,
-          );
-
-          if (targetTime.isBefore(now)) {
-            targetTime = targetTime.add(const Duration(days: 1));
-          }
-
-          wakeTimeStartTime = now;
-          wakeTimeDuration = targetTime.difference(now);
-
-          wakeTimeCountdown?.cancel();
-          wakeTimeCountdown = Timer(wakeTimeDuration!, () {
-            if (mounted) {
-              setState(() {
-                wakeTimeExpired = true;
-              });
+    setState(() {
+      if (wakeTime != null) {
+        final parts = wakeTime.split(':');
+        if (parts.length == 2) {
+          final hour = int.tryParse(parts[0]);
+          final minute = int.tryParse(parts[1]);
+          if (hour != null && minute != null) {
+            sentWakeTime = TimeOfDay(hour: hour, minute: minute);
+            final now = DateTime.now();
+            DateTime target = DateTime(now.year, now.month, now.day, hour, minute);
+            if (target.isBefore(now)) {
+              target = target.add(const Duration(days: 1));
             }
-          });
+            wakeTimeTimerTarget = target;
+          }
         }
       }
-    }
 
-    if (timerMinutes != null) {
-      sentTimerMinutes = timerMinutes;
-    }
+      if (timerMinutes != null && timerStartTimestamp != null) {
+        sentTimerMinutes = timerMinutes;
+        timerStartTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp);
+      }
+    });
+  }
 
-    if (timerStartTimestamp != null) {
-      timerStartTime = DateTime.fromMillisecondsSinceEpoch(timerStartTimestamp);
+  void checkWakeTimeExpired() {
+    if (wakeTimeTimerTarget != null && !wakeTimeExpired) {
+      final now = DateTime.now();
+      if (now.isAfter(wakeTimeTimerTarget!)) {
+        setState(() {
+          wakeTimeExpired = true;
+        });
+      }
     }
-  });
-}
+  }
 
+  void checkTimerExpired() {
+    if (sentTimerMinutes != null && timerStartTime != null && !timerExpired) {
+      final elapsed = DateTime.now().difference(timerStartTime!);
+      final remaining = Duration(minutes: sentTimerMinutes!) - elapsed;
+      if (remaining.isNegative) {
+        setState(() {
+          timerExpired = true;
+        });
+      }
+    }
+  }
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
@@ -612,7 +599,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       final elapsed = DateTime.now().difference(timerStartTime!);
       final remaining = Duration(minutes: sentTimerMinutes!) - elapsed;
       if (remaining.isNegative) {
-        timerExpired = true;
         return "Timer abgelaufen (${sentTimerMinutes! ~/ 60}h ${sentTimerMinutes! % 60}min)";
       } else {
         return formatDuration(remaining);
@@ -631,234 +617,21 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       ),
     );
   }
+// DeviceControlPage - Kompletter Code Teil 2 (Fortsetzung)
 
-  // Die anderen Methoden wie selectWakeTime, selectTimer, sendWakeTimeToESP, sendTimerToESP, clearWakeTimeOrTimer und build folgen jetzt...
-// DeviceControlPage - Kompletter Code Teil 2
-Future<void> selectWakeTime(BuildContext context) async {
-  
+  Future<void> selectWakeTime(BuildContext context) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: selectedWakeTime ?? TimeOfDay.now(),
+    );
 
-  bool useWheelPicker = false; // Standardmäßig Tastatureingabe
-  final hourController = TextEditingController(
-      text: selectedWakeTime?.hour.toString().padLeft(2, '0') ?? '');
-  final minuteController = TextEditingController(
-      text: selectedWakeTime?.minute.toString().padLeft(2, '0') ?? '');
-  int selectedHour = int.tryParse(hourController.text) ?? 0;
-  int selectedMinute = int.tryParse(minuteController.text) ?? 0;
-
-  await showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      void updateSelectedTime() {
-        selectedHour = int.tryParse(hourController.text) ?? 0;
-        selectedMinute = int.tryParse(minuteController.text) ?? 0;
-      }
-
-      Widget buildCustomPicker() {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Weckzeit wählen",
-              style: TextStyle(fontSize: 20, color: Color(0xFF7A9CA3)),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  children: [
-                    const Text("Stunde", style: TextStyle(color: Color(0xFF7A9CA3))),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      width: 60,
-                      child: TextField(
-                        controller: hourController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
-                        decoration: const InputDecoration(
-                          border: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                        ),
-                        onChanged: (_) => updateSelectedTime(),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  ":",
-                  style: TextStyle(color: Color(0xFF7A9CA3), fontSize: 24),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  children: [
-                    const Text("Minute", style: TextStyle(color: Color(0xFF7A9CA3))),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      width: 60,
-                      child: TextField(
-                        controller: minuteController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
-                        decoration: const InputDecoration(
-                          border: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                        ),
-                        onChanged: (_) => updateSelectedTime(),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        );
-      }
-
-      Widget buildWheelPicker() {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Weckzeit wählen",
-              style: TextStyle(fontSize: 20, color: Color(0xFF7A9CA3)),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  children: [
-                    const Text("Stunde", style: TextStyle(color: Color(0xFF7A9CA3))),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      height: 100,
-                      width: 60,
-                      child: ListWheelScrollView.useDelegate(
-                        itemExtent: 40,
-                        onSelectedItemChanged: (index) {
-                          selectedHour = index;
-                        },
-                        physics: const FixedExtentScrollPhysics(),
-                        childDelegate: ListWheelChildBuilderDelegate(
-                          builder: (context, index) {
-                            if (index >= 0 && index <= 23) {
-                              return Center(
-                                child: Text(
-                                  index.toString().padLeft(2, '0'),
-                                  style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
-                                ),
-                              );
-                            }
-                            return null;
-                          },
-                          childCount: 24,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  ":",
-                  style: TextStyle(color: Color(0xFF7A9CA3), fontSize: 24),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  children: [
-                    const Text("Minute", style: TextStyle(color: Color(0xFF7A9CA3))),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      height: 100,
-                      width: 60,
-                      child: ListWheelScrollView.useDelegate(
-                        itemExtent: 40,
-                        onSelectedItemChanged: (index) {
-                          selectedMinute = index;
-                        },
-                        physics: const FixedExtentScrollPhysics(),
-                        childDelegate: ListWheelChildBuilderDelegate(
-                          builder: (context, index) {
-                            if (index >= 0 && index <= 59) {
-                              return Center(
-                                child: Text(
-                                  index.toString().padLeft(2, '0'),
-                                  style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
-                                ),
-                              );
-                            }
-                            return null;
-                          },
-                          childCount: 60,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        );
-      }
-
-      return AlertDialog(
-        backgroundColor: Colors.black,
-        content: useWheelPicker ? buildWheelPicker() : buildCustomPicker(),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.access_time, color: Color(0xFF7A9CA3)),
-            onPressed: () {
-              useWheelPicker = !useWheelPicker;
-              (context as Element).markNeedsBuild();
-            },
-          ),
-          TextButton(
-            child: const Text("Abbrechen", style: TextStyle(fontSize: 18)),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: const Text("OK", style: TextStyle(fontSize: 18)),
-            onPressed: () {
-              if (selectedHour >= 0 && selectedHour <= 23 && selectedMinute >= 0 && selectedMinute <= 59) {
-                Navigator.of(context).pop(TimeOfDay(hour: selectedHour, minute: selectedMinute));
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Bitte gültige Werte eingeben")),
-                );
-              }
-            },
-          ),
-        ],
-      );
-    },
-  ).then((picked) {
     if (picked != null) {
       setState(() {
         selectedWakeTime = picked;
       });
     }
-  });
-}
+  }
 
-  
   Future<void> selectTimer(BuildContext context) async {
     timerHoursController.text = selectedTimerMinutes != null
         ? (selectedTimerMinutes! ~/ 60).toString()
@@ -878,56 +651,42 @@ Future<void> selectWakeTime(BuildContext context) async {
               Row(
                 children: [
                   Expanded(
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: timerHoursController,
-                          keyboardType: TextInputType.number,
-                          style: const TextStyle(color: Color(0xFF7A9CA3)),
-                          cursorColor: Colors.white,
-                          decoration: const InputDecoration(
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                            ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                            ),
-                          ),
+                    child: TextField(
+                      controller: timerHoursController,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: Color(0xFF7A9CA3)),
+                      cursorColor: Colors.white,
+                      decoration: const InputDecoration(
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          "Stunden",
-                          style: TextStyle(color: Color(0xFF7A9CA3)),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
+                  const Text("Stunden", style: TextStyle(color: Color(0xFF7A9CA3))),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: timerMinutesController,
-                          keyboardType: TextInputType.number,
-                          style: const TextStyle(color: Color(0xFF7A9CA3)),
-                          cursorColor: Colors.white,
-                          decoration: const InputDecoration(
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                            ),
-                            focusedBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                            ),
-                          ),
+                    child: TextField(
+                      controller: timerMinutesController,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(color: Color(0xFF7A9CA3)),
+                      cursorColor: Colors.white,
+                      decoration: const InputDecoration(
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          "Minuten",
-                          style: TextStyle(color: Color(0xFF7A9CA3)),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF7A9CA3)),
                         ),
-                      ],
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  const Text("Minuten", style: TextStyle(color: Color(0xFF7A9CA3))),
                 ],
               ),
             ],
@@ -935,9 +694,7 @@ Future<void> selectWakeTime(BuildContext context) async {
           actions: [
             TextButton(
               child: const Text("Abbrechen", style: TextStyle(fontSize: 18)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
               child: const Text("OK", style: TextStyle(fontSize: 18)),
@@ -969,55 +726,42 @@ Future<void> selectWakeTime(BuildContext context) async {
 
     if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
       try {
-        String currentTime = DateFormat("HH:mm").format(DateTime.now());
+        final now = DateTime.now();
+        String currentTime = DateFormat("HH:mm").format(now);
         String wakeTime =
             "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
         String combinedData = "$currentTime|$wakeTime";
 
         await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
         await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
         await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
 
+        // Interne Timer-Berechnung (App-intern!)
+        DateTime target = DateTime(now.year, now.month, now.day, selectedWakeTime!.hour, selectedWakeTime!.minute);
+        if (target.isBefore(now)) {
+          target = target.add(const Duration(days: 1));
+        }
+
         if (mounted) {
-  setState(() {
-    sentWakeTime = selectedWakeTime;
-    sentTimerMinutes = null;
-    wakeTimeExpired = false;
-    timerExpired = false;
-    timerStartTime = null;
+          setState(() {
+            sentWakeTime = selectedWakeTime;
+            wakeTimeTimerTarget = target;
+            wakeTimeExpired = false;
+            sentTimerMinutes = null;
+            timerStartTime = null;
+            timerExpired = false;
+          });
+        }
 
-    // Berechne die Differenz zur eingestellten WakeTime
-    final now = DateTime.now();
-    DateTime targetTime = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      selectedWakeTime!.hour,
-      selectedWakeTime!.minute,
-    );
-
-    if (targetTime.isBefore(now)) {
-      // Wenn die WakeTime in der Vergangenheit liegt: auf nächsten Tag setzen
-      targetTime = targetTime.add(const Duration(days: 1));
-    }
-
-    wakeTimeStartTime = now;
-    wakeTimeDuration = targetTime.difference(now);
-
-    // Timer starten
-    wakeTimeCountdown?.cancel();
-    wakeTimeCountdown = Timer(wakeTimeDuration!, () {
-      if (mounted) {
-        setState(() {
-          wakeTimeExpired = true;
-        });
+        debugPrint("✅ Weckzeit gesendet: $combinedData");
+      } catch (e) {
+        debugPrint("⚠️ Senden fehlgeschlagen: $e");
       }
-    });
-  });
-}
-
+    }
+  }
 
   void sendTimerToESP() async {
     if (!widget.device.isConnected) {
@@ -1030,6 +774,7 @@ Future<void> selectWakeTime(BuildContext context) async {
       try {
         String timerValue = selectedTimerMinutes.toString();
         await widget.timerCharacteristic!.write(utf8.encode(timerValue));
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('lastTimerMinutes_${widget.device.remoteId.str}', selectedTimerMinutes!);
         await prefs.setInt('timerStartTime_${widget.device.remoteId.str}', DateTime.now().millisecondsSinceEpoch);
@@ -1038,12 +783,12 @@ Future<void> selectWakeTime(BuildContext context) async {
         if (mounted) {
           setState(() {
             sentTimerMinutes = selectedTimerMinutes;
-            sentWakeTime = null;
             timerExpired = false;
-            wakeTimeExpired = false;
             timerStartTime = DateTime.now();
+            sentWakeTime = null;
+            wakeTimeTimerTarget = null;
+            wakeTimeExpired = false;
           });
-          startTimerCountdown();
         }
 
         debugPrint("✅ Timer gesendet: $timerValue Minuten");
@@ -1059,6 +804,7 @@ Future<void> selectWakeTime(BuildContext context) async {
       Navigator.pop(context);
       return;
     }
+
     try {
       await widget.alarmCharacteristic?.write(utf8.encode("CLEAR"));
       await widget.timerCharacteristic?.write(utf8.encode("CLEAR"));
@@ -1071,9 +817,10 @@ Future<void> selectWakeTime(BuildContext context) async {
       if (mounted) {
         setState(() {
           sentWakeTime = null;
+          wakeTimeTimerTarget = null;
+          wakeTimeExpired = false;
           sentTimerMinutes = null;
           timerExpired = false;
-          wakeTimeExpired = false;
           timerStartTime = null;
         });
       }
@@ -1083,7 +830,7 @@ Future<void> selectWakeTime(BuildContext context) async {
       debugPrint("⚠️ Löschen fehlgeschlagen: $e");
     }
   }
-// DeviceControlPage - Kompletter Code Teil 3
+// DeviceControlPage - Kompletter Code Teil 3 (Finale)
 
   @override
   Widget build(BuildContext context) {
@@ -1207,10 +954,6 @@ Future<void> selectWakeTime(BuildContext context) async {
 
 
 
-
-// -------------------------
-// DeviceOverviewPage
-// -------------------------
 // DeviceOverviewPage – Kompletter Code, fertig angepasst
 
 class DeviceOverviewPage extends StatefulWidget {
