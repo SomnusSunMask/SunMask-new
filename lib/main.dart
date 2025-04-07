@@ -615,199 +615,124 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   // Die anderen Methoden wie selectWakeTime, selectTimer, sendWakeTimeToESP, sendTimerToESP, clearWakeTimeOrTimer und build folgen jetzt...
 // DeviceControlPage - Kompletter Code Teil 2
 Future<void> selectWakeTime(BuildContext context) async {
-  
-
-  bool useWheelPicker = false; // Standardmäßig Tastatureingabe
-  final hourController = TextEditingController(
+  const blaugrau = Color(0xFF7A9CA3);
+  final TextEditingController hourController = TextEditingController(
       text: selectedWakeTime?.hour.toString().padLeft(2, '0') ?? '');
-  final minuteController = TextEditingController(
+  final TextEditingController minuteController = TextEditingController(
       text: selectedWakeTime?.minute.toString().padLeft(2, '0') ?? '');
-  int selectedHour = int.tryParse(hourController.text) ?? 0;
-  int selectedMinute = int.tryParse(minuteController.text) ?? 0;
+
+  final FocusNode hourFocusNode = FocusNode();
+  final FocusNode minuteFocusNode = FocusNode();
 
   await showDialog(
     context: context,
     builder: (BuildContext context) {
-      void updateSelectedTime() {
-        selectedHour = int.tryParse(hourController.text) ?? 0;
-        selectedMinute = int.tryParse(minuteController.text) ?? 0;
-      }
-
-      Widget buildCustomPicker() {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Weckzeit wählen",
-              style: TextStyle(fontSize: 20, color: Color(0xFF7A9CA3)),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  children: [
-                    const Text("Stunde", style: TextStyle(color: Color(0xFF7A9CA3))),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      width: 60,
-                      child: TextField(
-                        controller: hourController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
-                        decoration: const InputDecoration(
-                          border: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                        ),
-                        onChanged: (_) => updateSelectedTime(),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  ":",
-                  style: TextStyle(color: Color(0xFF7A9CA3), fontSize: 24),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  children: [
-                    const Text("Minute", style: TextStyle(color: Color(0xFF7A9CA3))),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      width: 60,
-                      child: TextField(
-                        controller: minuteController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
-                        decoration: const InputDecoration(
-                          border: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF7A9CA3)),
-                          ),
-                        ),
-                        onChanged: (_) => updateSelectedTime(),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        );
-      }
-
-      Widget buildWheelPicker() {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Weckzeit wählen",
-              style: TextStyle(fontSize: 20, color: Color(0xFF7A9CA3)),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  children: [
-                    const Text("Stunde", style: TextStyle(color: Color(0xFF7A9CA3))),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      height: 100,
-                      width: 60,
-                      child: ListWheelScrollView.useDelegate(
-                        itemExtent: 40,
-                        onSelectedItemChanged: (index) {
-                          selectedHour = index;
-                        },
-                        physics: const FixedExtentScrollPhysics(),
-                        childDelegate: ListWheelChildBuilderDelegate(
-                          builder: (context, index) {
-                            if (index >= 0 && index <= 23) {
-                              return Center(
-                                child: Text(
-                                  index.toString().padLeft(2, '0'),
-                                  style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
-                                ),
-                              );
-                            }
-                            return null;
-                          },
-                          childCount: 24,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  ":",
-                  style: TextStyle(color: Color(0xFF7A9CA3), fontSize: 24),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  children: [
-                    const Text("Minute", style: TextStyle(color: Color(0xFF7A9CA3))),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      height: 100,
-                      width: 60,
-                      child: ListWheelScrollView.useDelegate(
-                        itemExtent: 40,
-                        onSelectedItemChanged: (index) {
-                          selectedMinute = index;
-                        },
-                        physics: const FixedExtentScrollPhysics(),
-                        childDelegate: ListWheelChildBuilderDelegate(
-                          builder: (context, index) {
-                            if (index >= 0 && index <= 59) {
-                              return Center(
-                                child: Text(
-                                  index.toString().padLeft(2, '0'),
-                                  style: const TextStyle(color: Color(0xFF7A9CA3), fontSize: 20),
-                                ),
-                              );
-                            }
-                            return null;
-                          },
-                          childCount: 60,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        );
-      }
+      // Beim Öffnen direkt Fokus auf Stunde legen
+      Future.delayed(Duration(milliseconds: 100), () {
+        hourFocusNode.requestFocus();
+      });
 
       return AlertDialog(
         backgroundColor: Colors.black,
-        content: useWheelPicker ? buildWheelPicker() : buildCustomPicker(),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.access_time, color: Color(0xFF7A9CA3)),
-            onPressed: () {
-              useWheelPicker = !useWheelPicker;
-              (context as Element).markNeedsBuild();
-            },
+        title: const Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            "Weckzeit wählen",
+            style: TextStyle(color: blaugrau),
           ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Stunden-Spalte
+                Column(
+                  children: [
+                    const Text("Stunde", style: TextStyle(color: blaugrau)),
+                    SizedBox(
+                      width: 50,
+                      child: TextField(
+                        focusNode: hourFocusNode,
+                        controller: hourController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: blaugrau),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 8),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(color: blaugrau),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: blaugrau),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          if (value.isNotEmpty) {
+                            int number = int.tryParse(value) ?? 0;
+                            if (number > 23) {
+                              hourController.text = '23';
+                              hourController.selection = TextSelection.fromPosition(
+                                const TextPosition(offset: 2),
+                              );
+                            }
+                          }
+                        },
+                        onSubmitted: (_) {
+                          minuteFocusNode.requestFocus();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                const Text(":", style: TextStyle(color: blaugrau, fontSize: 20)),
+                const SizedBox(width: 8),
+                // Minuten-Spalte
+                Column(
+                  children: [
+                    const Text("Minute", style: TextStyle(color: blaugrau)),
+                    SizedBox(
+                      width: 50,
+                      child: TextField(
+                        focusNode: minuteFocusNode,
+                        controller: minuteController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: blaugrau),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 8),
+                          border: UnderlineInputBorder(
+                            borderSide: BorderSide(color: blaugrau),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: blaugrau),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          if (value.isNotEmpty) {
+                            int number = int.tryParse(value) ?? 0;
+                            if (number > 59) {
+                              minuteController.text = '59';
+                              minuteController.selection = TextSelection.fromPosition(
+                                const TextPosition(offset: 2),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actions: [
           TextButton(
             child: const Text("Abbrechen", style: TextStyle(fontSize: 18)),
             onPressed: () {
@@ -817,12 +742,15 @@ Future<void> selectWakeTime(BuildContext context) async {
           TextButton(
             child: const Text("OK", style: TextStyle(fontSize: 18)),
             onPressed: () {
-              if (selectedHour >= 0 && selectedHour <= 23 && selectedMinute >= 0 && selectedMinute <= 59) {
-                Navigator.of(context).pop(TimeOfDay(hour: selectedHour, minute: selectedMinute));
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Bitte gültige Werte eingeben")),
-                );
+              final int? enteredHour = int.tryParse(hourController.text);
+              final int? enteredMinute = int.tryParse(minuteController.text);
+              if (enteredHour != null &&
+                  enteredMinute != null &&
+                  enteredHour >= 0 &&
+                  enteredHour <= 23 &&
+                  enteredMinute >= 0 &&
+                  enteredMinute <= 59) {
+                Navigator.of(context).pop(TimeOfDay(hour: enteredHour, minute: enteredMinute));
               }
             },
           ),
@@ -830,13 +758,14 @@ Future<void> selectWakeTime(BuildContext context) async {
       );
     },
   ).then((picked) {
-    if (picked != null) {
+    if (picked != null && picked != selectedWakeTime) {
       setState(() {
         selectedWakeTime = picked;
       });
     }
   });
 }
+
 
   
   Future<void> selectTimer(BuildContext context) async {
