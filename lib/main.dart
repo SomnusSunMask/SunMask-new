@@ -242,7 +242,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       });
 
       showErrorSnackbar(
-        "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.",
+        "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.",
       );
     }
   }
@@ -470,10 +470,10 @@ void initState() {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Willkommen bei der SunMask!'),
+          title: const Text('Bedienungshinweise!'),
           content: const Text(
-            'Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n'
-            'Vergiss nicht, nach dem Einstellen auf „Weckzeit senden“ oder „Timer senden“ zu tippen.',
+            'Tippe auf „Weckzeit wählen“/„Timer wählen“, um deinen Lichtwecker einzustellen und anschließend auf „Weckzeit senden“/„Timer senden“.\n\n'
+            'Die Akkuanzeige ist während des Aufladens nicht korrekt.',
           ),
           actions: [
             TextButton(
@@ -1341,7 +1341,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.");
     } finally {
       if (mounted) {
         setState(() {
@@ -1393,7 +1393,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.");
     }
   }
 
