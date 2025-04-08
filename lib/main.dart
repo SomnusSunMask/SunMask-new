@@ -1130,7 +1130,6 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
 // -------------------------
 // DeviceOverviewPage
 // -------------------------
-
 class DeviceOverviewPage extends StatefulWidget {
   final String deviceId;
   final String? lastWakeTime;
@@ -1156,11 +1155,14 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   int? timerStartTimestamp;
   Timer? countdownTimer;
 
+  bool wakeTimeExpired = false;
+
   @override
   void initState() {
     super.initState();
     loadTimerStartTime();
     startCountdownTimer();
+    checkWakeTimeExpired();
   }
 
   @override
@@ -1172,7 +1174,10 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
   void startCountdownTimer() {
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
+      if (mounted) {
+        checkWakeTimeExpired();
+        setState(() {});
+      }
     });
   }
 
@@ -1184,49 +1189,25 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     });
   }
 
-  String get wakeTimeText {
-  // Wir nutzen hier KEIN FutureBuilder im Getter, weil das keinen Sinn ergibt.
-  // Stattdessen prüfen wir einfach nur den letzten bekannten Wert aus widget.lastWakeTime
-  if (widget.lastWakeTime != null) {
-    final parts = widget.lastWakeTime!.split(':');
-    if (parts.length == 2) {
-      final wakeHour = int.tryParse(parts[0]) ?? 0;
-      final wakeMinute = int.tryParse(parts[1]) ?? 0;
+  Future<void> checkWakeTimeExpired() async {
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
 
+    if (wakeTimestamp != null) {
+      final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
       final now = DateTime.now();
       final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+      final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
 
-      DateTime wakeDateTime = DateTime(
-        nowRounded.year,
-        nowRounded.month,
-        nowRounded.day,
-        wakeHour,
-        wakeMinute,
-      );
-
-      // Spezialfall: Wenn Weckzeit == aktuelle Zeit, direkt auf "abgelaufen"
-      if (wakeHour == now.hour && wakeMinute == now.minute) {
-        return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
-      }
-
-      if (wakeDateTime.isBefore(nowRounded)) {
-        // Weckzeit ist eigentlich für morgen
-        wakeDateTime = wakeDateTime.add(const Duration(days: 1));
-      }
-
-      if (nowRounded.isAfter(wakeDateTime) || nowRounded.isAtSameMomentAs(wakeDateTime)) {
-        return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
-      } else {
-        return widget.lastWakeTime!;
+      if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
+        if (!wakeTimeExpired) {
+          setState(() {
+            wakeTimeExpired = true;
+          });
+        }
       }
     }
   }
-  return "Nicht aktiv";
-}
-
-
-
-
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
@@ -1362,7 +1343,14 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
           children: [
             const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
+            Text(
+              widget.lastWakeTime != null
+                  ? (wakeTimeExpired
+                      ? "Aktuelle Weckzeit: Weckzeit abgelaufen (${widget.lastWakeTime!})"
+                      : "Aktuelle Weckzeit: ${widget.lastWakeTime!}")
+                  : "Aktuelle Weckzeit: Nicht aktiv",
+              style: const TextStyle(fontSize: 20),
+            ),
             const SizedBox(height: 181),
             const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
