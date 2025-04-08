@@ -1156,10 +1156,13 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   int? timerStartTimestamp;
   Timer? countdownTimer;
 
+  bool wakeTimeExpired = false;
+
   @override
   void initState() {
     super.initState();
     loadTimerStartTime();
+    loadWakeTimeExpiredStatus();
     startCountdownTimer();
   }
 
@@ -1184,54 +1187,34 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     });
   }
 
-  String get wakeTimeText {
-  final now = DateTime.now();
-  final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+  Future<void> loadWakeTimeExpiredStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
 
-  if (widget.lastWakeTime != null) {
-    final parts = widget.lastWakeTime!.split(':');
-    if (parts.length == 2) {
-      final wakeHour = int.tryParse(parts[0]) ?? 0;
-      final wakeMinute = int.tryParse(parts[1]) ?? 0;
+    if (wakeTimestamp != null) {
+      final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+      final now = DateTime.now();
+      final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+      final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
 
-      return FutureBuilder<SharedPreferences>(
-        future: SharedPreferences.getInstance(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return widget.lastWakeTime!;
-
-          final prefs = snapshot.data!;
-          final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
-
-          if (wakeTimestamp != null) {
-            final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-            final wakeRounded = DateTime(
-              wakeDateTime.year,
-              wakeDateTime.month,
-              wakeDateTime.day,
-              wakeDateTime.hour,
-              wakeDateTime.minute,
-            );
-
-            if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
-              return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
-            } else {
-              return widget.lastWakeTime!;
-            }
-          }
-
-          // Fallback, falls Timestamp nicht gefunden wird
-          return widget.lastWakeTime!;
-        },
-      ).toString();
+      if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
+        setState(() {
+          wakeTimeExpired = true;
+        });
+      }
     }
   }
 
-  return "Nicht aktiv";
-}
-
-
-
-
+  String get wakeTimeText {
+    if (widget.lastWakeTime != null) {
+      if (wakeTimeExpired) {
+        return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+      } else {
+        return widget.lastWakeTime!;
+      }
+    }
+    return "Nicht aktiv";
+  }
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
