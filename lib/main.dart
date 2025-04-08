@@ -1212,22 +1212,22 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   void checkWakeTimeExpired() async {
-    final prefs = await SharedPreferences.getInstance();
-    final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
+  final prefs = await SharedPreferences.getInstance();
+  final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
 
-    if (wakeTimestamp != null) {
-      final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-      final now = DateTime.now();
-      final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
-      final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
+  if (wakeTimestamp != null) {
+    final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+    final now = DateTime.now();
 
-      if ((nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) && !wakeTimeExpired) {
-        setState(() {
-          wakeTimeExpired = true;
-        });
-      }
+    // Exakte Prüfung inklusive Sekunden
+    if ((now.isAfter(wakeDateTime) || now.isAtSameMomentAs(wakeDateTime)) && !wakeTimeExpired) {
+      setState(() {
+        wakeTimeExpired = true;
+      });
     }
   }
+}
+
 
   String get wakeTimeText {
     if (widget.lastWakeTime != null) {
