@@ -1155,7 +1155,6 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   int? lastTimerMinutes;
   int? timerStartTimestamp;
   Timer? countdownTimer;
-
   bool wakeTimeExpired = false;
 
   @override
@@ -1171,12 +1170,6 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     countdownTimer?.cancel();
     scanSubscription.cancel();
     super.dispose();
-  }
-
-  void startCountdownTimer() {
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   Future<void> loadTimerStartTime() async {
@@ -1198,6 +1191,33 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
       final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
 
       if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
+        setState(() {
+          wakeTimeExpired = true;
+        });
+      }
+    }
+  }
+
+  void startCountdownTimer() {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        checkWakeTimeExpired();
+        setState(() {});
+      }
+    });
+  }
+
+  void checkWakeTimeExpired() async {
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
+
+    if (wakeTimestamp != null) {
+      final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+      final now = DateTime.now();
+      final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+      final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
+
+      if ((nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) && !wakeTimeExpired) {
         setState(() {
           wakeTimeExpired = true;
         });
