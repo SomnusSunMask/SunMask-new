@@ -945,39 +945,67 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
 }
 
 
-  void sendTimerToESP() async {
-    if (!widget.device.isConnected) {
-      showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
-      Navigator.pop(context);
-      return;
-    }
+  void sendWakeTimeToESP() async {
+  if (!widget.device.isConnected) {
+    showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
+    Navigator.pop(context);
+    return;
+  }
 
-    if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
-      try {
-        String timerValue = selectedTimerMinutes.toString();
-        await widget.timerCharacteristic!.write(utf8.encode(timerValue));
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('lastTimerMinutes_${widget.device.remoteId.str}', selectedTimerMinutes!);
-        await prefs.setInt('timerStartTime_${widget.device.remoteId.str}', DateTime.now().millisecondsSinceEpoch);
-        await prefs.remove('lastWakeTime_${widget.device.remoteId.str}');
+  if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
+    try {
+      // Aktuelle Uhrzeit inkl. Sekunden
+      DateTime now = DateTime.now();
+      int currentSeconds = now.second;
 
-        if (mounted) {
-          setState(() {
-            sentTimerMinutes = selectedTimerMinutes;
-            sentWakeTime = null;
-            timerExpired = false;
-            wakeTimeExpired = false;
-            timerStartTime = DateTime.now();
-          });
-          startTimerCountdown();
-        }
+      // Format für die ESP-Übertragung bleibt
+      String currentTime = DateFormat("HH:mm").format(now);
+      String wakeTime = "${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
+      String combinedData = "$currentTime|$wakeTime";
 
-        debugPrint("✅ Timer gesendet: $timerValue Minuten");
-      } catch (e) {
-        debugPrint("⚠️ Senden fehlgeschlagen: $e");
+      await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
+
+      // Jetzt berechnen wir für die App die Wake-DateTime, inkl. Sekundenverschiebung
+      DateTime wakeDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        selectedWakeTime!.hour,
+        selectedWakeTime!.minute,
+      );
+
+      // Hier: Zusätzliche Sekunden addieren (Differenz zur letzten Minute plus 1 Sekunde Sicherheit)
+      int secondsToAdd = currentSeconds + 1;
+      wakeDateTime = wakeDateTime.add(Duration(seconds: secondsToAdd));
+
+      // Falls die berechnete Weckzeit in der Vergangenheit liegt, für den nächsten Tag addieren
+      if (wakeDateTime.isBefore(now)) {
+        wakeDateTime = wakeDateTime.add(const Duration(days: 1));
       }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
+      await prefs.setInt('wakeTimestamp_${widget.device.remoteId.str}', wakeDateTime.millisecondsSinceEpoch);
+      await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
+      await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
+
+      if (mounted) {
+        setState(() {
+          sentWakeTime = selectedWakeTime;
+          sentTimerMinutes = null;
+          wakeTimeExpired = false;
+          timerExpired = false;
+          timerStartTime = null;
+        });
+      }
+
+      debugPrint("✅ Weckzeit gesendet: $combinedData ($wakeDateTime)");
+    } catch (e) {
+      debugPrint("⚠️ Senden fehlgeschlagen: $e");
     }
   }
+}
+
 
   void clearWakeTimeOrTimer() async {
     if (!widget.device.isConnected) {
