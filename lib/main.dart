@@ -1130,6 +1130,7 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
 // -------------------------
 // DeviceOverviewPage
 // -------------------------
+
 class DeviceOverviewPage extends StatefulWidget {
   final String deviceId;
   final String? lastWakeTime;
@@ -1155,14 +1156,11 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   int? timerStartTimestamp;
   Timer? countdownTimer;
 
-  bool wakeTimeExpired = false;
-
   @override
   void initState() {
     super.initState();
     loadTimerStartTime();
     startCountdownTimer();
-    checkWakeTimeExpired();
   }
 
   @override
@@ -1174,10 +1172,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
   void startCountdownTimer() {
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        checkWakeTimeExpired();
-        setState(() {});
-      }
+      if (mounted) setState(() {});
     });
   }
 
@@ -1189,25 +1184,54 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     });
   }
 
-  Future<void> checkWakeTimeExpired() async {
-    final prefs = await SharedPreferences.getInstance();
-    final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
+  String get wakeTimeText {
+  final now = DateTime.now();
+  final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
 
-    if (wakeTimestamp != null) {
-      final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-      final now = DateTime.now();
-      final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
-      final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
+  if (widget.lastWakeTime != null) {
+    final parts = widget.lastWakeTime!.split(':');
+    if (parts.length == 2) {
+      final wakeHour = int.tryParse(parts[0]) ?? 0;
+      final wakeMinute = int.tryParse(parts[1]) ?? 0;
 
-      if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
-        if (!wakeTimeExpired) {
-          setState(() {
-            wakeTimeExpired = true;
-          });
-        }
-      }
+      return FutureBuilder<SharedPreferences>(
+        future: SharedPreferences.getInstance(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return widget.lastWakeTime!;
+
+          final prefs = snapshot.data!;
+          final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
+
+          if (wakeTimestamp != null) {
+            final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+            final wakeRounded = DateTime(
+              wakeDateTime.year,
+              wakeDateTime.month,
+              wakeDateTime.day,
+              wakeDateTime.hour,
+              wakeDateTime.minute,
+            );
+
+            if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
+              return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+            } else {
+              return widget.lastWakeTime!;
+            }
+          }
+
+          // Fallback, falls Timestamp nicht gefunden wird
+          return widget.lastWakeTime!;
+        },
+      ).toString();
     }
   }
+
+  return "Nicht aktiv";
+}
+
+
+
+
 
   String formatDuration(Duration duration) {
     final hours = duration.inHours;
@@ -1343,14 +1367,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
           children: [
             const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            Text(
-              widget.lastWakeTime != null
-                  ? (wakeTimeExpired
-                      ? "Aktuelle Weckzeit: Weckzeit abgelaufen (${widget.lastWakeTime!})"
-                      : "Aktuelle Weckzeit: ${widget.lastWakeTime!}")
-                  : "Aktuelle Weckzeit: Nicht aktiv",
-              style: const TextStyle(fontSize: 20),
-            ),
+            Text("Aktuelle Weckzeit: $wakeTimeText", style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 181),
             const Text("Timer", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
