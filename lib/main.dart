@@ -181,71 +181,97 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void connectToDevice(BluetoothDevice device) async {
+  if (!mounted) return;
+
+  setState(() {
+    loadingDevices.add(device);
+  });
+
+  try {
+    await device.connect().timeout(const Duration(seconds: 2));
+
+    final id = device.remoteId.str;
+    final isFirstConnection = !storedDevices.contains(id);
+
+    if (isFirstConnection) {
+      storedDevices.add(id);
+    }
+    storedDeviceNames[id] = device.platformName;
+    await saveKnownDevices();
+
+    BluetoothCharacteristic? alarmCharacteristic;
+    BluetoothCharacteristic? timerCharacteristic;
+    BluetoothCharacteristic? batteryCharacteristic;
+
+    List<BluetoothService> services = await device.discoverServices();
+    for (var service in services) {
+      for (var characteristic in service.characteristics) {
+        final uuid = characteristic.uuid.toString();
+        if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
+          alarmCharacteristic = characteristic;
+        } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
+          timerCharacteristic = characteristic;
+        } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
+          batteryCharacteristic = characteristic;
+        }
+      }
+    }
+
     if (!mounted) return;
 
     setState(() {
-      loadingDevices.add(device);
+      loadingDevices.remove(device);
     });
 
-    try {
-      await device.connect().timeout(const Duration(seconds: 2));
-
-      final id = device.remoteId.str;
-      if (!storedDevices.contains(id)) {
-        storedDevices.add(id);
-      }
-      storedDeviceNames[id] = device.platformName;
-      await saveKnownDevices();
-
-      BluetoothCharacteristic? alarmCharacteristic;
-      BluetoothCharacteristic? timerCharacteristic;
-      BluetoothCharacteristic? batteryCharacteristic;
-
-      List<BluetoothService> services = await device.discoverServices();
-      for (var service in services) {
-        for (var characteristic in service.characteristics) {
-          final uuid = characteristic.uuid.toString();
-          if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
-            alarmCharacteristic = characteristic;
-          } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
-            timerCharacteristic = characteristic;
-          } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
-            batteryCharacteristic = characteristic;
-          }
-        }
-      }
-
-      if (!mounted) return;
-
-      setState(() {
-        loadingDevices.remove(device);
-      });
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceControlPage(
-            device: device,
-            alarmCharacteristic: alarmCharacteristic,
-            timerCharacteristic: timerCharacteristic,
-            batteryCharacteristic: batteryCharacteristic,
-          ),
-        ),
-      );
-    } catch (e) {
-      debugPrint("❌ Verbindung fehlgeschlagen: $e");
-
-      if (!mounted) return;
-
-      setState(() {
-        loadingDevices.remove(device);
-      });
-
-      showErrorSnackbar(
-        "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.",
+    // 👉 NEU: Bedienungshinweis anzeigen, wenn erste Verbindung
+    if (isFirstConnection) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Willkommen bei der SunMask!'),
+            content: const Text(
+                'Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n\n'
+                'Vergiss nicht, nach dem Einstellen auf „Weckzeit senden“ oder „Timer senden“ zu tippen.'),
+            actions: [
+              TextButton(
+                child: const Text('Verstanden'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
       );
     }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DeviceControlPage(
+          device: device,
+          alarmCharacteristic: alarmCharacteristic,
+          timerCharacteristic: timerCharacteristic,
+          batteryCharacteristic: batteryCharacteristic,
+        ),
+      ),
+    );
+  } catch (e) {
+    debugPrint("❌ Verbindung fehlgeschlagen: $e");
+
+    if (!mounted) return;
+
+    setState(() {
+      loadingDevices.remove(device);
+    });
+
+    showErrorSnackbar(
+      "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.",
+    );
   }
+}
+
 
   void removeStoredDevice(String deviceId) async {
     storedDevices.remove(deviceId);
