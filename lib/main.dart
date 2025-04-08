@@ -546,7 +546,12 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   if (wakeTimestamp != null) {
     final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
     final now = DateTime.now();
-    if (now.isAfter(wakeDateTime) || now.isAtSameMomentAs(wakeDateTime)) {
+
+    // → Beide Zeitpunkte auf Minute runden
+    final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+    final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
+
+    if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
       if (!wakeTimeExpired) {
         setState(() {
           wakeTimeExpired = true;
@@ -555,6 +560,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 }
+
 
 
 
@@ -1174,7 +1180,9 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
   String get wakeTimeText {
   if (widget.lastWakeTime != null) {
+    final now = DateTime.now();
     final prefs = SharedPreferences.getInstance();
+
     return FutureBuilder<SharedPreferences>(
       future: prefs,
       builder: (context, snapshot) {
@@ -1182,12 +1190,16 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
           final wakeTimestamp = snapshot.data!.getInt('wakeTimestamp_${widget.deviceId}');
           if (wakeTimestamp != null) {
             final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-            if (DateTime.now().isAfter(wakeDateTime) || DateTime.now().isAtSameMomentAs(wakeDateTime)) {
-  return Text("Weckzeit abgelaufen (${widget.lastWakeTime!})", style: const TextStyle(fontSize: 20));
-} else {
-  return Text(widget.lastWakeTime!, style: const TextStyle(fontSize: 20));
-}
 
+            // → Beide Zeitpunkte auf Minute runden
+            final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+            final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
+
+            if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
+              return Text("Weckzeit abgelaufen (${widget.lastWakeTime!})", style: const TextStyle(fontSize: 20));
+            } else {
+              return Text(widget.lastWakeTime!, style: const TextStyle(fontSize: 20));
+            }
           }
         }
         return const Text("Nicht aktiv", style: TextStyle(fontSize: 20));
@@ -1196,6 +1208,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
   return "Nicht aktiv";
 }
+
 
 
 
