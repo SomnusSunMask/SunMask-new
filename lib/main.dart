@@ -1185,35 +1185,45 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   String get wakeTimeText {
+  // Wir nutzen hier KEIN FutureBuilder im Getter, weil das keinen Sinn ergibt.
+  // Stattdessen prüfen wir einfach nur den letzten bekannten Wert aus widget.lastWakeTime
   if (widget.lastWakeTime != null) {
-    final now = DateTime.now();
-    final prefs = SharedPreferences.getInstance();
+    final parts = widget.lastWakeTime!.split(':');
+    if (parts.length == 2) {
+      final wakeHour = int.tryParse(parts[0]) ?? 0;
+      final wakeMinute = int.tryParse(parts[1]) ?? 0;
 
-    return FutureBuilder<SharedPreferences>(
-      future: prefs,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-          final wakeTimestamp = snapshot.data!.getInt('wakeTimestamp_${widget.deviceId}');
-          if (wakeTimestamp != null) {
-            final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+      final now = DateTime.now();
+      final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
 
-            // → Beide Zeitpunkte auf Minute runden
-            final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
-            final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
+      DateTime wakeDateTime = DateTime(
+        nowRounded.year,
+        nowRounded.month,
+        nowRounded.day,
+        wakeHour,
+        wakeMinute,
+      );
 
-            if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
-              return Text("Weckzeit abgelaufen (${widget.lastWakeTime!})", style: const TextStyle(fontSize: 20));
-            } else {
-              return Text(widget.lastWakeTime!, style: const TextStyle(fontSize: 20));
-            }
-          }
-        }
-        return const Text("Nicht aktiv", style: TextStyle(fontSize: 20));
-      },
-    ).toString();
+      // Spezialfall: Wenn Weckzeit == aktuelle Zeit, direkt auf "abgelaufen"
+      if (wakeHour == now.hour && wakeMinute == now.minute) {
+        return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+      }
+
+      if (wakeDateTime.isBefore(nowRounded)) {
+        // Weckzeit ist eigentlich für morgen
+        wakeDateTime = wakeDateTime.add(const Duration(days: 1));
+      }
+
+      if (nowRounded.isAfter(wakeDateTime) || nowRounded.isAtSameMomentAs(wakeDateTime)) {
+        return "Weckzeit abgelaufen (${widget.lastWakeTime!})";
+      } else {
+        return widget.lastWakeTime!;
+      }
+    }
   }
   return "Nicht aktiv";
 }
+
 
 
 
