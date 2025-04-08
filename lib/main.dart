@@ -895,20 +895,22 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
       await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
 
-      // → NEU: Weckzeit als vollständigen Zeitstempel berechnen
       DateTime now = DateTime.now();
-      DateTime nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
-      DateTime wakeDateTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        selectedWakeTime!.hour,
-        selectedWakeTime!.minute,
-      );
+// → Jetzt auch auf Minuten runden!
+DateTime nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
 
-      if (wakeDateTime.isBefore(now)) {
-        wakeDateTime = wakeDateTime.add(const Duration(days: 1));
-      }
+DateTime wakeDateTime = DateTime(
+  nowRounded.year,
+  nowRounded.month,
+  nowRounded.day,
+  selectedWakeTime!.hour,
+  selectedWakeTime!.minute,
+);
+
+if (wakeDateTime.isBefore(nowRounded) || wakeDateTime.isAtSameMomentAs(nowRounded)) {
+  wakeDateTime = wakeDateTime.add(const Duration(days: 1));
+}
+
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
