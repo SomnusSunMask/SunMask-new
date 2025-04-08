@@ -896,7 +896,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
 
       DateTime now = DateTime.now();
-// → Jetzt auch auf Minuten runden!
 DateTime nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
 
 DateTime wakeDateTime = DateTime(
@@ -907,9 +906,13 @@ DateTime wakeDateTime = DateTime(
   selectedWakeTime!.minute,
 );
 
-if (wakeDateTime.isBefore(nowRounded) || wakeDateTime.isAtSameMomentAs(nowRounded)) {
+// Spezialfall: Wenn Weckzeit == aktuelle Uhrzeit, dann sofort abgelaufen
+if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute) {
+  wakeDateTime = nowRounded.subtract(const Duration(seconds: 1)); // Extra Trick: auf vor „jetzt“ setzen
+} else if (wakeDateTime.isBefore(nowRounded)) {
   wakeDateTime = wakeDateTime.add(const Duration(days: 1));
 }
+
 
 
       final prefs = await SharedPreferences.getInstance();
