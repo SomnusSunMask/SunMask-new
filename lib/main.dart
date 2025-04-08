@@ -897,6 +897,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
       // → NEU: Weckzeit als vollständigen Zeitstempel berechnen
       DateTime now = DateTime.now();
+      DateTime nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
       DateTime wakeDateTime = DateTime(
         now.year,
         now.month,
