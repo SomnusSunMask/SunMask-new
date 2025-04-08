@@ -896,49 +896,26 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
       await widget.alarmCharacteristic!.write(utf8.encode(combinedData));
 
       DateTime now = DateTime.now();
-      DateTime nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+DateTime nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
 
-      // Berechne Differenz zur letzten vollen Minute + 1 Sekunde Reserve
-      int secondsSinceLastFullMinute = now.second;
-      int additionalSeconds = secondsSinceLastFullMinute + 1;
+// Berechne Differenz zur letzten vollen Minute + 1 Sekunde Reserve
+int secondsSinceLastFullMinute = now.second;
+int additionalSeconds = secondsSinceLastFullMinute + 1;
 
-      // Berechne Ziel-Weckzeit
-      DateTime wakeDateTime = DateTime(
-        nowRounded.year,
-        nowRounded.month,
-        nowRounded.day,
-        selectedWakeTime!.hour,
-        selectedWakeTime!.minute,
-      ).add(Duration(seconds: additionalSeconds));
+// Berechne Ziel-Weckzeit
+DateTime wakeDateTime = DateTime(
+  nowRounded.year,
+  nowRounded.month,
+  nowRounded.day,
+  selectedWakeTime!.hour,
+  selectedWakeTime!.minute,
+).add(Duration(seconds: additionalSeconds));
 
-      // Spezialfall: Wenn Weckzeit == aktuelle Uhrzeit, dann auf vorherige Sekunde setzen (wie bisher)
-      if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute) {
-        wakeDateTime = now.subtract(const Duration(seconds: 1));
-      } else if (wakeDateTime.isBefore(now)) {
-        wakeDateTime = wakeDateTime.add(const Duration(days: 1));
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('lastWakeTime_${widget.device.remoteId.str}', wakeTime);
-      await prefs.setInt('wakeTimestamp_${widget.device.remoteId.str}', wakeDateTime.millisecondsSinceEpoch);
-      await prefs.remove('lastTimerMinutes_${widget.device.remoteId.str}');
-      await prefs.remove('timerStartTime_${widget.device.remoteId.str}');
-
-      if (mounted) {
-        setState(() {
-          sentWakeTime = selectedWakeTime;
-          sentTimerMinutes = null;
-          wakeTimeExpired = false;
-          timerExpired = false;
-          timerStartTime = null;
-        });
-      }
-
-      debugPrint("✅ Weckzeit gesendet: $combinedData ($wakeDateTime)");
-    } catch (e) {
-      debugPrint("⚠️ Senden fehlgeschlagen: $e");
-    }
-  }
+// Spezialfall: Wenn Weckzeit == aktuelle Uhrzeit, dann auf vorherige Sekunde setzen (wie bisher)
+if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute) {
+  wakeDateTime = now.subtract(const Duration(seconds: 1));
+} else if (wakeDateTime.isBefore(now)) {
+  wakeDateTime = wakeDateTime.add(const Duration(days: 1));
 }
 
 
