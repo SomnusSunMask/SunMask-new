@@ -545,7 +545,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
   if (wakeTimestamp != null) {
     final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-    if (DateTime.now().isAfter(wakeDateTime)) {
+    final now = DateTime.now();
+    if (now.isAfter(wakeDateTime) || now.isAtSameMomentAs(wakeDateTime)) {
       if (!wakeTimeExpired) {
         setState(() {
           wakeTimeExpired = true;
@@ -554,6 +555,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 }
+
 
 
   String formatDuration(Duration duration) {
@@ -1180,11 +1182,12 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
           final wakeTimestamp = snapshot.data!.getInt('wakeTimestamp_${widget.deviceId}');
           if (wakeTimestamp != null) {
             final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-            if (DateTime.now().isAfter(wakeDateTime)) {
-              return Text("Weckzeit abgelaufen (${widget.lastWakeTime!})", style: const TextStyle(fontSize: 20));
-            } else {
-              return Text(widget.lastWakeTime!, style: const TextStyle(fontSize: 20));
-            }
+            if (DateTime.now().isAfter(wakeDateTime) || DateTime.now().isAtSameMomentAs(wakeDateTime)) {
+  return Text("Weckzeit abgelaufen (${widget.lastWakeTime!})", style: const TextStyle(fontSize: 20));
+} else {
+  return Text(widget.lastWakeTime!, style: const TextStyle(fontSize: 20));
+}
+
           }
         }
         return const Text("Nicht aktiv", style: TextStyle(fontSize: 20));
