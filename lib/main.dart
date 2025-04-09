@@ -452,8 +452,7 @@ class InfoPage extends StatelessWidget {
               SizedBox(height: 8),
               Text(
                 'Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n\n'
-                'Anschließend auf „Weckzeit senden“ oder „Timer senden“ tippen.\n\n'
-                'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
+                'Anschließend auf „Weckzeit senden“ oder „Timer senden“ tippen.\n',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 14,
