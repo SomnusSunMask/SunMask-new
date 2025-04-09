@@ -96,9 +96,9 @@ class MyApp extends StatelessWidget {
           selectionHandleColor: blaugrau,
         ),
         inputDecorationTheme: const InputDecorationTheme(
-          labelStyle: TextStyle(color: blaugrau),
-          floatingLabelStyle: TextStyle(color: blaugrau),
-          hintStyle: TextStyle(color: blaugrau),
+    labelStyle: TextStyle(color: blaugrau),
+    floatingLabelStyle: TextStyle(color: blaugrau),
+    hintStyle: TextStyle(color: blaugrau), // << HIER die Lösung!
         ),
       ),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
@@ -130,67 +130,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
   @override
   void initState() {
     super.initState();
-    showAppIntroIfFirstStart();
     loadKnownDevices();
     scanForDevices();
-  }
-
-  void showAppIntroIfFirstStart() async {
-    final prefs = await SharedPreferences.getInstance();
-    final hasShownIntro = prefs.getBool('appFirstStartShown') ?? false;
-
-    if (!hasShownIntro) {
-      await prefs.setBool('appFirstStartShown', true);
-
-      if (!mounted) return;
-
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            backgroundColor: Colors.black,
-            shape: RoundedRectangleBorder(
-              side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: const Text(
-              'SunMask Verbindungsanleitung',
-              style: TextStyle(color: Colors.white),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  '1. Starte deine SunMask und drücke den Startknopf.\n\n'
-                  '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
-                  '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
-                  '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
-                  'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
-                  style: TextStyle(color: Colors.white),
-                ),
-                SizedBox(height: 13),
-                Text(
-                  '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Verstanden'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
   }
 
   Future<void> loadKnownDevices() async {
@@ -256,7 +197,24 @@ class _BLEHomePageState extends State<BLEHomePage> {
       storedDeviceNames[id] = device.platformName;
       await saveKnownDevices();
 
-      // Später hier: DeviceControlPage oder gewünschte Seite öffnen
+      BluetoothCharacteristic? alarmCharacteristic;
+      BluetoothCharacteristic? timerCharacteristic;
+      BluetoothCharacteristic? batteryCharacteristic;
+
+      List<BluetoothService> services = await device.discoverServices();
+      for (var service in services) {
+        for (var characteristic in service.characteristics) {
+          final uuid = characteristic.uuid.toString();
+          if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
+            alarmCharacteristic = characteristic;
+          } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
+            timerCharacteristic = characteristic;
+          } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
+            batteryCharacteristic = characteristic;
+          }
+        }
+      }
+
       if (!mounted) return;
 
       setState(() {
@@ -268,9 +226,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
         MaterialPageRoute(
           builder: (context) => DeviceControlPage(
             device: device,
-            alarmCharacteristic: null,
-            timerCharacteristic: null,
-            batteryCharacteristic: null,
+            alarmCharacteristic: alarmCharacteristic,
+            timerCharacteristic: timerCharacteristic,
+            batteryCharacteristic: batteryCharacteristic,
           ),
         ),
       );
@@ -284,10 +242,11 @@ class _BLEHomePageState extends State<BLEHomePage> {
       });
 
       showErrorSnackbar(
-        "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.",
+        "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.",
       );
     }
   }
+
   void removeStoredDevice(String deviceId) async {
     storedDevices.remove(deviceId);
     storedDeviceNames.remove(deviceId);
@@ -334,15 +293,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
       appBar: AppBar(
         title: const Text('Somnus-Geräte'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const InfoPage()),
-              );
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: scanForDevices,
@@ -408,9 +358,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
               ],
             ),
             subtitle: Text(
-              "Gerätenummer: $id",
-              style: const TextStyle(color: blaugrau),
-            ),
+  "Gerätenummer: $id",
+  style: const TextStyle(color: blaugrau),
+),
             onTap: () async {
               if (isAvailable && !loadingDevices.contains(device)) {
                 connectToDevice(device);
@@ -438,124 +388,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 }
 
-// ============================
-// InfoPage - NEUE Hilfeseite
-// ============================
-
-class InfoPage extends StatelessWidget {
-  const InfoPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    const blaugrau = Color(0xFF7A9CA3);
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text(
-          'Hilfe und Hinweise',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(14.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                'Wie verbinde ich die SunMask?',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                '1. Starte deine SunMask und drücke den Startknopf.\n'
-                '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
-                '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
-                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 14,
-                  height: 1.2,
-                ),
-              ),
-              Text(
-                '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 10,
-                  height: 1.3,
-                ),
-              ),
-              SizedBox(height: 10),
-
-              Text(
-                'Wie stelle ich einen Lichtwecker ein?',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n'
-                '2. Tippe anschließend auf „Weckzeit senden“ oder „Timer senden“.',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 14,
-                  height: 1.2,
-                ),
-              ),
-              SizedBox(height: 10),
-
-              Text(
-                'Hinweis zur Akku-Anzeige:',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                'Die Akkuanzeige ist während des Aufladens nicht korrekt.',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 14,
-                  height: 1.2,
-                ),
-              ),
-              SizedBox(height: 10),
-
-              Text(
-                'Hinweis zur „eingestellte Lichtwecker“-Seite:',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen. Du erreichst sie in der Geräteübersicht mit Klick auf "SunMask (nicht verfügbar)" oder auf das "i".',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 14,
-                  height: 1.2,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
@@ -599,19 +431,13 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   bool timerExpired = false;
 
   @override
-void initState() {
-  super.initState();
-  readBatteryLevel();
-  listenToBatteryNotifications();
-  loadSavedData();
-  startCountdownTimer();
-
-  // === Hier kommt dein Popup-Hinweis ===
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    showFirstConnectionHint();
-  });
-}
-
+  void initState() {
+    super.initState();
+    readBatteryLevel();
+    listenToBatteryNotifications();
+    loadSavedData();
+    startCountdownTimer();
+  }
 
   @override
   void dispose() {
@@ -624,58 +450,6 @@ void initState() {
     }
     super.dispose();
   }
-
-  void showFirstConnectionHint() async {
-  final prefs = await SharedPreferences.getInstance();
-  final hasShownHint = prefs.getBool('hintShown_${widget.device.remoteId.str}') ?? false;
-
-  if (!hasShownHint) {
-    await prefs.setBool('hintShown_${widget.device.remoteId.str}', true);
-
-    if (!mounted) return;
-
-    showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Colors.black,
-      shape: RoundedRectangleBorder(
-        side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      title: const Text(
-  'Bedienungshinweise!',
-  style: TextStyle(color: Colors.white),
-),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
-            'Tippe auf „Weckzeit wählen“/„Timer wählen“, um deinen Lichtwecker einzustellen und anschließend auf „Weckzeit senden“/„Timer senden“.\n\n'
-            'Die Akkuanzeige ist während des Aufladens nicht korrekt.\n\n'
-            'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
-            style: TextStyle(color: Colors.white),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-  style: TextButton.styleFrom(
-    foregroundColor: Colors.white,
-  ),
-  child: const Text('Verstanden'),
-  onPressed: () {
-    Navigator.of(context).pop();
-          },
-        ),
-      ],
-    );
-  },
-);
-  }
-}
-
 
   void readBatteryLevel() async {
     if (widget.batteryCharacteristic != null) {
@@ -773,8 +547,11 @@ void initState() {
     final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
     final now = DateTime.now();
 
-    // Exakte Prüfung inklusive Sekunden
-    if (now.isAfter(wakeDateTime) || now.isAtSameMomentAs(wakeDateTime)) {
+    // → Beide Zeitpunkte auf Minute runden
+    final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+    final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
+
+    if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
       if (!wakeTimeExpired) {
         setState(() {
           wakeTimeExpired = true;
@@ -783,7 +560,6 @@ void initState() {
     }
   }
 }
-
 
 
 
@@ -870,10 +646,6 @@ void initState() {
 
         return AlertDialog(
           backgroundColor: Colors.black,
-          shape: RoundedRectangleBorder(
-        side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
           title: const Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -1018,10 +790,6 @@ void initState() {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-    side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
-    borderRadius: BorderRadius.circular(12),
-  ),
           title: const Text("Timer wählen"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1130,26 +898,20 @@ void initState() {
       DateTime now = DateTime.now();
 DateTime nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
 
-// Berechne Differenz zur letzten vollen Minute + 1 Sekunde Reserve
-int secondsSinceLastFullMinute = now.second;
-int additionalSeconds = secondsSinceLastFullMinute + 1;
-
-// Berechne Ziel-Weckzeit
 DateTime wakeDateTime = DateTime(
   nowRounded.year,
   nowRounded.month,
   nowRounded.day,
   selectedWakeTime!.hour,
   selectedWakeTime!.minute,
-).add(Duration(seconds: additionalSeconds));
+);
 
-// Spezialfall: Wenn Weckzeit == aktuelle Uhrzeit, dann auf vorherige Sekunde setzen (wie bisher)
+// Spezialfall: Wenn Weckzeit == aktuelle Uhrzeit, dann sofort abgelaufen
 if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute) {
-  wakeDateTime = now.subtract(const Duration(seconds: 1));
-} else if (wakeDateTime.isBefore(now)) {
+  wakeDateTime = nowRounded.subtract(const Duration(seconds: 1)); // Extra Trick: auf vor „jetzt“ setzen
+} else if (wakeDateTime.isBefore(nowRounded)) {
   wakeDateTime = wakeDateTime.add(const Duration(days: 1));
 }
-
 
 
 
@@ -1278,11 +1040,9 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
           ),
         ],
       ),
-      body: Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
-  child: Column(
-    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    children: [
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
           Column(
             children: [
               const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
@@ -1360,7 +1120,6 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
           ),
         ],
       ),
-      ),  
     );
   }
 }
@@ -1422,21 +1181,22 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   Future<void> loadWakeTimeExpiredStatus() async {
-  final prefs = await SharedPreferences.getInstance();
-  final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
 
-  if (wakeTimestamp != null) {
-    final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-    final now = DateTime.now();
+    if (wakeTimestamp != null) {
+      final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+      final now = DateTime.now();
+      final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+      final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
 
-    if (now.isAfter(wakeDateTime) || now.isAtSameMomentAs(wakeDateTime)) {
-      setState(() {
-        wakeTimeExpired = true;
-      });
+      if (nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) {
+        setState(() {
+          wakeTimeExpired = true;
+        });
+      }
     }
   }
-}
-
 
   void startCountdownTimer() {
     countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -1448,22 +1208,22 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   void checkWakeTimeExpired() async {
-  final prefs = await SharedPreferences.getInstance();
-  final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
+    final prefs = await SharedPreferences.getInstance();
+    final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
 
-  if (wakeTimestamp != null) {
-    final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
-    final now = DateTime.now();
+    if (wakeTimestamp != null) {
+      final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
+      final now = DateTime.now();
+      final nowRounded = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+      final wakeRounded = DateTime(wakeDateTime.year, wakeDateTime.month, wakeDateTime.day, wakeDateTime.hour, wakeDateTime.minute);
 
-    // Exakte Prüfung inklusive Sekunden
-    if ((now.isAfter(wakeDateTime) || now.isAtSameMomentAs(wakeDateTime)) && !wakeTimeExpired) {
-      setState(() {
-        wakeTimeExpired = true;
-      });
+      if ((nowRounded.isAfter(wakeRounded) || nowRounded.isAtSameMomentAs(wakeRounded)) && !wakeTimeExpired) {
+        setState(() {
+          wakeTimeExpired = true;
+        });
+      }
     }
   }
-}
-
 
   String get wakeTimeText {
     if (widget.lastWakeTime != null) {
@@ -1539,7 +1299,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
     } finally {
       if (mounted) {
         setState(() {
@@ -1591,7 +1351,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.");
+      showErrorSnackbar("❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, den Refresh-Button und versuche es dann erneut.");
     }
   }
 
