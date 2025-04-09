@@ -521,25 +521,37 @@ void initState() {
     if (!mounted) return;
 
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Bedienungshinweise!'),
-          content: const Text(
+  context: context,
+  builder: (BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.black,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      title: const Text('Bedienungshinweis!'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text(
             'Tippe auf „Weckzeit wählen“/„Timer wählen“, um deinen Lichtwecker einzustellen und anschließend auf „Weckzeit senden“/„Timer senden“.\n\n'
-            'Die Akkuanzeige ist während des Aufladens nicht korrekt.',
+            'Die Akkuanzeige ist während des Aufladens nicht korrekt.\n\n',
+            'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.'
           ),
-          actions: [
-            TextButton(
-              child: const Text('Verstanden'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+        ],
+      ),
+      actions: [
+        TextButton(
+          child: const Text('Verstanden'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
     );
+  },
+);
   }
 }
 
