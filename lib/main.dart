@@ -259,6 +259,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
       storedDeviceNames[id] = device.platformName;
       await saveKnownDevices();
+      if (!mounted) return;
 
       Navigator.push(
         context,
