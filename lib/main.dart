@@ -402,6 +402,8 @@ class InfoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const blaugrau = Color(0xFF7A9CA3);
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -411,7 +413,7 @@ class InfoPage extends StatelessWidget {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(14.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,83 +422,90 @@ class InfoPage extends StatelessWidget {
               Text(
                 'Wie verbinde ich die SunMask?',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 6),
               Text(
                 '1. Starte deine SunMask und drücke den Startknopf.\n\n'
                 '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
                 '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
-                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
-                '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
+                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  height: 1.2,
+                  color: blaugrau,
+                  fontSize: 13,
+                  height: 1.25,
                 ),
               ),
-              SizedBox(height: 16),
+              Text(
+                '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 11.5,
+                  height: 1.3,
+                ),
+              ),
+              SizedBox(height: 12),
 
               // Punkt 2: Lichtwecker einstellen
               Text(
                 'Wie stelle ich einen Lichtwecker ein?',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 6),
               Text(
                 'Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n\n'
-                'Anschließend auf „Weckzeit senden“ oder „Timer senden“ tippen.\n',
+                'Anschließend auf „Weckzeit senden“ oder „Timer senden“ tippen.',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  height: 1.2,
+                  color: blaugrau,
+                  fontSize: 13,
+                  height: 1.25,
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 12),
 
               // Punkt 3: Akku-Anzeige
               Text(
                 'Hinweis zur Akku-Anzeige:',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 6),
               Text(
                 'Die Akkuanzeige ist während des Aufladens nicht korrekt.',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  height: 1.2,
+                  color: blaugrau,
+                  fontSize: 13,
+                  height: 1.25,
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 12),
 
               // Punkt 4: Hinweis zur Übersichtsseite
               Text(
                 'Hinweis zur „eingestellte Lichtwecker“-Seite:',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 6),
               Text(
                 'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen.',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  height: 1.2,
+                  color: blaugrau,
+                  fontSize: 13,
+                  height: 1.25,
                 ),
               ),
             ],
@@ -506,6 +515,7 @@ class InfoPage extends StatelessWidget {
     );
   }
 }
+
 
 
 
