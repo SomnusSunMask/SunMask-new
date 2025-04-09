@@ -479,14 +479,14 @@ class InfoPage extends StatelessWidget {
                 '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
                 style: TextStyle(
                   color: blaugrau,
-                  fontSize: 12,
+                  fontSize: 14,
                   height: 1.2,
                 ),
               ),
               Text(
                 '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
                 style: TextStyle(
-                  color: Colors.grey,
+                  color: blaugrau,
                   fontSize: 10,
                   height: 1.3,
                 ),
@@ -507,7 +507,7 @@ class InfoPage extends StatelessWidget {
                 '2. Tippe anschließend auf „Weckzeit senden“ oder „Timer senden“.',
                 style: TextStyle(
                   color: blaugrau,
-                  fontSize: 12,
+                  fontSize: 14,
                   height: 1.2,
                 ),
               ),
@@ -526,7 +526,7 @@ class InfoPage extends StatelessWidget {
                 'Die Akkuanzeige ist während des Aufladens nicht korrekt.',
                 style: TextStyle(
                   color: blaugrau,
-                  fontSize: 12,
+                  fontSize: 14,
                   height: 1.2,
                 ),
               ),
@@ -545,7 +545,7 @@ class InfoPage extends StatelessWidget {
                 'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen. Du erreichst sie in der Geräteübersicht mit Klick auf "SunMask (nicht verfügbar)" oder auf das "i".',
                 style: TextStyle(
                   color: blaugrau,
-                  fontSize: 12,
+                  fontSize: 14,
                   height: 1.2,
                 ),
               ),
