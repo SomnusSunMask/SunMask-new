@@ -749,6 +749,10 @@ void initState() {
 
         return AlertDialog(
           backgroundColor: Colors.black,
+          shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
           title: const Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -893,6 +897,10 @@ void initState() {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+    side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
+    borderRadius: BorderRadius.circular(12),
+  ),
           title: const Text("Timer wählen"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
