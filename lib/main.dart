@@ -7,7 +7,6 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
@@ -110,6 +109,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 class BLEHomePage extends StatefulWidget {
   const BLEHomePage({super.key});
 
@@ -165,7 +165,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
                   '1. Starte deine SunMask und drücke den Startknopf.\n\n'
                   '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
                   '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
-                  '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
+                  '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
+                  'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
                   style: TextStyle(color: Colors.white),
                 ),
                 SizedBox(height: 13),
@@ -255,15 +256,23 @@ class _BLEHomePageState extends State<BLEHomePage> {
       storedDeviceNames[id] = device.platformName;
       await saveKnownDevices();
 
+      // Später hier: DeviceControlPage oder gewünschte Seite öffnen
       if (!mounted) return;
+
+      setState(() {
+        loadingDevices.remove(device);
+      });
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) {
-          return DeviceControlPage(
+        MaterialPageRoute(
+          builder: (context) => DeviceControlPage(
             device: device,
-          );
-        }),
+            alarmCharacteristic: null,
+            timerCharacteristic: null,
+            batteryCharacteristic: null,
+          ),
+        ),
       );
     } catch (e) {
       debugPrint("❌ Verbindung fehlgeschlagen: $e");
@@ -279,7 +288,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
       );
     }
   }
-
   void removeStoredDevice(String deviceId) async {
     storedDevices.remove(deviceId);
     storedDeviceNames.remove(deviceId);
@@ -371,20 +379,56 @@ class _BLEHomePageState extends State<BLEHomePage> {
                     height: 24,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                if (storedDevices.contains(id))
+                if (storedDevices.contains(id)) ...[
+                  if (isAvailable)
+                    IconButton(
+                      icon: const Icon(Icons.info_outline, color: blaugrau),
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        final wakeTime = prefs.getString('lastWakeTime_$id');
+                        final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+                        if (!context.mounted) return;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DeviceOverviewPage(
+                              deviceId: id,
+                              lastWakeTime: wakeTime,
+                              lastTimerMinutes: timerMinutes,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   IconButton(
                     icon: const Icon(Icons.delete, color: blaugrau),
                     onPressed: () => removeStoredDevice(id),
                   ),
+                ],
               ],
             ),
             subtitle: Text(
               "Gerätenummer: $id",
               style: const TextStyle(color: blaugrau),
             ),
-            onTap: () {
+            onTap: () async {
               if (isAvailable && !loadingDevices.contains(device)) {
                 connectToDevice(device);
+              } else if (storedDevices.contains(id)) {
+                final prefs = await SharedPreferences.getInstance();
+                final wakeTime = prefs.getString('lastWakeTime_$id');
+                final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+                if (!context.mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DeviceOverviewPage(
+                      deviceId: id,
+                      lastWakeTime: wakeTime,
+                      lastTimerMinutes: timerMinutes,
+                    ),
+                  ),
+                );
               }
             },
           );
@@ -393,7 +437,6 @@ class _BLEHomePageState extends State<BLEHomePage> {
     );
   }
 }
-
 
 // ============================
 // InfoPage - NEUE Hilfeseite
@@ -420,16 +463,15 @@ class InfoPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              // Punkt 1: Verbindung
               Text(
                 'Wie verbinde ich die SunMask?',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 6),
+              SizedBox(height: 5),
               Text(
                 '1. Starte deine SunMask und drücke den Startknopf.\n\n'
                 '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
@@ -437,77 +479,74 @@ class InfoPage extends StatelessWidget {
                 '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
                 style: TextStyle(
                   color: blaugrau,
-                  fontSize: 13,
-                  height: 1.25,
+                  fontSize: 12,
+                  height: 1.2,
                 ),
               ),
               Text(
                 '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
                 style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 11.5,
+                  color: Colors.grey,
+                  fontSize: 10,
                   height: 1.3,
                 ),
               ),
-              SizedBox(height: 12),
+              SizedBox(height: 10),
 
-              // Punkt 2: Lichtwecker einstellen
               Text(
                 'Wie stelle ich einen Lichtwecker ein?',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 6),
+              SizedBox(height: 5),
               Text(
                 '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n\n'
                 '2. Tippe anschließend auf „Weckzeit senden“ oder „Timer senden“.',
                 style: TextStyle(
                   color: blaugrau,
-                  fontSize: 13,
-                  height: 1.25,
+                  fontSize: 12,
+                  height: 1.2,
                 ),
               ),
-              SizedBox(height: 12),
+              SizedBox(height: 10),
 
-              // Punkt 3: Akku-Anzeige
               Text(
                 'Hinweis zur Akku-Anzeige:',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 6),
+              SizedBox(height: 5),
               Text(
                 'Die Akkuanzeige ist während des Aufladens nicht korrekt.',
                 style: TextStyle(
                   color: blaugrau,
-                  fontSize: 13,
-                  height: 1.25,
+                  fontSize: 12,
+                  height: 1.2,
                 ),
               ),
-              SizedBox(height: 12),
+              SizedBox(height: 10),
 
-              // Punkt 4: Hinweis zur Übersichtsseite
               Text(
                 'Hinweis zur „eingestellte Lichtwecker“-Seite:',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 6),
+              SizedBox(height: 5),
               Text(
                 'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen. Du erreichst sie in der Geräteübersicht mit Klick auf "SunMask (nicht verfügbar)" oder auf das "i".',
                 style: TextStyle(
                   color: blaugrau,
-                  fontSize: 13,
-                  height: 1.25,
+                  fontSize: 12,
+                  height: 1.2,
                 ),
               ),
             ],
@@ -517,12 +556,6 @@ class InfoPage extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
 
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
