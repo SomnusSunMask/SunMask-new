@@ -240,54 +240,78 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void connectToDevice(BluetoothDevice device) async {
+  if (!mounted) return;
+
+  setState(() {
+    loadingDevices.add(device);
+  });
+
+  try {
+    await device.connect().timeout(const Duration(seconds: 2));
+
+    final id = device.remoteId.str;
+    if (!storedDevices.contains(id)) {
+      storedDevices.add(id);
+    }
+    storedDeviceNames[id] = device.platformName;
+    await saveKnownDevices();
+
+    // ❗️ Hier: Services lesen
+    List<BluetoothService> services = await device.discoverServices();
+
+    BluetoothCharacteristic? alarmCharacteristic;
+    BluetoothCharacteristic? timerCharacteristic;
+    BluetoothCharacteristic? batteryCharacteristic;
+
+    for (var service in services) {
+      for (var characteristic in service.characteristics) {
+        final uuid = characteristic.uuid.toString();
+        if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
+          alarmCharacteristic = characteristic;
+        } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
+          timerCharacteristic = characteristic;
+        } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
+          batteryCharacteristic = characteristic;
+        }
+      }
+    }
+
+    if (alarmCharacteristic == null || timerCharacteristic == null) {
+      throw Exception("Charakteristiken nicht gefunden");
+    }
+
     if (!mounted) return;
 
     setState(() {
-      loadingDevices.add(device);
+      loadingDevices.remove(device);
     });
 
-    try {
-      await device.connect().timeout(const Duration(seconds: 2));
-
-      final id = device.remoteId.str;
-      if (!storedDevices.contains(id)) {
-        storedDevices.add(id);
-      }
-      storedDeviceNames[id] = device.platformName;
-      await saveKnownDevices();
-
-      // Später hier: DeviceControlPage oder gewünschte Seite öffnen
-      if (!mounted) return;
-
-      setState(() {
-        loadingDevices.remove(device);
-      });
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DeviceControlPage(
-            device: device,
-            alarmCharacteristic: null,
-            timerCharacteristic: null,
-            batteryCharacteristic: null,
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DeviceControlPage(
+          device: device,
+          alarmCharacteristic: alarmCharacteristic,
+          timerCharacteristic: timerCharacteristic,
+          batteryCharacteristic: batteryCharacteristic,
         ),
-      );
-    } catch (e) {
-      debugPrint("❌ Verbindung fehlgeschlagen: $e");
+      ),
+    );
+  } catch (e) {
+    debugPrint("❌ Verbindung fehlgeschlagen: $e");
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      setState(() {
-        loadingDevices.remove(device);
-      });
+    setState(() {
+      loadingDevices.remove(device);
+    });
 
-      showErrorSnackbar(
-        "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.",
-      );
-    }
+    showErrorSnackbar(
+      "❌ Verbindung fehlgeschlagen! Drücke den Startknopf der SunMask, aktualisiere die Geräteliste und versuche es dann erneut.",
+    );
   }
+}
+
   void removeStoredDevice(String deviceId) async {
     storedDevices.remove(deviceId);
     storedDeviceNames.remove(deviceId);
