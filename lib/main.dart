@@ -167,8 +167,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
                 '1. Starte deine SunMask und drücke den Startknopf.\n\n'
                 '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
                 '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
-                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
-                'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
+                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
                 style: TextStyle(color: Colors.white),
               ),
               SizedBox(height: 13),
@@ -406,7 +405,7 @@ class InfoPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('SunMask Hilfe', style: TextStyle(color: Colors.white)),
+        title: const Text('Hilfe und Hinweise', style: TextStyle(color: Colors.white)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -414,8 +413,9 @@ class InfoPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
+              // Punkt 1
               Text(
-                'Verbindungsanleitung:',
+                'Wie verbinde ich die SunMask?',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               SizedBox(height: 8),
@@ -424,18 +424,50 @@ class InfoPage extends StatelessWidget {
                 '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
                 '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
                 '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
-                'Bei Unklarheiten kannst du später jederzeit auf diese Hilfeseite zurückgreifen.',
+                'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
                 style: TextStyle(color: Colors.white),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Tipp:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               SizedBox(height: 8),
               Text(
                 '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              SizedBox(height: 16),
+
+              // Punkt 2
+              Text(
+                'Wie stelle ich einen Lichtwecker ein?',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n\n'
+                'Anschließend auf „Weckzeit senden“ oder „Timer senden“ tippen.',
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 16),
+
+              // Punkt 3
+              Text(
+                'Hinweis zur Akku-Anzeige',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Die Akkuanzeige ist während des Aufladens nicht korrekt.',
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 16),
+
+              // Punkt 4
+              Text(
+                'Hinweis zur Übersichtsseite',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Du kannst, ohne die SunMask zu starten und zu verbinden, auf der Übersichtsseite deine eingestellten Lichtwecker überprüfen.',
+                style: TextStyle(color: Colors.white),
               ),
             ],
           ),
@@ -444,6 +476,7 @@ class InfoPage extends StatelessWidget {
     );
   }
 }
+
 
 
 
