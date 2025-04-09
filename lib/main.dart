@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'info_page.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -352,102 +354,158 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Somnus-Geräte'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: scanForDevices,
+  title: const Text('Somnus-Geräte'),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.help_outline),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const InfoPage()),
+        );
+      },
+    ),
+    IconButton(
+      icon: const Icon(Icons.refresh),
+      onPressed: scanForDevices,
+    ),
+  ],
+),
+body: ListView.builder(
+  itemCount: allDeviceIds.length,
+  itemBuilder: (context, index) {
+    final id = allDeviceIds[index];
+    final device = devices.firstWhere(
+      (d) => d.remoteId.str == id,
+      orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)),
+    );
+    final isAvailable = devices.any((d) => d.remoteId.str == id);
+    final name = isAvailable
+        ? device.platformName
+        : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
+
+    return ListTile(
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: blaugrau),
+            ),
           ),
+          if (loadingDevices.contains(device))
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          if (storedDevices.contains(id)) ...[
+            if (isAvailable)
+              IconButton(
+                icon: const Icon(Icons.info_outline, color: blaugrau),
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  final wakeTime = prefs.getString('lastWakeTime_$id');
+                  final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+                  if (!context.mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DeviceOverviewPage(
+                        deviceId: id,
+                        lastWakeTime: wakeTime,
+                        lastTimerMinutes: timerMinutes,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: blaugrau),
+              onPressed: () => removeStoredDevice(id),
+            ),
+          ],
         ],
       ),
-      body: ListView.builder(
-        itemCount: allDeviceIds.length,
-        itemBuilder: (context, index) {
-          final id = allDeviceIds[index];
-          final device = devices.firstWhere(
-            (d) => d.remoteId.str == id,
-            orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)),
-          );
-          final isAvailable = devices.any((d) => d.remoteId.str == id);
-          final name = isAvailable
-              ? device.platformName
-              : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
-
-          return ListTile(
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: blaugrau),
-                  ),
-                ),
-                if (loadingDevices.contains(device))
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                if (storedDevices.contains(id)) ...[
-                  if (isAvailable)
-                    IconButton(
-                      icon: const Icon(Icons.info_outline, color: blaugrau),
-                      onPressed: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        final wakeTime = prefs.getString('lastWakeTime_$id');
-                        final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-                        if (!context.mounted) return;
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DeviceOverviewPage(
-                              deviceId: id,
-                              lastWakeTime: wakeTime,
-                              lastTimerMinutes: timerMinutes,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: blaugrau),
-                    onPressed: () => removeStoredDevice(id),
-                  ),
-                ],
-              ],
+      subtitle: Text(
+        "Gerätenummer: $id",
+        style: const TextStyle(color: blaugrau),
+      ),
+      onTap: () async {
+        if (isAvailable && !loadingDevices.contains(device)) {
+          connectToDevice(device);
+        } else if (storedDevices.contains(id)) {
+          final prefs = await SharedPreferences.getInstance();
+          final wakeTime = prefs.getString('lastWakeTime_$id');
+          final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+          if (!context.mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DeviceOverviewPage(
+                deviceId: id,
+                lastWakeTime: wakeTime,
+                lastTimerMinutes: timerMinutes,
+              ),
             ),
-            subtitle: Text(
-  "Gerätenummer: $id",
-  style: const TextStyle(color: blaugrau),
-),
-            onTap: () async {
-              if (isAvailable && !loadingDevices.contains(device)) {
-                connectToDevice(device);
-              } else if (storedDevices.contains(id)) {
-                final prefs = await SharedPreferences.getInstance();
-                final wakeTime = prefs.getString('lastWakeTime_$id');
-                final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-                if (!context.mounted) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DeviceOverviewPage(
-                      deviceId: id,
-                      lastWakeTime: wakeTime,
-                      lastTimerMinutes: timerMinutes,
-                    ),
-                  ),
-                );
-              }
-            },
           );
-        },
+        }
+      },
+    );
+  },
+),
+
+// InfoPage - NEUE Hilfeseite
+
+class InfoPage extends StatelessWidget {
+  const InfoPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('SunMask Hilfe', style: TextStyle(color: Colors.white)),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Verbindungsanleitung:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '1. Starte deine SunMask und drücke den Startknopf.\n\n'
+                '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
+                '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
+                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
+                'Bei Unklarheiten kannst du später jederzeit auf diese Hilfeseite zurückgreifen.',
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Tipp:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
+
 
 
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
