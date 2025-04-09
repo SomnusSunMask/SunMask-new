@@ -1,5 +1,3 @@
-// Teil 1 von 2
-
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -8,6 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Import für Info-Seite
+import 'info_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -111,7 +112,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
 class BLEHomePage extends StatefulWidget {
   const BLEHomePage({super.key});
 
@@ -138,63 +138,61 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void showAppIntroIfFirstStart() async {
-  final prefs = await SharedPreferences.getInstance();
-  final hasShownIntro = prefs.getBool('appFirstStartShown') ?? false;
+    final prefs = await SharedPreferences.getInstance();
+    final hasShownIntro = prefs.getBool('appFirstStartShown') ?? false;
 
-  if (!hasShownIntro) {
-    await prefs.setBool('appFirstStartShown', true);
+    if (!hasShownIntro) {
+      await prefs.setBool('appFirstStartShown', true);
 
-    if (!mounted) return; // <<< WICHTIG! mounted prüfen direkt nach await
+      if (!mounted) return;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.black,
-          shape: RoundedRectangleBorder(
-            side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          title: const Text(
-            'SunMask Verbindungsanleitung',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                '1. Starte deine SunMask und drücke den Startknopf.\n\n'
-                '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
-                '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
-                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
-                style: TextStyle(color: Colors.white),
-              ),
-              SizedBox(height: 13),
-              Text(
-                '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: const Text(
+              'SunMask Verbindungsanleitung',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  '1. Starte deine SunMask und drücke den Startknopf.\n\n'
+                  '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
+                  '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
+                  '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
+                  style: TextStyle(color: Colors.white),
+                ),
+                SizedBox(height: 13),
+                Text(
+                  '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Verstanden'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Verstanden'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+          );
+        },
+      );
+    }
   }
-}
-
-// Teil 2 von 2
 
   Future<void> loadKnownDevices() async {
     final prefs = await SharedPreferences.getInstance();
@@ -258,11 +256,16 @@ class _BLEHomePageState extends State<BLEHomePage> {
       }
       storedDeviceNames[id] = device.platformName;
       await saveKnownDevices();
+
       if (!mounted) return;
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const InfoPage()),
+        MaterialPageRoute(builder: (context) {
+          return DeviceControlPage(
+            device: device,
+          );
+        }),
       );
     } catch (e) {
       debugPrint("❌ Verbindung fehlgeschlagen: $e");
@@ -392,6 +395,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     );
   }
 }
+
 
 // ============================
 // InfoPage - NEUE Hilfeseite
