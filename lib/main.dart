@@ -130,9 +130,52 @@ class _BLEHomePageState extends State<BLEHomePage> {
   @override
   void initState() {
     super.initState();
+    showAppIntroIfFirstStart(); // <<< NEU
     loadKnownDevices();
     scanForDevices();
   }
+
+  void showAppIntroIfFirstStart() async {
+  final prefs = await SharedPreferences.getInstance();
+  final hasShownIntro = prefs.getBool('appFirstStartShown') ?? false;
+
+  if (!hasShownIntro) {
+    await prefs.setBool('appFirstStartShown', true);
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('SunMask Verbindungsanleitung'),
+          content: const Text(
+            '1. Starte deine SunMask und drücke den Startknopf.\n\n'
+            '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
+            '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
+            '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
+            'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
+          ),
+          SizedBox(height: 13), // Platz zwischen Text und Fußnote
+          Text(
+            '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          child: const Text('Verstanden'),
+          onPressed: () {
+            Navigator.of(context).pop();
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 
   Future<void> loadKnownDevices() async {
     final prefs = await SharedPreferences.getInstance();
