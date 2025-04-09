@@ -148,6 +148,11 @@ class _BLEHomePageState extends State<BLEHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.black,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
           title: const Text('SunMask Verbindungsanleitung'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
