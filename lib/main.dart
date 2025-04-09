@@ -473,9 +473,9 @@ class InfoPage extends StatelessWidget {
               ),
               SizedBox(height: 5),
               Text(
-                '1. Starte deine SunMask und drücke den Startknopf.\n\n'
-                '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
-                '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
+                '1. Starte deine SunMask und drücke den Startknopf.\n'
+                '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
+                '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
                 '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
                 style: TextStyle(
                   color: blaugrau,
@@ -503,7 +503,7 @@ class InfoPage extends StatelessWidget {
               ),
               SizedBox(height: 5),
               Text(
-                '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n\n'
+                '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n'
                 '2. Tippe anschließend auf „Weckzeit senden“ oder „Timer senden“.',
                 style: TextStyle(
                   color: blaugrau,
