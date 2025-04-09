@@ -423,8 +423,7 @@ class InfoPage extends StatelessWidget {
                 '1. Starte deine SunMask und drücke den Startknopf.\n'
                 '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
                 '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
-                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
-                'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
+                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n',
                 style: TextStyle(color: Colors.white),
               ),
               SizedBox(height: 8),
