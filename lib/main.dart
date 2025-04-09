@@ -1,3 +1,5 @@
+// Teil 1 von 2
+
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -7,7 +9,6 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'info_page.dart';
-
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,9 +99,9 @@ class MyApp extends StatelessWidget {
           selectionHandleColor: blaugrau,
         ),
         inputDecorationTheme: const InputDecorationTheme(
-    labelStyle: TextStyle(color: blaugrau),
-    floatingLabelStyle: TextStyle(color: blaugrau),
-    hintStyle: TextStyle(color: blaugrau), // << HIER die Lösung!
+          labelStyle: TextStyle(color: blaugrau),
+          floatingLabelStyle: TextStyle(color: blaugrau),
+          hintStyle: TextStyle(color: blaugrau),
         ),
       ),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
@@ -132,70 +133,69 @@ class _BLEHomePageState extends State<BLEHomePage> {
   @override
   void initState() {
     super.initState();
-    showAppIntroIfFirstStart(); // <<< NEU
+    showAppIntroIfFirstStart();
     loadKnownDevices();
     scanForDevices();
   }
 
   void showAppIntroIfFirstStart() async {
-  final prefs = await SharedPreferences.getInstance();
-  final hasShownIntro = prefs.getBool('appFirstStartShown') ?? false;
+    final prefs = await SharedPreferences.getInstance();
+    final hasShownIntro = prefs.getBool('appFirstStartShown') ?? false;
 
-  if (!hasShownIntro) {
-    await prefs.setBool('appFirstStartShown', true);
+    if (!hasShownIntro) {
+      await prefs.setBool('appFirstStartShown', true);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.black,
-      shape: RoundedRectangleBorder(
-        side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-          title: const Text(
-  'SunMask Verbindungsanleitung',
-  style: TextStyle(color: Colors.white),
-),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                '1. Starte deine SunMask und drücke den Startknopf.\n\n'
-                '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
-                '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
-                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
-                'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
-                style: TextStyle(color: Colors.white),
-              ),
-              SizedBox(height: 13),
-              Text(
-                '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: const Text(
+              'SunMask Verbindungsanleitung',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  '1. Starte deine SunMask und drücke den Startknopf.\n\n'
+                  '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
+                  '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
+                  '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
+                  'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
+                  style: TextStyle(color: Colors.white),
+                ),
+                SizedBox(height: 13),
+                Text(
+                  '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Verstanden'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-  style: TextButton.styleFrom(
-    foregroundColor: Colors.white,
-  ),
-  child: const Text('Verstanden'),
-  onPressed: () {
-    Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+          );
+        },
+      );
+    }
   }
-}
-
-
+// Teil 2 von 2
 
   Future<void> loadKnownDevices() async {
     final prefs = await SharedPreferences.getInstance();
@@ -260,40 +260,9 @@ class _BLEHomePageState extends State<BLEHomePage> {
       storedDeviceNames[id] = device.platformName;
       await saveKnownDevices();
 
-      BluetoothCharacteristic? alarmCharacteristic;
-      BluetoothCharacteristic? timerCharacteristic;
-      BluetoothCharacteristic? batteryCharacteristic;
-
-      List<BluetoothService> services = await device.discoverServices();
-      for (var service in services) {
-        for (var characteristic in service.characteristics) {
-          final uuid = characteristic.uuid.toString();
-          if (uuid == "abcdef03-1234-5678-1234-56789abcdef0") {
-            alarmCharacteristic = characteristic;
-          } else if (uuid == "abcdef04-1234-5678-1234-56789abcdef0") {
-            timerCharacteristic = characteristic;
-          } else if (uuid == "abcdef06-1234-5678-1234-56789abcdef0") {
-            batteryCharacteristic = characteristic;
-          }
-        }
-      }
-
-      if (!mounted) return;
-
-      setState(() {
-        loadingDevices.remove(device);
-      });
-
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => DeviceControlPage(
-            device: device,
-            alarmCharacteristic: alarmCharacteristic,
-            timerCharacteristic: timerCharacteristic,
-            batteryCharacteristic: batteryCharacteristic,
-          ),
-        ),
+        MaterialPageRoute(builder: (context) => const InfoPage()),
       );
     } catch (e) {
       debugPrint("❌ Verbindung fehlgeschlagen: $e");
@@ -354,110 +323,79 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-  title: const Text('Somnus-Geräte'),
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.help_outline),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const InfoPage()),
-        );
-      },
-    ),
-    IconButton(
-      icon: const Icon(Icons.refresh),
-      onPressed: scanForDevices,
-    ),
-  ],
-),
-body: ListView.builder(
-  itemCount: allDeviceIds.length,
-  itemBuilder: (context, index) {
-    final id = allDeviceIds[index];
-    final device = devices.firstWhere(
-      (d) => d.remoteId.str == id,
-      orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)),
-    );
-    final isAvailable = devices.any((d) => d.remoteId.str == id);
-    final name = isAvailable
-        ? device.platformName
-        : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
-
-    return ListTile(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Text(
-              "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: blaugrau),
-            ),
+        title: const Text('Somnus-Geräte'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const InfoPage()),
+              );
+            },
           ),
-          if (loadingDevices.contains(device))
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          if (storedDevices.contains(id)) ...[
-            if (isAvailable)
-              IconButton(
-                icon: const Icon(Icons.info_outline, color: blaugrau),
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  final wakeTime = prefs.getString('lastWakeTime_$id');
-                  final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-                  if (!context.mounted) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DeviceOverviewPage(
-                        deviceId: id,
-                        lastWakeTime: wakeTime,
-                        lastTimerMinutes: timerMinutes,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: blaugrau),
-              onPressed: () => removeStoredDevice(id),
-            ),
-          ],
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: scanForDevices,
+          ),
         ],
       ),
-      subtitle: Text(
-        "Gerätenummer: $id",
-        style: const TextStyle(color: blaugrau),
-      ),
-      onTap: () async {
-        if (isAvailable && !loadingDevices.contains(device)) {
-          connectToDevice(device);
-        } else if (storedDevices.contains(id)) {
-          final prefs = await SharedPreferences.getInstance();
-          final wakeTime = prefs.getString('lastWakeTime_$id');
-          final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
-          if (!context.mounted) return;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DeviceOverviewPage(
-                deviceId: id,
-                lastWakeTime: wakeTime,
-                lastTimerMinutes: timerMinutes,
-              ),
-            ),
+      body: ListView.builder(
+        itemCount: allDeviceIds.length,
+        itemBuilder: (context, index) {
+          final id = allDeviceIds[index];
+          final device = devices.firstWhere(
+            (d) => d.remoteId.str == id,
+            orElse: () => BluetoothDevice(remoteId: DeviceIdentifier(id)),
           );
-        }
-      },
-    );
-  },
-),
+          final isAvailable = devices.any((d) => d.remoteId.str == id);
+          final name = isAvailable
+              ? device.platformName
+              : (storedDeviceNames[id] ?? "Unbekanntes Gerät");
 
+          return ListTile(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    "$name (${isAvailable ? 'verfügbar' : 'nicht verfügbar'})",
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: blaugrau),
+                  ),
+                ),
+                if (loadingDevices.contains(device))
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                if (storedDevices.contains(id))
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: blaugrau),
+                    onPressed: () => removeStoredDevice(id),
+                  ),
+              ],
+            ),
+            subtitle: Text(
+              "Gerätenummer: $id",
+              style: const TextStyle(color: blaugrau),
+            ),
+            onTap: () {
+              if (isAvailable && !loadingDevices.contains(device)) {
+                connectToDevice(device);
+              }
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ============================
 // InfoPage - NEUE Hilfeseite
+// ============================
 
 class InfoPage extends StatelessWidget {
   const InfoPage({super.key});
@@ -505,6 +443,7 @@ class InfoPage extends StatelessWidget {
     );
   }
 }
+
 
 
 
