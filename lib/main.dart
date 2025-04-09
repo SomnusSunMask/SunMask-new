@@ -536,8 +536,8 @@ void initState() {
         children: const [
           Text(
             'Tippe auf „Weckzeit wählen“/„Timer wählen“, um deinen Lichtwecker einzustellen und anschließend auf „Weckzeit senden“/„Timer senden“.\n\n'
-            'Die Akkuanzeige ist während des Aufladens nicht korrekt.\n\n',
-            'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.'
+            'Die Akkuanzeige ist während des Aufladens nicht korrekt.\n\n'
+            'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
           ),
         ],
       ),
