@@ -405,7 +405,7 @@ class InfoPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Hilfe und Hinweise', style: TextStyle(color: Colors.white)),
+        title: const Text('Hilfe & Hinweise', style: TextStyle(color: Colors.white)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
