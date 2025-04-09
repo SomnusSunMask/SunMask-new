@@ -153,7 +153,10 @@ class _BLEHomePageState extends State<BLEHomePage> {
         side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
         borderRadius: BorderRadius.circular(12),
       ),
-          title: const Text('SunMask Verbindungsanleitung'),
+          title: const Text(
+  'SunMask Verbindungsanleitung',
+  style: TextStyle(color: Colors.white),
+),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,6 +167,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
                 '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
                 '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
                 'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
+                style: TextStyle(color: Colors.white),
               ),
               SizedBox(height: 13),
               Text(
@@ -174,9 +178,12 @@ class _BLEHomePageState extends State<BLEHomePage> {
           ),
           actions: [
             TextButton(
-              child: const Text('Verstanden'),
-              onPressed: () {
-                Navigator.of(context).pop();
+  style: TextButton.styleFrom(
+    foregroundColor: Colors.white,
+  ),
+  child: const Text('Verstanden'),
+  onPressed: () {
+    Navigator.of(context).pop();
               },
             ),
           ],
@@ -529,7 +536,10 @@ void initState() {
         side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
         borderRadius: BorderRadius.circular(12),
       ),
-      title: const Text('Bedienungshinweis!'),
+      title: const Text(
+  'Bedienungshinweise!',
+  style: TextStyle(color: Colors.white),
+),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -538,14 +548,18 @@ void initState() {
             'Tippe auf „Weckzeit wählen“/„Timer wählen“, um deinen Lichtwecker einzustellen und anschließend auf „Weckzeit senden“/„Timer senden“.\n\n'
             'Die Akkuanzeige ist während des Aufladens nicht korrekt.\n\n'
             'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
+            style: TextStyle(color: Colors.white),
           ),
         ],
       ),
       actions: [
         TextButton(
-          child: const Text('Verstanden'),
-          onPressed: () {
-            Navigator.of(context).pop();
+  style: TextButton.styleFrom(
+    foregroundColor: Colors.white,
+  ),
+  child: const Text('Verstanden'),
+  onPressed: () {
+    Navigator.of(context).pop();
           },
         ),
       ],
