@@ -420,9 +420,9 @@ class InfoPage extends StatelessWidget {
               ),
               SizedBox(height: 8),
               Text(
-                '1. Starte deine SunMask und drücke den Startknopf.\n\n'
-                '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
-                '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
+                '1. Starte deine SunMask und drücke den Startknopf.\n'
+                '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
+                '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
                 '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
                 'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
                 style: TextStyle(color: Colors.white),
@@ -441,8 +441,8 @@ class InfoPage extends StatelessWidget {
               ),
               SizedBox(height: 8),
               Text(
-                'Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n\n'
-                'Anschließend auf „Weckzeit senden“ oder „Timer senden“ tippen.',
+                '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n'
+                '2. Anschließend auf „Weckzeit senden“ oder „Timer senden“ tippen.',
                 style: TextStyle(color: Colors.white),
               ),
               SizedBox(height: 16),
@@ -461,12 +461,12 @@ class InfoPage extends StatelessWidget {
 
               // Punkt 4
               Text(
-                'Hinweis zur Übersichtsseite',
+                'Hinweis zur "eingestellte Lichtwecker"-Seite',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               SizedBox(height: 8),
               Text(
-                'Du kannst, ohne die SunMask zu starten und zu verbinden, auf der Übersichtsseite deine eingestellten Lichtwecker überprüfen.',
+                'Mit der "eingestellte Lichtwecker"-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen.',
                 style: TextStyle(color: Colors.white),
               ),
             ],
