@@ -442,7 +442,7 @@ class InfoPage extends StatelessWidget {
               Text(
                 '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
                 style: TextStyle(
-                  color: Colors.grey,
+                  color: blaugrau,
                   fontSize: 11.5,
                   height: 1.3,
                 ),
@@ -460,8 +460,8 @@ class InfoPage extends StatelessWidget {
               ),
               SizedBox(height: 6),
               Text(
-                'Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n\n'
-                'Anschließend auf „Weckzeit senden“ oder „Timer senden“ tippen.',
+                '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n\n'
+                '2. Tippe anschließend auf „Weckzeit senden“ oder „Timer senden“.',
                 style: TextStyle(
                   color: blaugrau,
                   fontSize: 13,
@@ -501,7 +501,7 @@ class InfoPage extends StatelessWidget {
               ),
               SizedBox(height: 6),
               Text(
-                'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen.',
+                'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen. Du erreichst sie in der Geräteübersicht mit Klick auf "SunMask (nicht verfügbar)" oder auf das "i".',
                 style: TextStyle(
                   color: blaugrau,
                   fontSize: 13,
