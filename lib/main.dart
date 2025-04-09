@@ -1278,9 +1278,11 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
           ),
         ],
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
+      body: Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    children: [
           Column(
             children: [
               const Text("Weckzeit", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
