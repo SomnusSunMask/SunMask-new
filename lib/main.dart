@@ -919,6 +919,44 @@ void initState() {
   }
 }
 
+void showFirstTimeUsageHint() async {
+  final prefs = await SharedPreferences.getInstance();
+  final hasShownUsageHint = prefs.getBool('usageHintShown_${widget.device.remoteId.str}') ?? false;
+
+  if (hasShownUsageHint) return;
+
+  await prefs.setBool('usageHintShown_${widget.device.remoteId.str}', true);
+
+  if (!mounted) return;
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.black,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: const Text('Hinweis zur Nutzung', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n\n'
+          'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen.',
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
+            child: const Text('Verstanden'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
 
   void readBatteryLevel() async {
     if (widget.batteryCharacteristic != null) {
@@ -1376,6 +1414,8 @@ void initState() {
     return;
   }
 
+  showFirstTimeUsageHint();
+
   if (widget.alarmCharacteristic != null && selectedWakeTime != null) {
     try {
       String currentTime = DateFormat("HH:mm").format(DateTime.now());
@@ -1441,6 +1481,8 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
       Navigator.pop(context);
       return;
     }
+
+    showFirstTimeUsageHint();
 
     if (widget.timerCharacteristic != null && selectedTimerMinutes != null) {
       try {
