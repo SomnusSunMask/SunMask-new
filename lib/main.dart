@@ -435,7 +435,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
               title: 'Standort-Berechtigung',
               isMet: isLocationPermissionGranted,
               onTap: () {
-                AppSettings.openAppSettings(type: AppSettingsType.location);
+                AppSettings.openAppSettings();
               },
             ),
           ],
