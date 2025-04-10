@@ -125,6 +125,7 @@ class _BLEHomePageState extends State<BLEHomePage> with WidgetsBindingObserver {
   List<String> storedDevices = [];
   Map<String, String> storedDeviceNames = {};
   BluetoothDevice? selectedDevice;
+  bool isRequirementDialogOpen = false;
 
   bool isShowingConnectionError = false;
   DateTime lastConnectionErrorTime = DateTime.fromMillisecondsSinceEpoch(0);
@@ -350,18 +351,22 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
 
   if (isBluetoothOn && isLocationServiceOn && isLocationPermissionGranted) {
   if (!mounted) return;if (!mounted) return;
-  if (Navigator.canPop(context)) {
-    Navigator.of(context).pop(); // ✅ Dialog automatisch schließen
-  }
+  if (isRequirementDialogOpen && Navigator.canPop(context)) {
+  Navigator.of(context).pop();
+}
+
   return; // ✅ Alles in Ordnung, kein Dialog nötig
 }
 
 
   if (!mounted) return;
 
-  if (Navigator.canPop(context)) {
+  if (isRequirementDialogOpen && Navigator.canPop(context)) {
   Navigator.of(context).pop();
 }
+
+  if (isRequirementDialogOpen) return;
+isRequirementDialogOpen = true;
 
   showDialog(
     context: context,
@@ -446,7 +451,8 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
         ],
       );
     },
-  );
+  ).then((_) {
+  isRequirementDialogOpen = false;
 }
 
   void showRequirementsDialog(bool isBluetoothOn, bool isLocationOn, bool isLocationPermissionGranted) {
