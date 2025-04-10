@@ -351,6 +351,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
         title: const Text('Verbindungs-Voraussetzungen', style: TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
@@ -359,14 +360,30 @@ class _BLEHomePageState extends State<BLEHomePage> {
                 const Text('Bluetooth', style: TextStyle(color: Colors.white)),
               ],
             ),
+            if (!isBluetoothOn)
+              const Padding(
+                padding: EdgeInsets.only(left: 32, top: 4),
+                child: Text(
+                  '→ Aktiviere Bluetooth',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Icon(isLocationServiceOn ? Icons.check_circle : Icons.cancel, color: isLocationServiceOn ? Colors.green : Colors.red),
                 const SizedBox(width: 8),
-                const Text('Standortdienst', style: TextStyle(color: Colors.white)),
+                const Text('Standort', style: TextStyle(color: Colors.white)),
               ],
             ),
+            if (!isLocationServiceOn)
+              const Padding(
+                padding: EdgeInsets.only(left: 32, top: 4),
+                child: Text(
+                  '→ Aktiviere den Standort',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -375,6 +392,14 @@ class _BLEHomePageState extends State<BLEHomePage> {
                 const Text('Standortberechtigung', style: TextStyle(color: Colors.white)),
               ],
             ),
+            if (!isLocationPermissionGranted)
+              const Padding(
+                padding: EdgeInsets.only(left: 32, top: 4),
+                child: Text(
+                  '→ Suche in den Einstellungen nach Somnus und berechtige die App auf den Standort zuzugreifen.',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ),
           ],
         ),
         actions: [
@@ -398,6 +423,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     },
   );
 }
+
   void showRequirementsDialog(bool isBluetoothOn, bool isLocationOn, bool isLocationPermissionGranted) {
   showDialog(
     context: context,
