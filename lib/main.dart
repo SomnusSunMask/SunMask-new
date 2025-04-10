@@ -417,7 +417,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
               title: 'Bluetooth aktiviert',
               isMet: isBluetoothOn,
               onTap: () {
-                AppSettings.openBluetoothSettings();
+                AppSettings.openAppSettings(type: AppSettingsType.bluetooth);
               },
             ),
             const SizedBox(height: 10),
