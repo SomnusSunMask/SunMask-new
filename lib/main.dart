@@ -6,9 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart'
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:app_settings/app_settings.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -327,7 +327,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
 
   Future<void> checkBluetoothAndLocation() async {
   const blaugrau = Color(0xFF7A9CA3);
-  bool isBluetoothOn = await FlutterBluePlus.isOn;
+  bool isBluetoothOn = (await FlutterBluePlus.adapterState.first) == BluetoothAdapterState.on;
   bool isLocationServiceOn = await Geolocator.isLocationServiceEnabled();
   LocationPermission permission = await Geolocator.checkPermission();
   bool isLocationPermissionGranted =
