@@ -336,6 +336,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
     return; // ✅ Alles in Ordnung, kein Dialog nötig
   }
 
+  if (!mounted) return;
+
   showDialog(
     context: context,
     barrierDismissible: false,
