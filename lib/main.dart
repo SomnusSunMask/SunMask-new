@@ -139,6 +139,21 @@ class _BLEHomePageState extends State<BLEHomePage> with WidgetsBindingObserver {
     scanForDevices();
   }
 
+  @override
+void dispose() {
+  WidgetsBinding.instance.removeObserver(this);
+  super.dispose();
+}
+
+  @override
+void didChangeAppLifecycleState(AppLifecycleState state) {
+  if (state == AppLifecycleState.resumed) {
+    // Wenn App wieder sichtbar wird, erneut prüfen!
+    checkBluetoothAndLocation();
+  }
+}
+
+
   void showAppIntroIfFirstStart() async {
     final prefs = await SharedPreferences.getInstance();
     final hasShownIntro = prefs.getBool('appFirstStartShown') ?? false;
@@ -830,7 +845,6 @@ void initState() {
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     countdownTimer?.cancel();
     timerCountdown?.cancel();
     try {
@@ -841,14 +855,7 @@ void initState() {
     super.dispose();
   }
 
-  @override
-void didChangeAppLifecycleState(AppLifecycleState state) {
-  if (state == AppLifecycleState.resumed) {
-    // Wenn App wieder sichtbar wird, erneut prüfen!
-    checkBluetoothAndLocation();
-  }
-}
-
+  
   void showFirstConnectionHint() async {
   final prefs = await SharedPreferences.getInstance();
   final hasShownHint = prefs.getBool('hintShown_${widget.device.remoteId.str}') ?? false;
