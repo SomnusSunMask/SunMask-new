@@ -718,7 +718,7 @@ class InfoPage extends StatelessWidget {
                 '1. Starte deine SunMask und drücke den Startknopf.\n'
                 '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
                 '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
-                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n',
+                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n',
                 style: TextStyle(
                   color: blaugrau,
                   fontSize: 14,
@@ -765,7 +765,7 @@ class InfoPage extends StatelessWidget {
               ),
               SizedBox(height: 5),
               Text(
-                'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n\n'
+                'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n'
                 'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen, der kurz vor dem Ausgehen der LEDs klingelt.',
                 style: TextStyle(
                   color: blaugrau,
