@@ -359,6 +359,10 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
 
   if (!mounted) return;
 
+  if (Navigator.canPop(context)) {
+  Navigator.of(context).pop();
+}
+
   showDialog(
     context: context,
     barrierDismissible: false,
