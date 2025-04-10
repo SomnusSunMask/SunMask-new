@@ -349,6 +349,7 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
       permission == LocationPermission.always || permission == LocationPermission.whileInUse;
 
   if (isBluetoothOn && isLocationServiceOn && isLocationPermissionGranted) {
+  if (!mounted) return;if (!mounted) return;
   if (Navigator.canPop(context)) {
     Navigator.of(context).pop(); // ✅ Dialog automatisch schließen
   }
