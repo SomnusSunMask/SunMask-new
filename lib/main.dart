@@ -746,7 +746,7 @@ class InfoPage extends StatelessWidget {
               SizedBox(height: 5),
               Text(
                 '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n'
-                '2. Tippe anschließend auf „Weckzeit senden“ oder „Timer senden“.',
+                '2. Tippe anschließend auf „Weckzeit bestätigen“ oder „Timer bestätigen“.',
                 style: TextStyle(
                   color: blaugrau,
                   fontSize: 14,
@@ -896,7 +896,7 @@ void initState() {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
           Text(
-            'Tippe auf „Weckzeit wählen“/„Timer wählen“, um deinen Lichtwecker einzustellen und anschließend auf „Weckzeit senden“/„Timer senden“.\n\n'
+            'Tippe auf „Weckzeit wählen“/„Timer wählen“, um deinen Lichtwecker einzustellen und anschließend auf „Weckzeit bestätigen“/„Timer bestätigen“.\n\n'
             'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
             style: TextStyle(color: Colors.white),
           ),
@@ -1409,7 +1409,7 @@ void showFirstTimeUsageHint() async {
 
   void sendWakeTimeToESP() async {
   if (!widget.device.isConnected) {
-    showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
+    showErrorSnackbar("❌ bestätigen fehlgeschlagen! Verbinde die SunMask neu.");
     Navigator.pop(context);
     return;
   }
@@ -1469,7 +1469,7 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
 
       debugPrint("✅ Weckzeit gesendet: $combinedData ($wakeDateTime)");
     } catch (e) {
-      debugPrint("⚠️ Senden fehlgeschlagen: $e");
+      debugPrint("⚠️ bestätigen fehlgeschlagen: $e");
     }
   }
 }
@@ -1477,7 +1477,7 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
 
   void sendTimerToESP() async {
     if (!widget.device.isConnected) {
-      showErrorSnackbar("❌ Senden fehlgeschlagen! Verbinde die SunMask neu.");
+      showErrorSnackbar("❌ bestätigen fehlgeschlagen! Verbinde die SunMask neu.");
       Navigator.pop(context);
       return;
     }
@@ -1506,7 +1506,7 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
 
         debugPrint("✅ Timer gesendet: $timerValue Minuten");
       } catch (e) {
-        debugPrint("⚠️ Senden fehlgeschlagen: $e");
+        debugPrint("⚠️ bestätigen fehlgeschlagen: $e");
       }
     }
   }
@@ -1609,7 +1609,7 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
                     foregroundColor: Colors.white,
                   ),
                   onPressed: sendWakeTimeToESP,
-                  child: const Text("Weckzeit senden", style: TextStyle(fontSize: 18)),
+                  child: const Text("Weckzeit bestätigen", style: TextStyle(fontSize: 18)),
                 ),
               ),
             ],
@@ -1641,7 +1641,7 @@ if (selectedWakeTime!.hour == now.hour && selectedWakeTime!.minute == now.minute
                     foregroundColor: Colors.white,
                   ),
                   onPressed: sendTimerToESP,
-                  child: const Text("Timer senden", style: TextStyle(fontSize: 18)),
+                  child: const Text("Timer bestätigen", style: TextStyle(fontSize: 18)),
                 ),
               ),
             ],
