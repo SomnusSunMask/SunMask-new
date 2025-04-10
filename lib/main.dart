@@ -119,7 +119,7 @@ class BLEHomePage extends StatefulWidget {
   State<BLEHomePage> createState() => _BLEHomePageState();
 }
 
-class _BLEHomePageState extends State<BLEHomePage> {
+class _BLEHomePageState extends State<BLEHomePage> with WidgetsBindingObserver {
   final List<BluetoothDevice> devices = [];
   final Set<BluetoothDevice> loadingDevices = {};
   List<String> storedDevices = [];
@@ -132,6 +132,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     showAppIntroIfFirstStart();
     loadKnownDevices();
     checkBluetoothAndLocation();
@@ -333,8 +334,12 @@ class _BLEHomePageState extends State<BLEHomePage> {
       permission == LocationPermission.always || permission == LocationPermission.whileInUse;
 
   if (isBluetoothOn && isLocationServiceOn && isLocationPermissionGranted) {
-    return; // ✅ Alles in Ordnung, kein Dialog nötig
+  if (Navigator.canPop(context)) {
+    Navigator.of(context).pop(); // ✅ Dialog automatisch schließen
   }
+  return; // ✅ Alles in Ordnung, kein Dialog nötig
+}
+
 
   if (!mounted) return;
 
@@ -825,6 +830,7 @@ void initState() {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     countdownTimer?.cancel();
     timerCountdown?.cancel();
     try {
@@ -834,6 +840,14 @@ void initState() {
     }
     super.dispose();
   }
+
+  @override
+void didChangeAppLifecycleState(AppLifecycleState state) {
+  if (state == AppLifecycleState.resumed) {
+    // Wenn App wieder sichtbar wird, erneut prüfen!
+    checkBluetoothAndLocation();
+  }
+}
 
   void showFirstConnectionHint() async {
   final prefs = await SharedPreferences.getInstance();
