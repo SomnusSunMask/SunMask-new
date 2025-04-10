@@ -132,6 +132,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
     super.initState();
     showAppIntroIfFirstStart();
     loadKnownDevices();
+    checkBluetoothAndLocation();
     scanForDevices();
   }
 
@@ -210,6 +211,8 @@ class _BLEHomePageState extends State<BLEHomePage> {
   }
 
   void scanForDevices() async {
+    await checkBluetoothAndLocation();
+
     setState(() {
       devices.clear();
     });
@@ -318,6 +321,159 @@ class _BLEHomePageState extends State<BLEHomePage> {
     await saveKnownDevices();
     setState(() {});
   }
+
+  Future<void> checkBluetoothAndLocation() async {
+  const blaugrau = Color(0xFF7A9CA3);
+  bool isBluetoothOn = await FlutterBluePlus.isOn;
+  bool isLocationServiceOn = await Geolocator.isLocationServiceEnabled();
+  LocationPermission permission = await Geolocator.checkPermission();
+  bool isLocationPermissionGranted =
+      permission == LocationPermission.always || permission == LocationPermission.whileInUse;
+
+  if (isBluetoothOn && isLocationServiceOn && isLocationPermissionGranted) {
+    return; // ✅ Alles in Ordnung, kein Dialog nötig
+  }
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.black,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: blaugrau, width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: const Text('Verbindungs-Voraussetzungen', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(isBluetoothOn ? Icons.check_circle : Icons.cancel, color: isBluetoothOn ? Colors.green : Colors.red),
+                const SizedBox(width: 8),
+                const Text('Bluetooth', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(isLocationServiceOn ? Icons.check_circle : Icons.cancel, color: isLocationServiceOn ? Colors.green : Colors.red),
+                const SizedBox(width: 8),
+                const Text('Standortdienst', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(isLocationPermissionGranted ? Icons.check_circle : Icons.cancel, color: isLocationPermissionGranted ? Colors.green : Colors.red),
+                const SizedBox(width: 8),
+                const Text('Standortberechtigung', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (!isBluetoothOn) {
+                FlutterBluePlus.turnOn(); // Öffnet das Bluetooth-Fenster
+              }
+              if (!isLocationServiceOn) {
+                Geolocator.openLocationSettings(); // Öffnet Standort-Einstellungen
+              }
+              if (!isLocationPermissionGranted) {
+                Geolocator.requestPermission(); // Fragt Berechtigung ab
+              }
+            },
+            child: const Text('Problem beheben', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      );
+    },
+  );
+}
+  void showRequirementsDialog(bool isBluetoothOn, bool isLocationOn, bool isLocationPermissionGranted) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.black,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: const Text(
+          'Verbindungsanforderungen',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            buildRequirementRow(
+              title: 'Bluetooth aktiviert',
+              isMet: isBluetoothOn,
+              onTap: () {
+                FlutterBluePlus.openBluetoothSettings();
+              },
+            ),
+            const SizedBox(height: 10),
+            buildRequirementRow(
+              title: 'Standort aktiviert',
+              isMet: isLocationOn,
+              onTap: () {
+                Geolocator.openLocationSettings();
+              },
+            ),
+            const SizedBox(height: 10),
+            buildRequirementRow(
+              title: 'Standort-Berechtigung',
+              isMet: isLocationPermissionGranted,
+              onTap: () {
+                Geolocator.openAppSettings();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: const Text('OK', style: TextStyle(color: Colors.white)),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Widget buildRequirementRow({
+  required String title,
+  required bool isMet,
+  required VoidCallback onTap,
+}) {
+  return InkWell(
+    onTap: onTap,
+    child: Row(
+      children: [
+        Icon(
+          isMet ? Icons.check_circle : Icons.cancel,
+          color: isMet ? Colors.green : Colors.red,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   void showErrorSnackbar(String message) {
     if (!mounted) return;
