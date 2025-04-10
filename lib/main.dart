@@ -999,13 +999,11 @@ void initState() {
 
 
   String formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final parts = <String>[];
-    if (hours > 0) parts.add("$hours Stunden");
-    if (minutes > 0 || hours == 0) parts.add("$minutes Minuten");
-    return parts.join(", ");
-  }
+  final hours = duration.inHours;
+  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return '$hours:$minutes:$seconds';
+}
   String wakeTimeButtonText() {
     if (selectedWakeTime != null) {
       return "Weckzeit wählen – ${selectedWakeTime!.hour.toString().padLeft(2, '0')}:${selectedWakeTime!.minute.toString().padLeft(2, '0')}";
@@ -1704,13 +1702,12 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   String formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final parts = <String>[];
-    if (hours > 0) parts.add("$hours Stunden");
-    if (minutes > 0 || hours == 0) parts.add("$minutes Minuten");
-    return parts.join(", ");
-  }
+  final hours = duration.inHours;
+  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return '$hours:$minutes:$seconds';
+}
+
 
   String get timerText {
     if (lastTimerMinutes != null && timerStartTimestamp != null) {
