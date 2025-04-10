@@ -756,7 +756,7 @@ class InfoPage extends StatelessWidget {
               SizedBox(height: 10),
 
               Text(
-                'Hinweis zur Akku-Anzeige:',
+                'Wie stelle ich einen Lichtwecker ein?',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
@@ -765,7 +765,8 @@ class InfoPage extends StatelessWidget {
               ),
               SizedBox(height: 5),
               Text(
-                'Die Akkuanzeige ist während des Aufladens nicht korrekt.',
+                'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n\n'
+                'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen, der kurz vor dem Ausgehen der LEDs klingelt.',
                 style: TextStyle(
                   color: blaugrau,
                   fontSize: 14,
@@ -887,7 +888,7 @@ void initState() {
         borderRadius: BorderRadius.circular(12),
       ),
       title: const Text(
-  'Bedienungshinweise!',
+  'Wie stelle ich einen Lichtwecker ein?',
   style: TextStyle(color: Colors.white),
 ),
       content: Column(
@@ -896,7 +897,6 @@ void initState() {
         children: const [
           Text(
             'Tippe auf „Weckzeit wählen“/„Timer wählen“, um deinen Lichtwecker einzustellen und anschließend auf „Weckzeit senden“/„Timer senden“.\n\n'
-            'Die Akkuanzeige ist während des Aufladens nicht korrekt.\n\n'
             'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
             style: TextStyle(color: Colors.white),
           ),
@@ -938,10 +938,10 @@ void showFirstTimeUsageHint() async {
           side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
           borderRadius: BorderRadius.circular(12),
         ),
-        title: const Text('Hinweis zur Nutzung', style: TextStyle(color: Colors.white)),
+        title: const Text('Wie funktioniert der Lichtwecker?', style: TextStyle(color: Colors.white)),
         content: const Text(
           'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n\n'
-          'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen.',
+          'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen, der kurz vor dem Ausgehen der LEDs klingelt.',
           style: TextStyle(color: Colors.white),
         ),
         actions: [
