@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sunmask/main.dart';
+import 'package:somnus/main.dart';
 
 void main() {
   testWidgets('App startet ohne Fehler', (WidgetTester tester) async {
