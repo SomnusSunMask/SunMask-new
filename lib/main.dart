@@ -756,7 +756,7 @@ class InfoPage extends StatelessWidget {
               SizedBox(height: 10),
 
               Text(
-                'Wie stelle ich einen Lichtwecker ein?',
+                'Wie weckt mich der Lichtwecker?',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
@@ -938,7 +938,7 @@ void showFirstTimeUsageHint() async {
           side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
           borderRadius: BorderRadius.circular(12),
         ),
-        title: const Text('Wie funktioniert der Lichtwecker?', style: TextStyle(color: Colors.white)),
+        title: const Text('Wie weckt mich der Lichtwecker?', style: TextStyle(color: Colors.white)),
         content: const Text(
           'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n\n'
           'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen, der kurz vor dem Ausgehen der LEDs klingelt.',
