@@ -417,7 +417,7 @@ class _BLEHomePageState extends State<BLEHomePage> {
               title: 'Bluetooth aktiviert',
               isMet: isBluetoothOn,
               onTap: () {
-                FlutterBluePlus.openBluetoothSettings();
+                AppSettings.openBluetoothSettings();
               },
             ),
             const SizedBox(height: 10),
