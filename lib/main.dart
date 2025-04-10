@@ -453,6 +453,7 @@ isRequirementDialogOpen = true;
     },
   ).then((_) {
   isRequirementDialogOpen = false;
+});
 }
 
   void showRequirementsDialog(bool isBluetoothOn, bool isLocationOn, bool isLocationPermissionGranted) {
