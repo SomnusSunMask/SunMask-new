@@ -775,7 +775,7 @@ class _InfoPageState extends State<InfoPage> with SingleTickerProviderStateMixin
                       title: Text(
                         titles[index],
                         style: const TextStyle(
-                          fontSize: 15,
+                          fontSize: 17,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
