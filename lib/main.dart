@@ -687,6 +687,8 @@ Widget buildRequirementRow({
 // InfoPage - NEUE Hilfeseite
 // ============================
 
+// InfoPage - Hilfe- und Hinweiseseite mit perfektem Pfeil
+
 class InfoPage extends StatefulWidget {
   const InfoPage({super.key});
 
@@ -694,7 +696,7 @@ class InfoPage extends StatefulWidget {
   State<InfoPage> createState() => _InfoPageState();
 }
 
-class _InfoPageState extends State<InfoPage> {
+class _InfoPageState extends State<InfoPage> with SingleTickerProviderStateMixin {
   final blaugrau = const Color(0xFF7A9CA3);
   int? _currentPanelIndex;
 
@@ -702,15 +704,10 @@ class _InfoPageState extends State<InfoPage> {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
-        dividerColor: Colors.transparent, // Standard-Linien unsichtbar
-        unselectedWidgetColor: blaugrau, // Pfeil in geschlossenem Zustand
+        dividerColor: Colors.transparent,
+        unselectedWidgetColor: Colors.transparent, // Standard-Pfeil unsichtbar
         colorScheme: ColorScheme.dark(
-          primary: blaugrau, // Pfeil in geöffnetem Zustand
-        ),
-        iconTheme: IconThemeData(color: blaugrau), // <- Blaugraue Pfeilfarbe
-        expansionTileTheme: ExpansionTileThemeData(
-          iconColor: blaugrau,
-          collapsedIconColor: blaugrau,
+          primary: Colors.transparent, // Standard-Pfeil unsichtbar
         ),
       ),
       child: Scaffold(
@@ -789,51 +786,60 @@ class _InfoPageState extends State<InfoPage> {
   }
 
   ExpansionPanelRadio _buildRadioPanel({
-  required int index,
-  required String title,
-  required Widget content,
-}) {
-  return ExpansionPanelRadio(
-    value: index,
-    backgroundColor: Colors.black,
-    headerBuilder: (context, isExpanded) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            title: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+    required int index,
+    required String title,
+    required Widget content,
+  }) {
+    final isExpanded = _currentPanelIndex == index;
+
+    return ExpansionPanelRadio(
+      value: index,
+      backgroundColor: Colors.black,
+      headerBuilder: (context, _) {
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 400),
+                  child: Icon(
+                    Icons.expand_more,
+                    color: blaugrau,
+                  ),
+                ),
+              ],
             ),
-            trailing: AnimatedRotation(
-              turns: isExpanded ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: const Icon(
-                Icons.expand_more,
-                color: Color(0xFF7A9CA3), // Blaugrau
-              ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: -42),
+              width: double.infinity,
+              height: 1,
+              color: blaugrau,
             ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: -42),
-            width: double.infinity,
-            height: 1,
-            color: const Color(0xFF7A9CA3),
-          ),
-        ],
-      );
-    },
-    body: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-      child: content,
-    ),
-  );
-}
+          ],
+        );
+      },
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+        child: content,
+      ),
+    );
   }
+}
+
 
 
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
