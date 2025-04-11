@@ -709,6 +709,10 @@ class _InfoPageState extends State<InfoPage> {
         ),
         iconTheme: const IconThemeData(color: Color(0xFF7A9CA3)), // <- blaugraue Farbe hier fest verdrahtet
       ),
+      expansionTileTheme: ExpansionTileThemeData(
+    iconColor: blaugrau, // Pfeil in geöffnetem Zustand
+    collapsedIconColor: blaugrau, // Pfeil in geschlossenem Zustand
+  ),
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
