@@ -707,7 +707,10 @@ class _InfoPageState extends State<InfoPage> {
         colorScheme: ColorScheme.dark(
           primary: blaugrau, // Pfeil in geöffnetem Zustand
         ),
-        iconTheme: const IconThemeData(color: Color(0xFF7A9CA3)), // <- blaugraue Farbe hier fest verdrahtet
+       iconTheme: IconThemeData(color: blaugrau), // <- Wichtig
+    expansionTileTheme: ExpansionTileThemeData(
+      iconColor: blaugrau,
+      collapsedIconColor: blaugrau,
       ),
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -763,7 +766,7 @@ class _InfoPageState extends State<InfoPage> {
                   index: 2,
                   title: 'Wie weckt mich der Lichtwecker?',
                   content: Text(
-                    'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n'
+                    'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n\n'
                     'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen, der kurz vor dem Ausgehen der LEDs klingelt.',
                     style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
                   ),
@@ -797,17 +800,21 @@ class _InfoPageState extends State<InfoPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              title: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+  title: Text(
+    title,
+    style: const TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+    ),
+  ),
+  trailing: Icon(
+    Icons.expand_more,
+    color: blaugrau,
+  ),
+),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: -42),
+              margin: const EdgeInsets.symmetric(horizontal: -60),
               width: double.infinity,
               height: 1,
               color: blaugrau,
