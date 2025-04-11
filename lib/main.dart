@@ -712,6 +712,7 @@ class _InfoPageState extends State<InfoPage> {
         padding: const EdgeInsets.all(14.0),
         child: SingleChildScrollView(
           child: ExpansionPanelList.radio(
+            iconColor: Color(0xFF7A9CA3),
             expansionCallback: (int index, bool isExpanded) {
               setState(() {
                 _currentPanelIndex = isExpanded ? null : index;
