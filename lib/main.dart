@@ -577,7 +577,7 @@ Widget buildRequirementRow({
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Somnus-Geräte'),
+        title: const Text('Somnus-Startseite'),
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline),
@@ -734,7 +734,7 @@ class _InfoPageState extends State<InfoPage> with SingleTickerProviderStateMixin
                   children: [
                     Text(
                       '1. Starte deine SunMask und drücke den Startknopf.\n'
-                      '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
+                      '2. Aktualisiere auf der Somnus-Startseite oben rechts, um nach Geräten zu suchen.\n'
                       '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
                       '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n',
                       style: TextStyle(color: blaugrau, fontSize: 16, height: 1.2),
