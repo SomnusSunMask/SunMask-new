@@ -707,7 +707,7 @@ class _InfoPageState extends State<InfoPage> {
         colorScheme: ColorScheme.dark(
           primary: blaugrau, // Pfeil in geöffnetem Zustand
         ),
-        iconTheme: IconThemeData(color: blaugrau),
+        iconTheme: const IconThemeData(color: Color(0xFF7A9CA3)), // <- blaugraue Farbe hier fest verdrahtet
       ),
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -727,7 +727,7 @@ class _InfoPageState extends State<InfoPage> {
                 });
               },
               initialOpenPanelValue: _currentPanelIndex,
-              dividerColor: Colors.transparent, // Standard-Linien unsichtbar
+              dividerColor: Colors.transparent,
               animationDuration: const Duration(milliseconds: 400),
               children: [
                 _buildRadioPanel(
@@ -807,10 +807,10 @@ class _InfoPageState extends State<InfoPage> {
               ),
             ),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: -14),
+              margin: const EdgeInsets.symmetric(horizontal: -18),
               width: double.infinity,
               height: 1,
-              color: blaugrau, // Eigene Linie in blaugrau
+              color: blaugrau,
             ),
           ],
         );
@@ -822,6 +822,7 @@ class _InfoPageState extends State<InfoPage> {
     );
   }
 }
+
 
 
 
