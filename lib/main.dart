@@ -702,10 +702,10 @@ class _InfoPageState extends State<InfoPage> {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
-        dividerColor: blaugrau,
-        unselectedWidgetColor: blaugrau, // <- Farbe für den Pfeil
+        dividerColor: Colors.transparent, // Standard-Linien unsichtbar
+        unselectedWidgetColor: blaugrau, // Pfeil in geschlossenem Zustand
         colorScheme: ColorScheme.dark(
-          primary: blaugrau, // <- Farbe für aktiven Pfeil
+          primary: blaugrau, // Pfeil in geöffnetem Zustand
         ),
       ),
       child: Scaffold(
@@ -726,7 +726,7 @@ class _InfoPageState extends State<InfoPage> {
                 });
               },
               initialOpenPanelValue: _currentPanelIndex,
-              dividerColor: blaugrau,
+              dividerColor: Colors.transparent, // Standard-Linien unsichtbar
               animationDuration: const Duration(milliseconds: 400),
               children: [
                 _buildRadioPanel(
@@ -792,15 +792,25 @@ class _InfoPageState extends State<InfoPage> {
       value: index,
       backgroundColor: Colors.black,
       headerBuilder: (context, isExpanded) {
-        return ListTile(
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              title: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
-          ),
+            Container(
+              width: double.infinity,
+              height: 1,
+              color: blaugrau, // Eigene Linie in blaugrau
+            ),
+          ],
         );
       },
       body: Padding(
