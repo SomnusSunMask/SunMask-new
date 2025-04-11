@@ -700,74 +700,83 @@ class _InfoPageState extends State<InfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text(
-          'Hilfe und Hinweise',
-          style: TextStyle(color: Colors.white),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dividerColor: blaugrau,
+        unselectedWidgetColor: blaugrau, // <- Farbe für den Pfeil
+        colorScheme: ColorScheme.dark(
+          primary: blaugrau, // <- Farbe für aktiven Pfeil
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(14.0),
-        child: SingleChildScrollView(
-          child: ExpansionPanelList.radio(
-            expansionCallback: (int index, bool isExpanded) {
-              setState(() {
-                _currentPanelIndex = isExpanded ? null : index;
-              });
-            },
-            initialOpenPanelValue: _currentPanelIndex,
-            dividerColor: Colors.black, // Standard-Linie unsichtbar lassen!
-            animationDuration: const Duration(milliseconds: 400),
-            children: [
-              _buildRadioPanel(
-                index: 0,
-                title: 'Wie verbinde ich die SunMask?',
-                content: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '1. Starte deine SunMask und drücke den Startknopf.\n'
-                      '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
-                      '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
-                      '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n',
-                      style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
-                    ),
-                    Text(
-                      '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
-                      style: TextStyle(color: blaugrau, fontSize: 10, height: 1.3),
-                    ),
-                  ],
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          title: const Text(
+            'Hilfe und Hinweise',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(14.0),
+          child: SingleChildScrollView(
+            child: ExpansionPanelList.radio(
+              expansionCallback: (int index, bool isExpanded) {
+                setState(() {
+                  _currentPanelIndex = isExpanded ? null : index;
+                });
+              },
+              initialOpenPanelValue: _currentPanelIndex,
+              dividerColor: blaugrau,
+              animationDuration: const Duration(milliseconds: 400),
+              children: [
+                _buildRadioPanel(
+                  index: 0,
+                  title: 'Wie verbinde ich die SunMask?',
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '1. Starte deine SunMask und drücke den Startknopf.\n'
+                        '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
+                        '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
+                        '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n',
+                        style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
+                      ),
+                      Text(
+                        '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
+                        style: TextStyle(color: blaugrau, fontSize: 10, height: 1.3),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              _buildRadioPanel(
-                index: 1,
-                title: 'Wie stelle ich einen Lichtwecker ein?',
-                content: Text(
-                  '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n'
-                  '2. Tippe anschließend auf „Weckzeit senden“ oder „Timer senden“.',
-                  style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
+                _buildRadioPanel(
+                  index: 1,
+                  title: 'Wie stelle ich einen Lichtwecker ein?',
+                  content: Text(
+                    '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n'
+                    '2. Tippe anschließend auf „Weckzeit senden“ oder „Timer senden“.',
+                    style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
+                  ),
                 ),
-              ),
-              _buildRadioPanel(
-                index: 2,
-                title: 'Wie weckt mich der Lichtwecker?',
-                content: Text(
-                  'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n'
-                  'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen, der kurz vor dem Ausgehen der LEDs klingelt.',
-                  style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
+                _buildRadioPanel(
+                  index: 2,
+                  title: 'Wie weckt mich der Lichtwecker?',
+                  content: Text(
+                    'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n'
+                    'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen, der kurz vor dem Ausgehen der LEDs klingelt.',
+                    style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
+                  ),
                 ),
-              ),
-              _buildRadioPanel(
-                index: 3,
-                title: 'Hinweis zur „eingestellte Lichtwecker“-Seite:',
-                content: Text(
-                  'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen. Du erreichst sie in der Geräteübersicht mit Klick auf "SunMask (nicht verfügbar)" oder auf das "i".',
-                  style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
+                _buildRadioPanel(
+                  index: 3,
+                  title: 'Hinweis zur „eingestellte Lichtwecker“-Seite:',
+                  content: Text(
+                    'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen. Du erreichst sie in der Geräteübersicht mit Klick auf "SunMask (nicht verfügbar)" oder auf das "i".',
+                    style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -783,34 +792,15 @@ class _InfoPageState extends State<InfoPage> {
       value: index,
       backgroundColor: Colors.black,
       headerBuilder: (context, isExpanded) {
-        return Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Icon(
-                  isExpanded ? Icons.expand_less : Icons.expand_more,
-                  color: blaugrau, // Jetzt korrekt in blaugrau!
-                ),
-              ],
+        return ListTile(
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            const SizedBox(height: 6),
-            Container(
-              width: double.infinity,
-              height: 1,
-              color: blaugrau, // Manuelle Linie in blaugrau
-            ),
-          ],
+          ),
         );
       },
       body: Padding(
