@@ -789,46 +789,49 @@ class _InfoPageState extends State<InfoPage> {
   }
 
   ExpansionPanelRadio _buildRadioPanel({
-    required int index,
-    required String title,
-    required Widget content,
-  }) {
-    return ExpansionPanelRadio(
-      value: index,
-      backgroundColor: Colors.black,
-      headerBuilder: (context, isExpanded) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListTile(
-              title: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+  required int index,
+  required String title,
+  required Widget content,
+}) {
+  return ExpansionPanelRadio(
+    value: index,
+    backgroundColor: Colors.black,
+    headerBuilder: (context, isExpanded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            title: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
-              trailing: Icon(
+            ),
+            trailing: AnimatedRotation(
+              turns: isExpanded ? 0.5 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: const Icon(
                 Icons.expand_more,
-                color: blaugrau,
+                color: Color(0xFF7A9CA3), // Blaugrau
               ),
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: -42),
-              width: double.infinity,
-              height: 1,
-              color: blaugrau,
-            ),
-          ],
-        );
-      },
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-        child: content,
-      ),
-    );
-  }
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: -42),
+            width: double.infinity,
+            height: 1,
+            color: const Color(0xFF7A9CA3),
+          ),
+        ],
+      );
+    },
+    body: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+      child: content,
+    ),
+  );
 }
 
 
