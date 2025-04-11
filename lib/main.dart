@@ -693,7 +693,7 @@ class InfoPage extends StatefulWidget {
 
 class _InfoPageState extends State<InfoPage> {
   final blaugrau = const Color(0xFF7A9CA3);
-  
+
   final List<bool> _isExpanded = [false, false, false, false];
 
   @override
@@ -784,6 +784,10 @@ class _InfoPageState extends State<InfoPage> {
               color: Colors.white,
             ),
           ),
+          trailing: Icon(
+            isExpanded ? Icons.expand_less : Icons.expand_more,
+            color: blaugrau, // 👈 Farbe deines Pfeils
+          ),
         );
       },
       body: Padding(
@@ -795,6 +799,7 @@ class _InfoPageState extends State<InfoPage> {
     );
   }
 }
+
 
 
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
