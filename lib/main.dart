@@ -693,40 +693,40 @@ class InfoPage extends StatefulWidget {
 
 class _InfoPageState extends State<InfoPage> {
   final blaugrau = const Color(0xFF7A9CA3);
-
-  final List<bool> _isExpanded = [false, false, false, false];
+  int? _currentPanelIndex;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text(
-          'Hilfe und Hinweise',
-          style: TextStyle(color: Colors.white),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dividerColor: blaugrau,
+        unselectedWidgetColor: blaugrau, // <- Farbe für den Pfeil
+        colorScheme: ColorScheme.dark(
+          primary: blaugrau, // <- Farbe für aktiven Pfeil
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(14.0),
-        child: SingleChildScrollView(
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              dividerColor: blaugrau,
-              unselectedWidgetColor: blaugrau, // Pfeil-Farbe (zugeklappt)
-              colorScheme: ColorScheme.fromSwatch().copyWith(
-                secondary: blaugrau, // Pfeil-Farbe (ausgeklappt)
-              ),
-            ),
-            child: ExpansionPanelList(
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          title: const Text(
+            'Hilfe und Hinweise',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(14.0),
+          child: SingleChildScrollView(
+            child: ExpansionPanelList.radio(
               expansionCallback: (int index, bool isExpanded) {
                 setState(() {
-                  _isExpanded[index] = !isExpanded;
+                  _currentPanelIndex = isExpanded ? null : index;
                 });
               },
+              initialOpenPanelValue: _currentPanelIndex,
               dividerColor: blaugrau,
               animationDuration: const Duration(milliseconds: 400),
               children: [
-                _buildPanel(
+                _buildRadioPanel(
                   index: 0,
                   title: 'Wie verbinde ich die SunMask?',
                   content: Column(
@@ -746,7 +746,7 @@ class _InfoPageState extends State<InfoPage> {
                     ],
                   ),
                 ),
-                _buildPanel(
+                _buildRadioPanel(
                   index: 1,
                   title: 'Wie stelle ich einen Lichtwecker ein?',
                   content: Text(
@@ -755,7 +755,7 @@ class _InfoPageState extends State<InfoPage> {
                     style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
                   ),
                 ),
-                _buildPanel(
+                _buildRadioPanel(
                   index: 2,
                   title: 'Wie weckt mich der Lichtwecker?',
                   content: Text(
@@ -764,7 +764,7 @@ class _InfoPageState extends State<InfoPage> {
                     style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
                   ),
                 ),
-                _buildPanel(
+                _buildRadioPanel(
                   index: 3,
                   title: 'Hinweis zur „eingestellte Lichtwecker“-Seite:',
                   content: Text(
@@ -780,8 +780,13 @@ class _InfoPageState extends State<InfoPage> {
     );
   }
 
-  ExpansionPanel _buildPanel({required int index, required String title, required Widget content}) {
-    return ExpansionPanel(
+  ExpansionPanelRadio _buildRadioPanel({
+    required int index,
+    required String title,
+    required Widget content,
+  }) {
+    return ExpansionPanelRadio(
+      value: index,
       backgroundColor: Colors.black,
       headerBuilder: (context, isExpanded) {
         return ListTile(
@@ -799,11 +804,10 @@ class _InfoPageState extends State<InfoPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
         child: content,
       ),
-      isExpanded: _isExpanded[index],
-      canTapOnHeader: true,
     );
   }
 }
+
 
 
 
