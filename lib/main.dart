@@ -687,13 +687,6 @@ Widget buildRequirementRow({
 // InfoPage - NEUE Hilfeseite
 // ============================
 
-class InfoPage extends StatefulWidget {
-  const InfoPage({super.key});
-
-  @override
-  State<InfoPage> createState() => _InfoPageState();
-}
-
 class _InfoPageState extends State<InfoPage> {
   final blaugrau = const Color(0xFF7A9CA3);
   int? _currentPanelIndex;
@@ -707,10 +700,11 @@ class _InfoPageState extends State<InfoPage> {
         colorScheme: ColorScheme.dark(
           primary: blaugrau, // Pfeil in geöffnetem Zustand
         ),
-       iconTheme: IconThemeData(color: blaugrau), // <- Wichtig
-    expansionTileTheme: ExpansionTileThemeData(
-      iconColor: blaugrau,
-      collapsedIconColor: blaugrau,
+        iconTheme: IconThemeData(color: blaugrau), // <- Blaugraue Pfeilfarbe
+        expansionTileTheme: ExpansionTileThemeData(
+          iconColor: blaugrau,
+          collapsedIconColor: blaugrau,
+        ),
       ),
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -800,21 +794,21 @@ class _InfoPageState extends State<InfoPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-  title: Text(
-    title,
-    style: const TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.bold,
-      color: Colors.white,
-    ),
-  ),
-  trailing: Icon(
-    Icons.expand_more,
-    color: blaugrau,
-  ),
-),
+              title: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              trailing: Icon(
+                Icons.expand_more,
+                color: blaugrau,
+              ),
+            ),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: -60),
+              margin: const EdgeInsets.symmetric(horizontal: -42),
               width: double.infinity,
               height: 1,
               color: blaugrau,
@@ -829,13 +823,6 @@ class _InfoPageState extends State<InfoPage> {
     );
   }
 }
-
-
-
-
-
-
-
 
 
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
