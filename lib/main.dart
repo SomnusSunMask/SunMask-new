@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
           backgroundColor: Colors.white,
           contentTextStyle: TextStyle(color: Colors.black),
         ),
-        dialogTheme: const DialogTheme(
+        dialogTheme: const DialogThemeData(
           backgroundColor: Colors.black,
           titleTextStyle: TextStyle(color: blaugrau, fontSize: 20),
           contentTextStyle: TextStyle(color: blaugrau),
@@ -709,10 +709,6 @@ class _InfoPageState extends State<InfoPage> {
         ),
         iconTheme: const IconThemeData(color: Color(0xFF7A9CA3)), // <- blaugraue Farbe hier fest verdrahtet
       ),
-      expansionTileTheme: ExpansionTileThemeData(
-    iconColor: blaugrau, // Pfeil in geöffnetem Zustand
-    collapsedIconColor: blaugrau, // Pfeil in geschlossenem Zustand
-  ),
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
