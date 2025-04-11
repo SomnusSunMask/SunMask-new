@@ -811,7 +811,7 @@ class _InfoPageState extends State<InfoPage> {
               ),
             ),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: -30),
+              margin: const EdgeInsets.symmetric(horizontal: -42),
               width: double.infinity,
               height: 1,
               color: blaugrau,
