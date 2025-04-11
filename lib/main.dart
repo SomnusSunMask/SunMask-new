@@ -684,13 +684,20 @@ Widget buildRequirementRow({
 // InfoPage - NEUE Hilfeseite
 // ============================
 
-class InfoPage extends StatelessWidget {
+class InfoPage extends StatefulWidget {
   const InfoPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const blaugrau = Color(0xFF7A9CA3);
+  State<InfoPage> createState() => _InfoPageState();
+}
 
+class _InfoPageState extends State<InfoPage> {
+  final blaugrau = const Color(0xFF7A9CA3);
+  
+  final List<bool> _isExpanded = [false, false, false, false];
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -702,94 +709,59 @@ class InfoPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(14.0),
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                'Wie verbinde ich die SunMask?',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          child: ExpansionPanelList(
+            expansionCallback: (int index, bool isExpanded) {
+              setState(() {
+                _isExpanded[index] = !isExpanded;
+              });
+            },
+            dividerColor: blaugrau,
+            animationDuration: const Duration(milliseconds: 400),
+            children: [
+              _buildPanel(
+                index: 0,
+                title: 'Wie verbinde ich die SunMask?',
+                content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '1. Starte deine SunMask und drücke den Startknopf.\n'
+                      '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
+                      '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
+                      '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n',
+                      style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
+                    ),
+                    Text(
+                      '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
+                      style: TextStyle(color: blaugrau, fontSize: 10, height: 1.3),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 5),
-              Text(
-                '1. Starte deine SunMask und drücke den Startknopf.\n'
-                '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n'
-                '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
-                '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 14,
-                  height: 1.2,
+              _buildPanel(
+                index: 1,
+                title: 'Wie stelle ich einen Lichtwecker ein?',
+                content: Text(
+                  '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n'
+                  '2. Tippe anschließend auf „Weckzeit senden“ oder „Timer senden“.',
+                  style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
                 ),
               ),
-              Text(
-                '* Um Akku zu sparen, wird Bluetooth 60 Sekunden nach dem Start deaktiviert.',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 10,
-                  height: 1.3,
+              _buildPanel(
+                index: 2,
+                title: 'Wie weckt mich der Lichtwecker?',
+                content: Text(
+                  'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n'
+                  'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen, der kurz vor dem Ausgehen der LEDs klingelt.',
+                  style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
                 ),
               ),
-              SizedBox(height: 10),
-
-              Text(
-                'Wie stelle ich einen Lichtwecker ein?',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                '1. Tippe auf „Weckzeit wählen“ oder „Timer wählen“, um deinen Lichtwecker einzustellen.\n'
-                '2. Tippe anschließend auf „Weckzeit bestätigen“ oder „Timer bestätigen“.',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 14,
-                  height: 1.2,
-                ),
-              ),
-              SizedBox(height: 10),
-
-              Text(
-                'Wie weckt mich der Lichtwecker?',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                'Nach Ablauf des Timers oder beim Erreichen der Weckzeit werden die LEDs für 10 Minuten langsam heller und bleiben danach für weitere 10 Minuten auf maximaler Helligkeit.\n'
-                'Es wird empfohlen, zusätzlich einen akustischen Wecker zu stellen, der kurz vor dem Ausgehen der LEDs klingelt.',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 14,
-                  height: 1.2,
-                ),
-              ),
-              SizedBox(height: 10),
-
-              Text(
-                'Hinweis zur „eingestellte Lichtwecker“-Seite:',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen. Du erreichst sie in der Geräteübersicht mit Klick auf "SunMask (nicht verfügbar)" oder auf das "i".',
-                style: TextStyle(
-                  color: blaugrau,
-                  fontSize: 14,
-                  height: 1.2,
+              _buildPanel(
+                index: 3,
+                title: 'Hinweis zur „eingestellte Lichtwecker“-Seite:',
+                content: Text(
+                  'Mit der „eingestellte Lichtwecker“-Seite kannst du, ohne die SunMask zu starten, deine eingestellten Lichtwecker überprüfen. Du erreichst sie in der Geräteübersicht mit Klick auf "SunMask (nicht verfügbar)" oder auf das "i".',
+                  style: TextStyle(color: blaugrau, fontSize: 14, height: 1.2),
                 ),
               ),
             ],
@@ -798,7 +770,32 @@ class InfoPage extends StatelessWidget {
       ),
     );
   }
+
+  ExpansionPanel _buildPanel({required int index, required String title, required Widget content}) {
+    return ExpansionPanel(
+      backgroundColor: Colors.black,
+      headerBuilder: (context, isExpanded) {
+        return ListTile(
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        );
+      },
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+        child: content,
+      ),
+      isExpanded: _isExpanded[index],
+      canTapOnHeader: true,
+    );
+  }
 }
+
 
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
 
