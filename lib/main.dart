@@ -715,6 +715,7 @@ class _InfoPageState extends State<InfoPage> {
                 _isExpanded[index] = !isExpanded;
               });
             },
+            expandIconColor: blaugrau, // ✅ Deine Wunschfarbe für den Pfeil
             dividerColor: blaugrau,
             animationDuration: const Duration(milliseconds: 400),
             children: [
@@ -783,10 +784,6 @@ class _InfoPageState extends State<InfoPage> {
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
-          ),
-          trailing: Icon(
-            isExpanded ? Icons.expand_less : Icons.expand_more,
-            color: blaugrau, // 👈 Farbe deines Pfeils
           ),
         );
       },
