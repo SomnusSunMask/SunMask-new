@@ -687,6 +687,13 @@ Widget buildRequirementRow({
 // InfoPage - NEUE Hilfeseite
 // ============================
 
+class InfoPage extends StatefulWidget {
+  const InfoPage({super.key});
+
+  @override
+  State<InfoPage> createState() => _InfoPageState();
+}
+
 class _InfoPageState extends State<InfoPage> {
   final blaugrau = const Color(0xFF7A9CA3);
   int? _currentPanelIndex;
