@@ -699,8 +699,8 @@ class _InfoPageState extends State<InfoPage> {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
-        dividerColor: blaugrau,
-        unselectedWidgetColor: blaugrau, // <-- Farbe für den Pfeil!
+        dividerColor: Colors.transparent, // ❌ Standard-Linie entfernen
+        unselectedWidgetColor: blaugrau,  // ✅ Pfeil blaugrau einfärben
       ),
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -785,15 +785,21 @@ class _InfoPageState extends State<InfoPage> {
       value: index,
       backgroundColor: Colors.black,
       headerBuilder: (context, isExpanded) {
-        return ListTile(
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              title: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
-          ),
+            Divider(color: blaugrau, thickness: 1), // ✅ Immer sichtbare eigene Linie
+          ],
         );
       },
       body: Padding(
@@ -803,6 +809,7 @@ class _InfoPageState extends State<InfoPage> {
     );
   }
 }
+
 
 
 
