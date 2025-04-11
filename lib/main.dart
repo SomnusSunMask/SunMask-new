@@ -707,6 +707,7 @@ class _InfoPageState extends State<InfoPage> {
         colorScheme: ColorScheme.dark(
           primary: blaugrau, // Pfeil in geöffnetem Zustand
         ),
+        iconTheme: IconThemeData(color: blaugrau),
       ),
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -806,6 +807,7 @@ class _InfoPageState extends State<InfoPage> {
               ),
             ),
             Container(
+              margin: const EdgeInsets.symmetric(horizontal: -14),
               width: double.infinity,
               height: 1,
               color: blaugrau, // Eigene Linie in blaugrau
