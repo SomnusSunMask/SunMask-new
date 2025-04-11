@@ -68,6 +68,9 @@ class MyApp extends StatelessWidget {
             foregroundColor: blaugrau,
           ),
         ),
+        expansionTileTheme: ExpansionTileThemeData(
+        iconColor: Color(0xFF7A9CA3), // Blaugrau für den Standard-Pfeil
+       ),
         progressIndicatorTheme: const ProgressIndicatorThemeData(
           color: blaugrau,
         ),
@@ -715,7 +718,7 @@ class _InfoPageState extends State<InfoPage> {
               });
             },
             initialOpenPanelValue: _currentPanelIndex,
-            dividerColor: Colors.black, // Standard-Linien deaktivieren
+            dividerColor: Colors.black, // Standard-Linien unsichtbar
             animationDuration: const Duration(milliseconds: 400),
             children: [
               _buildRadioPanel(
@@ -791,10 +794,8 @@ class _InfoPageState extends State<InfoPage> {
                   color: Colors.white,
                 ),
               ),
-              trailing: Icon(
-                isExpanded ? Icons.expand_less : Icons.expand_more,
-                color: blaugrau, // Blaugrauer Pfeil
-              ),
+              // 👉 Kein zusätzlicher Icon-Button mehr hier!
+              // Der Standard-Pfeil übernehmen wir gleich per Theme.
             ),
             Container(
               width: double.infinity,
