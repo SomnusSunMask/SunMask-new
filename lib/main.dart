@@ -833,6 +833,7 @@ class _InfoPageState extends State<InfoPage> {
     ),
   );
 }
+  }
 
 
 // Teil 2: DeviceControlPage komplett + DeviceOverviewPage
