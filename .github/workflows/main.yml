@@ -46,12 +46,18 @@ jobs:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      # === NEU: Build AAB ===
       - name: Build AAB
         run: flutter build appbundle --release
 
-      - name: Upload AAB
+      - name: Sign AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore somnus-key.jks -storepass $KEYSTORE_PASSWORD -keypass $KEY_PASSWORD build/app/outputs/bundle/release/app-release.aab $KEY_ALIAS
+
+      - name: Upload signed AAB
         uses: actions/upload-artifact@v4
         with:
-          name: release-aab
+          name: signed-release-aab
           path: build/app/outputs/bundle/release/app-release.aab
