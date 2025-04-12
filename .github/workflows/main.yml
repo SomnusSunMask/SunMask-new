@@ -20,7 +20,6 @@ jobs:
           channel: 'beta'
           cache: true
 
-
       - name: Check Flutter & Dart Version
         run: flutter doctor -v
 
@@ -32,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Generate App Icons  # NEU: Erstellt das App-Icon basierend auf pubspec.yaml
+      - name: Generate App Icons
         run: flutter pub run flutter_launcher_icons:main
 
       - name: Run Flutter analyze
@@ -46,3 +45,13 @@ jobs:
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      # === NEU: Build AAB ===
+      - name: Build AAB
+        run: flutter build appbundle --release
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
