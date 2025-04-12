@@ -49,6 +49,9 @@ jobs:
       - name: Build AAB
         run: flutter build appbundle --release
 
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > somnus-key.jks  
+
       - name: Sign AAB
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
