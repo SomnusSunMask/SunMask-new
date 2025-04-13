@@ -65,8 +65,9 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-            -keystore somnus-key.jks \
+            -keystore sunmask-key.jks \
             -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEYSTORE_PASSWORD" \
             build/app/outputs/bundle/release/app-release.aab \
             "$KEY_ALIAS"
 
