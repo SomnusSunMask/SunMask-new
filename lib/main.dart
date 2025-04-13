@@ -187,7 +187,7 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
                 Text(
                   '1. Starte deine SunMask und drücke den Startknopf.\n\n'
                   '2. Aktualisiere oben rechts, um nach Geräten zu suchen.\n\n'
-                  '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n\n'
+                  '3. Tippe auf die angezeigte "SunMask", um dich zu verbinden.\n\n'
                   '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n\n'
                   'Bei Unklarheiten kannst du später jederzeit auf das Fragezeichen in der Geräteübersicht tippen.',
                   style: TextStyle(color: Colors.white),
@@ -735,7 +735,7 @@ class _InfoPageState extends State<InfoPage> with SingleTickerProviderStateMixin
                     Text(
                       '1. Starte deine SunMask und drücke den Startknopf.\n'
                       '2. Aktualisiere auf der Somnus-Startseite oben rechts, um nach Geräten zu suchen.\n'
-                      '3. Wähle deine SunMask aus der Liste aus, um dich zu verbinden.\n'
+                      '3. Tippe auf die angezeigte "SunMask", um dich zu verbinden.\n'
                       '4. Du hast anschließend 60 Sekunden* Zeit, um Weckzeit oder Timer einzustellen.\n',
                       style: TextStyle(color: blaugrau, fontSize: 16, height: 1.2),
                     ),
