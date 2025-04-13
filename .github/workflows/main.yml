@@ -58,25 +58,21 @@ jobs:
           distribution: 'oracle'
           java-version: '17'
 
-      - name: Install Android Build Tools (für apksigner)
-        run: sudo apt-get update && sudo apt-get install -y apksigner
-
-      - name: Sign AAB using apksigner
+      - name: Sign AAB
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          apksigner sign \
-            --ks sunmask-key.jks \
-            --ks-key-alias "$KEY_ALIAS" \
-            --ks-pass pass:"$KEYSTORE_PASSWORD" \
-            --key-pass pass:"$KEY_PASSWORD" \
-            --out build/app/outputs/bundle/release/app-release-signed.aab \
-            build/app/outputs/bundle/release/app-release.aab
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore sunmask-key.jks \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            build/app/outputs/bundle/release/app-release.aab \
+            "$KEY_ALIAS"
 
       - name: Upload signed AAB
         uses: actions/upload-artifact@v4
         with:
           name: signed-release-aab
-          path: build/app/outputs/bundle/release/app-release-signed.aab
+          path: build/app/outputs/bundle/release/app-release.aab
