@@ -50,7 +50,7 @@ jobs:
         run: flutter build appbundle --release
 
       - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > somnus-key.jks
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > sunmask-key.jks
 
       - name: Set up Java 17
         uses: actions/setup-java@v3
