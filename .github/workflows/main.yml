@@ -49,30 +49,8 @@ jobs:
       - name: Build AAB
         run: flutter build appbundle --release
 
-      - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > sunmask-key.jks
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'oracle'
-          java-version: '17'
-
-      - name: Sign AAB
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-            -keystore sunmask-key.jks \
-            -storepass "$KEYSTORE_PASSWORD" \
-            -keypass "$KEY_PASSWORD" \
-            build/app/outputs/bundle/release/app-release.aab \
-            "$KEY_ALIAS"
-
-      - name: Upload signed AAB
+      - name: Upload unsigned AAB
         uses: actions/upload-artifact@v4
         with:
-          name: signed-release-aab
+          name: unsigned-release-aab
           path: build/app/outputs/bundle/release/app-release.aab
