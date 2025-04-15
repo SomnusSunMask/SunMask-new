@@ -1696,7 +1696,7 @@ class DeviceOverviewPage extends StatefulWidget {
 class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   bool isConnecting = false;
   BluetoothDevice? targetDevice;
-  late final StreamSubscription<List<ScanResult>> scanSubscription;
+  StreamSubscription<List<ScanResult>>? scanSubscription;
 
   int? lastTimerMinutes;
   int? timerStartTimestamp;
@@ -1714,7 +1714,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   @override
   void dispose() {
     countdownTimer?.cancel();
-    scanSubscription.cancel();
+    scanSubscription?.cancel();
     super.dispose();
   }
 
