@@ -1828,7 +1828,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
           if (result.device.remoteId.str == widget.deviceId) {
             targetDevice = result.device;
             await FlutterBluePlus.stopScan();
-            await scanSubscription.cancel();
+            await scanSubscription?.cancel();
             await establishConnection(targetDevice!);
             return;
           }
