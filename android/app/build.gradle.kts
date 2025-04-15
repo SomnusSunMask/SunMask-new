@@ -29,7 +29,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             signingConfig = null
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
