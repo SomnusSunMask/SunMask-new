@@ -458,52 +458,58 @@ isRequirementDialogOpen = true;
 });
 }
 
- cpp
-void showRequirementsDialog(bool isBluetoothOn, bool isLocationOn, bool isLocationPermissionGranted) {
+void showRequirementsDialog(BuildContext context) {
   showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
-        backgroundColor: Colors.black,
-        shape: RoundedRectangleBorder(
-          side: const BorderSide(color: Color(0xFF7A9CA3), width: 1.5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        title: const Text(
-          'Verbindungsanforderungen',
-          style: TextStyle(color: Colors.white),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              'Verbindungs-\nVoraussetzungen',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
             buildRequirementRow(
               title: 'Bluetooth aktiviert',
               isMet: isBluetoothOn,
+              onTap: () {}, // leerer Handler – Funktion entfernt
             ),
             const SizedBox(height: 10),
             buildRequirementRow(
               title: 'Standort aktiviert',
               isMet: isLocationOn,
+              onTap: () {}, // leerer Handler – Funktion entfernt
             ),
             const SizedBox(height: 10),
             buildRequirementRow(
               title: 'Standort-Berechtigung',
               isMet: isLocationPermissionGranted,
+              onTap: () {}, // leerer Handler – Funktion entfernt
+            ),
+            const SizedBox(height: 30),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK'),
+              ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            child: const Text('OK', style: TextStyle(color: Colors.white)),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
       );
     },
   );
 }
+
 
 
 Widget buildRequirementRow({
