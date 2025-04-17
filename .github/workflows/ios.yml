@@ -34,4 +34,4 @@ jobs:
         run: flutter analyze
 
       - name: Build iOS app (debug)
-        run: flutter build ios --debug
+        run: flutter build ios --debug --simulator
