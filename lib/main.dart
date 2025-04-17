@@ -7,7 +7,6 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:app_settings/app_settings.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -479,9 +478,6 @@ isRequirementDialogOpen = true;
             buildRequirementRow(
               title: 'Bluetooth aktiviert',
               isMet: isBluetoothOn,
-              onTap: () {
-                AppSettings.openAppSettings(type: AppSettingsType.bluetooth);
-              },
             ),
             const SizedBox(height: 10),
             buildRequirementRow(
@@ -495,9 +491,6 @@ isRequirementDialogOpen = true;
             buildRequirementRow(
               title: 'Standort-Berechtigung',
               isMet: isLocationPermissionGranted,
-              onTap: () {
-                AppSettings.openAppSettings();
-              },
             ),
           ],
         ),
