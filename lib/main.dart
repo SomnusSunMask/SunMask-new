@@ -459,6 +459,9 @@ isRequirementDialogOpen = true;
 }
 
 void showRequirementsDialog(BuildContext context) {
+  bool isBluetoothOn = true; // oder dein echter Check
+  bool isLocationOn = true;
+  bool isLocationPermissionGranted = true;
   showDialog(
     context: context,
     barrierDismissible: false,
