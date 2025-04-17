@@ -18,7 +18,6 @@ dependencies:
   intl: ^0.20.2
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.2
-  app_settings: ^5.1.1    # ✅ hinzugefügt für Bluetooth-Einstellungen
 
 dev_dependencies:
   flutter_test:
