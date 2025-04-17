@@ -458,7 +458,8 @@ isRequirementDialogOpen = true;
 });
 }
 
-  void showRequirementsDialog(bool isBluetoothOn, bool isLocationOn, bool isLocationPermissionGranted) {
+ cpp
+void showRequirementsDialog(bool isBluetoothOn, bool isLocationOn, bool isLocationPermissionGranted) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -483,9 +484,6 @@ isRequirementDialogOpen = true;
             buildRequirementRow(
               title: 'Standort aktiviert',
               isMet: isLocationOn,
-              onTap: () {
-                Geolocator.openLocationSettings();
-              },
             ),
             const SizedBox(height: 10),
             buildRequirementRow(
@@ -506,6 +504,7 @@ isRequirementDialogOpen = true;
     },
   );
 }
+
 
 Widget buildRequirementRow({
   required String title,
