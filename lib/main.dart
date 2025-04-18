@@ -459,7 +459,6 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
       isRequirementDialogOpen = false;
     });
   }
-}
 
 
   void showErrorSnackbar(String message) {
