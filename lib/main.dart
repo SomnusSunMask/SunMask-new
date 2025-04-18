@@ -1,6 +1,7 @@
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -156,6 +157,123 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
   }
 }
 
+Future<void> checkBluetoothAndLocation() async {
+    const blaugrau = Color(0xFF7A9CA3);
+    final isAndroid = Platform.isAndroid;
+    final isIOS = Platform.isIOS;
+
+    bool isBluetoothOn = (await FlutterBluePlus.adapterState.first) == BluetoothAdapterState.on;
+    bool isLocationServiceOn = await Geolocator.isLocationServiceEnabled();
+    LocationPermission permission = await Geolocator.checkPermission();
+    bool isLocationPermissionGranted =
+        permission == LocationPermission.always || permission == LocationPermission.whileInUse;
+
+    bool allRequirementsMet = isBluetoothOn &&
+        (isIOS || isLocationServiceOn) &&
+        (isIOS || isLocationPermissionGranted);
+
+    if (!mounted) return;
+
+    if (isRequirementDialogOpen && Navigator.canPop(context)) {
+      Navigator.of(context).pop();
+    }
+
+    if (allRequirementsMet) {
+      return;
+    }
+
+    if (isRequirementDialogOpen) return;
+    isRequirementDialogOpen = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.black,
+          shape: RoundedRectangleBorder(
+            side: const BorderSide(color: blaugrau, width: 1.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text('Verbindungs-Voraussetzungen', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(isBluetoothOn ? Icons.check_circle : Icons.cancel, color: isBluetoothOn ? Colors.green : Colors.red),
+                  const SizedBox(width: 8),
+                  const Text('Bluetooth', style: TextStyle(color: Colors.white)),
+                ],
+              ),
+              if (!isBluetoothOn)
+                const Padding(
+                  padding: EdgeInsets.only(left: 32, top: 4),
+                  child: Text('→ Aktiviere Bluetooth', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                ),
+              if (isAndroid) const SizedBox(height: 8),
+              if (isAndroid)
+                Row(
+                  children: [
+                    Icon(isLocationServiceOn ? Icons.check_circle : Icons.cancel, color: isLocationServiceOn ? Colors.green : Colors.red),
+                    const SizedBox(width: 8),
+                    const Text('Standort', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              if (!isLocationServiceOn && isAndroid)
+                const Padding(
+                  padding: EdgeInsets.only(left: 32, top: 4),
+                  child: Text('→ Aktiviere den Standort', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                ),
+              if (isAndroid) const SizedBox(height: 8),
+              if (isAndroid)
+                Row(
+                  children: [
+                    Icon(isLocationPermissionGranted ? Icons.check_circle : Icons.cancel, color: isLocationPermissionGranted ? Colors.green : Colors.red),
+                    const SizedBox(width: 8),
+                    const Text('Standortberechtigung', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              if (!isLocationPermissionGranted && isAndroid)
+                const Padding(
+                  padding: EdgeInsets.only(left: 32, top: 4),
+                  child: Text('→ Berechtige Somnus in den Einstellungen für Standortzugriff.', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                ),
+            ],
+          ),
+          actions: [
+            if (isAndroid)
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  if (!isBluetoothOn) {
+                    FlutterBluePlus.turnOn();
+                  }
+                  if (!isLocationServiceOn) {
+                    await Geolocator.openLocationSettings();
+                  }
+                  if (!isLocationPermissionGranted) {
+                    await Geolocator.requestPermission();
+                  }
+                },
+                child: const Text('Problem beheben', style: TextStyle(color: Colors.white)),
+              ),
+            if (isIOS)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK', style: TextStyle(color: Colors.white)),
+              ),
+          ],
+        );
+      },
+    ).then((_) {
+      isRequirementDialogOpen = false;
+    });
+  }
+}
 
   void showAppIntroIfFirstStart() async {
     final prefs = await SharedPreferences.getInstance();
@@ -456,88 +574,6 @@ isRequirementDialogOpen = true;
   ).then((_) {
   isRequirementDialogOpen = false;
 });
-}
-
-void showRequirementsDialog(BuildContext context) {
-  bool isBluetoothOn = true; // oder dein echter Check
-  bool isLocationOn = true;
-  bool isLocationPermissionGranted = true;
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Verbindungs-\nVoraussetzungen',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            buildRequirementRow(
-              title: 'Bluetooth aktiviert',
-              isMet: isBluetoothOn,
-              onTap: () {}, // leerer Handler – Funktion entfernt
-            ),
-            const SizedBox(height: 10),
-            buildRequirementRow(
-              title: 'Standort aktiviert',
-              isMet: isLocationOn,
-              onTap: () {}, // leerer Handler – Funktion entfernt
-            ),
-            const SizedBox(height: 10),
-            buildRequirementRow(
-              title: 'Standort-Berechtigung',
-              isMet: isLocationPermissionGranted,
-              onTap: () {}, // leerer Handler – Funktion entfernt
-            ),
-            const SizedBox(height: 30),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK'),
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-
-
-Widget buildRequirementRow({
-  required String title,
-  required bool isMet,
-  required VoidCallback onTap,
-}) {
-  return InkWell(
-    onTap: onTap,
-    child: Row(
-      children: [
-        Icon(
-          isMet ? Icons.check_circle : Icons.cancel,
-          color: isMet ? Colors.green : Colors.red,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 
