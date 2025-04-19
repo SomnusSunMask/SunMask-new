@@ -2,7 +2,6 @@ name: Build iOS App
 
 on:
   workflow_dispatch:
- 
 
 jobs:
   build_ios:
@@ -25,6 +24,15 @@ jobs:
 
       - name: Install CocoaPods
         run: sudo gem install cocoapods
+
+      - name: Clean iOS folder
+        run: flutter clean
+
+      - name: Delete iOS Pods and Podfile.lock
+        run: |
+          cd ios
+          rm -rf Pods
+          rm -f Podfile.lock
 
       - name: Install dependencies
         run: flutter pub get
