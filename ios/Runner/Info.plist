@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Somnus</string>
+	<string>somnus</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -45,12 +45,5 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-
-	<!-- Hinzugefügte Berechtigungen für Bluetooth & Standort -->
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Diese App benötigt Bluetooth, um sich mit deiner SunMask zu verbinden.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Der Standort wird benötigt, um Bluetooth-Geräte in der Nähe zu scannen.</string>
-
 </dict>
 </plist>
