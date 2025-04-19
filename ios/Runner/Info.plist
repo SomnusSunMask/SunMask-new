@@ -45,5 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Hinzugefügte Berechtigungen für Bluetooth & Standort -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Diese App benötigt Bluetooth, um sich mit deiner SunMask zu verbinden.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Der Standort wird benötigt, um Bluetooth-Geräte in der Nähe zu scannen.</string>
+
 </dict>
 </plist>
