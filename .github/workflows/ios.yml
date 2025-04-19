@@ -2,16 +2,20 @@ name: Build iOS App
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
+  build_ios:
+    name: Build iOS .ipa
     runs-on: macos-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Flutter
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.31.0-0.1.pre'
@@ -30,8 +34,17 @@ jobs:
       - name: Generate App Icons
         run: flutter pub run flutter_launcher_icons:main
 
-      - name: Run Flutter analyze
-        run: flutter analyze
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
 
-      - name: Build iOS app (debug)
-        run: flutter build ios --debug --simulator
+      - name: Build iOS .ipa
+        run: |
+          flutter build ipa --release --export-options-plist=ios/Runner/ExportOptions.plist
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: build/ios/ipa/*.ipa
