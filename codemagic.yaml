@@ -1,0 +1,24 @@
+# codemagic.yaml
+workflows:
+  ios-build:
+    name: Build iOS App
+    max_build_duration: 60
+    instance_type: mac_mini
+    environment:
+      flutter: stable
+      xcode: latest
+    scripts:
+      - name: Set up Flutter dependencies
+        script: |
+          flutter pub get
+          flutter pub run flutter_launcher_icons:main
+      - name: Clean build
+        script: flutter clean
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install
+      - name: Build .ipa for iOS
+        script: flutter build ipa --release --export-options-plist=ios/Runner/ExportOptions.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
