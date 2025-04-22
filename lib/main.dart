@@ -1,22 +1,24 @@
+// main.dart
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyTestApp());
+  debugPrint(">>> MAIN WIRD AUSGEFÜHRT <<<");
+  runApp(MyTestApp());
 }
 
 class MyTestApp extends StatelessWidget {
-  const MyTestApp({super.key});
-
   @override
   Widget build(BuildContext context) {
+    debugPrint(">>> BUILD WIRD AUSGEFÜHRT <<<");
+
     return MaterialApp(
-      title: 'Test iOS',
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.yellow,
         body: Center(
           child: Text(
-            'Hallo iOS',
-            style: TextStyle(fontSize: 24),
+            "Hello iOS!",
+            style: TextStyle(fontSize: 32, color: Colors.black),
           ),
         ),
       ),
