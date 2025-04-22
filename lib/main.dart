@@ -13,8 +13,15 @@ class MyApp extends StatelessWidget {
       title: 'Plugin-Test',
       theme: ThemeData.dark(),
       home: Scaffold(
-        appBar: AppBar(title: const Text('Test ohne Plugins')),
-        body: const Center(child: Text('Läuft die App jetzt?')),
+        appBar: AppBar(
+          title: const Text('Test ohne Plugins'),
+        ),
+        body: const Center(
+          child: Text(
+            'Läuft die App jetzt?',
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+        ),
       ),
     );
   }
