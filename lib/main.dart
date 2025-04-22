@@ -231,8 +231,8 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
 
   Future<void> loadKnownDevices() async {
     final prefs = await DummyPrefs.getInstance();
-    storedDevices = prefs.getStringList('storedDevices') ?? [];
-    final nameMap = prefs.getString('deviceNameMap');
+    storedDevices = (await prefs.getStringList('storedDevices')) ?? [];
+    final nameMap = await prefs.getString('deviceNameMap');
     if (nameMap != null) {
       storedDeviceNames = Map<String, String>.from(jsonDecode(nameMap));
     }
@@ -565,8 +565,8 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
                       icon: const Icon(Icons.info_outline, color: blaugrau),
                       onPressed: () async {
                         final prefs = await DummyPrefs.getInstance();
-                        final wakeTime = prefs.getString('lastWakeTime_$id');
-                        final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+                        final wakeTime = await prefs.getString('lastWakeTime_$id');
+                        final timerMinutes = await prefs.getInt('lastTimerMinutes_$id');
                         if (!context.mounted) return;
                         Navigator.push(
                           context,
@@ -596,8 +596,8 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
                 connectToDevice(device);
               } else if (storedDevices.contains(id)) {
                 final prefs = await DummyPrefs.getInstance();
-                final wakeTime = prefs.getString('lastWakeTime_$id');
-                final timerMinutes = prefs.getInt('lastTimerMinutes_$id');
+                final wakeTime = await prefs.getString('lastWakeTime_$id');
+                final timerMinutes = await prefs.getInt('lastTimerMinutes_$id');
                 if (!context.mounted) return;
                 Navigator.push(
                   context,
@@ -811,7 +811,7 @@ void initState() {
   
   void showFirstConnectionHint() async {
   final prefs = await DummyPrefs.getInstance();
-  final hasShownHint = prefs.getBool('hintShown_${widget.device.remoteId.str}') ?? false;
+  final hasShownHint = await prefs.getBool('hintShown_${widget.device.remoteId.str}') ?? false;
 
   if (!hasShownHint) {
     await prefs.setBool('hintShown_${widget.device.remoteId.str}', true);
@@ -861,7 +861,7 @@ void initState() {
 
 void showFirstTimeUsageHint() async {
   final prefs = await DummyPrefs.getInstance();
-  final hasShownUsageHint = prefs.getBool('usageHintShown_${widget.device.remoteId.str}') ?? false;
+  final hasShownUsageHint = await prefs.getBool('usageHintShown_${widget.device.remoteId.str}') ?? false;
 
   if (hasShownUsageHint) return;
 
