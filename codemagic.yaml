@@ -16,6 +16,7 @@ workflows:
       - name: Install CocoaPods
         script: |
           cd ios
+          rm -f Podfile.lock
           pod install
       - name: Build .ipa for iOS
         script: |
