@@ -955,10 +955,10 @@ void showFirstTimeUsageHint() async {
 
   void loadSavedData() async {
     final prefs = await DummyPrefs.getInstance();
-    final wakeTime = prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
-    final timerMinutes = prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
-    final timerStartTimestamp = prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
-    final wakeTimeExpiredFlag = prefs.getBool('wakeTimeExpired_${widget.device.remoteId.str}') ?? false;
+    final wakeTime = await prefs.getString('lastWakeTime_${widget.device.remoteId.str}');
+    final timerMinutes = await prefs.getInt('lastTimerMinutes_${widget.device.remoteId.str}');
+    final timerStartTimestamp = await prefs.getInt('timerStartTime_${widget.device.remoteId.str}');
+    final wakeTimeExpiredFlag = await prefs.getBool('wakeTimeExpired_${widget.device.remoteId.str}') ?? false;
 
     if (!mounted) return;
 
@@ -988,7 +988,7 @@ void showFirstTimeUsageHint() async {
 
   void checkWakeTimeExpired() async {
   final prefs = await DummyPrefs.getInstance();
-  final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.device.remoteId.str}');
+  final wakeTimestamp = await prefs.getInt('wakeTimestamp_${widget.device.remoteId.str}');
 
   if (wakeTimestamp != null) {
     final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
@@ -1657,13 +1657,13 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
     final prefs = await DummyPrefs.getInstance();
     setState(() {
       lastTimerMinutes = widget.lastTimerMinutes;
-      timerStartTimestamp = prefs.getInt('timerStartTime_${widget.deviceId}');
+      timerStartTimestamp = await prefs.getInt('timerStartTime_${widget.deviceId}');
     });
   }
 
   Future<void> loadWakeTimeExpiredStatus() async {
   final prefs = await DummyPrefs.getInstance();
-  final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
+  final wakeTimestamp = await prefs.getInt('wakeTimestamp_${widget.deviceId}');
 
   if (wakeTimestamp != null) {
     final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
@@ -1689,7 +1689,7 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
 
   void checkWakeTimeExpired() async {
   final prefs = await DummyPrefs.getInstance();
-  final wakeTimestamp = prefs.getInt('wakeTimestamp_${widget.deviceId}');
+  final wakeTimestamp = await prefs.getInt('wakeTimestamp_${widget.deviceId}');
 
   if (wakeTimestamp != null) {
     final wakeDateTime = DateTime.fromMillisecondsSinceEpoch(wakeTimestamp);
