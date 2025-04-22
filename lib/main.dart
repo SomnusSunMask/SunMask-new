@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,26 +28,12 @@ class MyApp extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
-                  LocationPermission permission = await Geolocator.checkPermission();
-                  if (permission == LocationPermission.denied) {
-                    permission = await Geolocator.requestPermission();
-                  }
-
-                  if (permission == LocationPermission.always ||
-                      permission == LocationPermission.whileInUse) {
-                    Position position = await Geolocator.getCurrentPosition();
-                    // ignore: use_build_context_synchronously
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Standort'),
-                        content: Text(
-                            'Latitude: ${position.latitude}\nLongitude: ${position.longitude}'),
-                      ),
-                    );
-                  }
+                  final status = await Permission.location.request();
+                  debugPrint("Standort-Erlaubnis: ${status.name}");
+                  final pos = await Geolocator.getCurrentPosition();
+                  debugPrint("Position: ${pos.latitude}, ${pos.longitude}");
                 },
-                child: const Text('Standort abfragen'),
+                child: const Text("Berechtigung & Ort testen"),
               ),
             ],
           ),
