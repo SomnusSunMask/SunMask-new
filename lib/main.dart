@@ -10,16 +10,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Plugin-Test',
-      theme: ThemeData.light(), // <--- Hell statt dark
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Test ohne Plugins'),
-        ),
-        body: const Center(
-          child: Text(
-            'Läuft die App jetzt?',
-            style: TextStyle(fontSize: 20, color: Colors.black), // <--- explizit schwarz
+        backgroundColor: Colors.red, // kräftige Hintergrundfarbe
+        body: Center(
+          child: Container(
+            width: 200,
+            height: 100,
+            color: Colors.white,
+            child: const Center(
+              child: Text(
+                'TEST',
+                style: TextStyle(fontSize: 24, color: Colors.black),
+              ),
+            ),
           ),
         ),
       ),
