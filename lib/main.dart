@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Plugin-Test',
-      theme: ThemeData.dark(),
+      theme: ThemeData.light(), // <--- Hell statt dark
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Test ohne Plugins'),
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         body: const Center(
           child: Text(
             'Läuft die App jetzt?',
-            style: TextStyle(color: Colors.white, fontSize: 20),
+            style: TextStyle(fontSize: 20, color: Colors.black), // <--- explizit schwarz
           ),
         ),
       ),
