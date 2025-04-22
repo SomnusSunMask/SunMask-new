@@ -173,7 +173,7 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
 
   void showAppIntroIfFirstStart() async {
     final prefs = await DummyPrefs.getInstance();
-    final hasShownIntro = prefs.getBool('appFirstStartShown') ?? false;
+    final hasShownIntro = await prefs.getBool('appFirstStartShown') ?? false;
 
     if (!hasShownIntro) {
       await prefs.setBool('appFirstStartShown', true);
@@ -1654,12 +1654,15 @@ class _DeviceOverviewPageState extends State<DeviceOverviewPage> {
   }
 
   Future<void> loadTimerStartTime() async {
-    final prefs = await DummyPrefs.getInstance();
-    setState(() {
-      lastTimerMinutes = widget.lastTimerMinutes;
-      timerStartTimestamp = await prefs.getInt('timerStartTime_${widget.deviceId}');
-    });
-  }
+  final prefs = await DummyPrefs.getInstance();
+  final savedTimestamp = await prefs.getInt('timerStartTime_${widget.deviceId}');
+
+  setState(() {
+    lastTimerMinutes = widget.lastTimerMinutes;
+    timerStartTimestamp = savedTimestamp;
+  });
+}
+
 
   Future<void> loadWakeTimeExpiredStatus() async {
   final prefs = await DummyPrefs.getInstance();
